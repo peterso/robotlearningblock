@@ -1,4 +1,3 @@
-//#include <ESP8266WiFi.h>
 #include <M5StickC.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -26,16 +25,38 @@ HX711 scale(33, 32);
 
 void setup() {
   M5.begin();
+  
   Serial.begin(115200);
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
+  
+  //M5.IMU.Init();
 
+  M5.MPU6886.Init();
+  M5.MPU6886.SetGyroFsr(M5.MPU6886.GFS_500DPS);
+  M5.MPU6886.SetAccelFsr(M5.MPU6886.AFS_4G);
+  
   M5.Lcd.setRotation(3);
-  M5.Lcd.setCursor(2,11,FRONT);
+  M5.Lcd.setCursor(2,41,FRONT);
   M5.Lcd.print("Btn_A to tare");
+  delay(1000); // temp delay to see how m5 might clog publish cmd
 }
 
 float weight;
+
+float accX = 0.0F;
+float accY = 0.0F;
+float accZ = 0.0F;
+
+float gyroX = 0.0F;
+float gyroY = 0.0F;
+float gyroZ = 0.0F;
+
+float pitch = 0.0F;
+float roll  = 0.0F;
+float yaw   = 0.0F;
+
+float temp = 0;
 
 void loop() {
   
@@ -45,15 +66,34 @@ void loop() {
   }
   client.loop();
 
+  // Get device accel data
+//  M5.IMU.getGyroData(&gyroX,&gyroY,&gyroZ);
+//  M5.IMU.getAccelData(&accX,&accY,&accZ);
+//  M5.IMU.getAhrsData(&pitch,&roll,&yaw);
+//  M5.IMU.getTempData(&temp);
+  M5.MPU6886.getGyroData(&gyroX, &gyroY, &gyroZ);
+  M5.MPU6886.getAccelData(&accX, &accY, &accZ);
+  M5.MPU6886.getTempData(&temp);
+
   unsigned long now = millis();
   if (now - lastPublish >= fiveSeconds) {
     lastPublish += fiveSeconds;
     DynamicJsonDocument telemetry(1023);
     telemetry.createNestedObject();
-    telemetry[0]["temperature"] = random(18, 23);
+    //telemetry[0]["temperature"] = random(18, 23);
+    telemetry[0]["temperature"] = temp;
     telemetry[0]["humidity"] = random(40, 60);
     telemetry[0]["co2"] = random(900, 1200);
     telemetry[0]["weight"] = weight;
+    telemetry[0]["accX"] = accX;
+    telemetry[0]["accY"] = accY;
+    telemetry[0]["accZ"] = accZ;
+    telemetry[0]["gyroX"] = gyroX;
+    telemetry[0]["gyroY"] = gyroY;
+    telemetry[0]["gyroZ"] = gyroZ;
+    telemetry[0]["roll"] = roll;
+    telemetry[0]["pitch"] = pitch;
+    telemetry[0]["yaw"] = yaw;
 
     String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
     client.publish(topic.c_str(), telemetry.as<String>().c_str());
@@ -66,16 +106,24 @@ void loop() {
   }
   weight =scale.getGram();
   Serial.println(weight);
-  M5.Lcd.setCursor(2,21,FRONT);
-  M5.Lcd.printf("                             ");
+  //M5.Lcd.setCursor(2,21,FRONT);
+  //M5.Lcd.printf("                             ");
   M5.Lcd.setCursor(2,31,FRONT);
   M5.Lcd.printf("weight:%0.2f g     ",weight);
-  M5.Lcd.setCursor(2,41,FRONT);
+  M5.Lcd.setCursor(2,11,FRONT);
   Serial.println(WiFi.localIP());
   
   M5.Lcd.printf("deviceIP: ");
   M5.Lcd.printf("%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
 
+  M5.Lcd.setCursor(2,51,FRONT);
+  M5.Lcd.printf("temp: %0.2f degC    ", temp);
+  M5.Lcd.setCursor(2,61,FRONT);
+  M5.Lcd.printf("accZ: %5.2f G    ", accZ);
+
+  M5.Rtc.GetBm8563Time();
+  M5.Lcd.setCursor(2, 61,FRONT);
+  M5.Lcd.printf("%02d : %02d : %02d\n", M5.Rtc.Hour, M5.Rtc.Minute, M5.Rtc.Second);
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
