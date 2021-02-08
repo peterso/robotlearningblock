@@ -16,13 +16,13 @@ void setup() {
   // init lcd
   M5.begin();
   M5.Lcd.setRotation(3);
-  pinMode(32, INPUT);
-  pinMode(33, INPUT);
-  pinMode(26, INPUT_PULLUP); //GPIO26 for the keyswitch input
-  pinMode(10, OUTPUT); //GPIO10 the builtin LED
+  pinMode(32, INPUT);         //GPIO32 (defined by Grove Port) for red button
+  pinMode(33, INPUT);         //GPIO33 (defined by Grove Port) for blue button
+  pinMode(26, INPUT_PULLUP);  //GPIO26 for the keyswitch input with pullup
+  pinMode(10, OUTPUT);        //GPIO10 the builtin LED
   M5.Lcd.setTextColor(YELLOW);
   M5.Lcd.setCursor(15, 2);
-  M5.Lcd.println("Dual Button example");
+  M5.Lcd.println("Dual Button Key Demo");
   M5.Lcd.setTextColor(WHITE);
 }
 
@@ -76,7 +76,7 @@ void loop() {
     }
     else{
       M5.Lcd.setCursor(75,45); M5.Lcd.print("released, 1");
-      Serial.println("Button Status: key released");
+      Serial.println("Key Status: key released");
       Serial.println(" value: 1");
     }
       last_value_key = cur_value_key;
