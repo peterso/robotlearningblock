@@ -1,0 +1,19 @@
+# A Personal Guide
+
+1. Download the zip file of the arduino ide from the arduino website
+https://www.arduino.cc/en/guide/linux
+2. Unzip the file
+3. Open the arduino IDE by running the arduino.sh file in a terminal
+4. Add the Espressif URL to the board manager list in Preferences
+    https://dl.espressif.com/dl/package_esp32_index.json
+5. Add the board files for ESP32 using the Board Manager
+6. Add the libraries for ESP32 and M5StickC
+7. Install pyserial with pip3.
+
+# Verify setup
+Plug in the M5StickC board and see if it is recognized by the computer. It should be viewable in the arduino ide. 
+
+Before uploading to the board, set the board target, port and baud rate in the IDE. Board=M5StickC, Port=/dev/ttyUSB0, Baud=115200.
+
+Open a sketch and attempt to compile and upload to the board. 
+Wait for the upload to take place (~1min)...Then you should see the message upload complete in the IDE. 
