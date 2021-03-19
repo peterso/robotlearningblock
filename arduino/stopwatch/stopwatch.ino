@@ -1,16 +1,21 @@
 #include <M5StickC.h>
+#include <Wire.h>
+#include "porthub.h"
 
 #define LCDHIGH 240
 #define LCDWIDTH 320
 
 #define BTN_RED 32 // Dual Button Module - Red Button
 #define BTN_BLU 33 // Dual Button Module - Blue Button
-#define KEYSWITCH 26 // Keyswitch
+#define KEYSWITCH 36 // Keyswitch
 #define PLUG 0 // Plug
 #define TIMELIMIT 30  // Trial Time Limit in seconds
 
 #define BUTTON_ON 0
 #define BUTTON_OFF 1
+
+PortHub porthub;
+uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR};
 
 //timer interrupt variable.
 volatile unsigned long usecCount = 0;
@@ -25,6 +30,8 @@ int countStart = 0;
 int started = 0;
 int keyswitch = 0;
 int plug = 0;
+int batt1 = 0;
+int batt2 = 0;
 int timeLeft = 0;
 
 void IRAM_ATTR usecTimer()
@@ -37,12 +44,13 @@ void IRAM_ATTR usecTimer()
 void setup()
 {
   // initialize the M5Stack object
-  M5.begin();
+  M5.begin(true, false, true);
+  porthub.begin();
 
   //GPIO setting  
-  pinMode(BTN_RED, INPUT);          //Button A = GPIO 39
-  pinMode(BTN_BLU, INPUT);          //Button B = GPIO 38
-  pinMode(KEYSWITCH, INPUT_PULLUP); //Button C = GPIO 26
+  //pinMode(BTN_RED, INPUT);          //Button A = GPIO 39
+  //pinMode(BTN_BLU, INPUT);          //Button B = GPIO 38
+  //pinMode(KEYSWITCH, INPUT_PULLUP); //Button C = GPIO 36
   pinMode(PLUG, INPUT_PULLUP);      //Button D = GPIO 0
   pinMode(10, OUTPUT);              //GPIO10 the builtin LED
 
@@ -74,30 +82,30 @@ void loop()
   // put your main code here, to run repeatedly:
 
   //Start Button Check
-  if (digitalRead(BTN_RED) != BUTTON_OFF && started == 0 && digitalRead(KEYSWITCH) == 1 && digitalRead(PLUG) == 1)
+  if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 0 && digitalRead(PLUG) == 1)
   {
     delay(1);
-    if (digitalRead(BTN_RED) != BUTTON_OFF)
+    if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF)
       countStart = 1;
       digitalWrite(10, HIGH); //turn off LED
       Serial.println("Button Status: BtnA pressed");
 
     for (;;)
-      if (digitalRead(BTN_RED) == BUTTON_OFF)
+      if (porthub.hub_d_read_value_A(HUB_ADDR[0]) == BUTTON_OFF)
         break;
     delay(1);
   }
 
   //Stop Button Check
-  if (digitalRead(BTN_RED) != BUTTON_OFF && started == 1 && plug == 1 && keyswitch == 1)
+  if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 1 && plug == 1 && batt1 == 1 && batt2 == 1)
   {
     delay(1);
-    if (digitalRead(BTN_RED) != BUTTON_OFF)
+    if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF)
       countStart = 0;
       Serial.println("Button Status: BtnA pressed STOP!");
 
     for (;;)
-      if (digitalRead(BTN_RED) == BUTTON_OFF)
+      if (porthub.hub_d_read_value_A(HUB_ADDR[0]) == BUTTON_OFF)
         break;
     delay(1);
   }
@@ -111,7 +119,7 @@ void loop()
       Serial.println(TIMELIMIT);
     delay(1);
   }
-
+/*
   //Keyswith Check
   if (digitalRead(KEYSWITCH) != BUTTON_OFF && started == 1 && keyswitch == 0)
   {
@@ -120,16 +128,39 @@ void loop()
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.println("Button Status: Key switched!");
   }
+*/
 
   //Plug Check
   if (digitalRead(PLUG) != BUTTON_OFF && started == 1 && plug == 0)
   {
     delay(1);
     plug = 1;
-    digitalWrite(10, HIGH); //turn on LED when red button is pressed
+    digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.println("Button Status: plug seated!");
+  }
+
+  //Battery Hole 1 Check
+  if (porthub.hub_d_read_value_A(HUB_ADDR[1]) != BUTTON_OFF && started == 1 && batt1 == 0)
+  {
+    delay(1);
+    batt1 = 1;
+    digitalWrite(10, HIGH); //turn off LED when red button is pressed
+    delay(50);
+    digitalWrite(10, LOW); //turn on LED when red button is pressed
+    Serial.println("Button Status: batt1 inserted!");
+  }
+
+  //Battery Hole 2 Check
+  if (porthub.hub_d_read_value_A(HUB_ADDR[1]) != BUTTON_OFF && started == 1 && batt2 == 0)
+  {
+    delay(1);
+    batt2 = 1;
+    digitalWrite(10, HIGH); //turn off LED when red button is pressed
+    delay(50);
+    digitalWrite(10, LOW); //turn on LED when red button is pressed
+    Serial.println("Button Status: batt2 inserted!");
   }
 
   //Time Count  Start
@@ -149,17 +180,17 @@ void loop()
   }
 
   //Count Reset Check
-  if (digitalRead(BTN_BLU) != BUTTON_OFF && started == 0)
+  if (porthub.hub_d_read_value_B(HUB_ADDR[0]) != BUTTON_OFF && started == 0)
   {
     delay(1);
-    if (digitalRead(BTN_BLU) != BUTTON_OFF)
+    if (porthub.hub_d_read_value_B(HUB_ADDR[0]) != BUTTON_OFF)
       Serial.println("Button Status: BtnB pressed");
 
       usecCount = 0;
       digitalWrite(10, HIGH); //turn off LED
 
     for (;;)
-      if (digitalRead(BTN_BLU) == BUTTON_OFF)
+      if (porthub.hub_d_read_value_B(HUB_ADDR[0]) == BUTTON_OFF)
         break;
     delay(1);
   }
@@ -184,10 +215,12 @@ void loop()
   M5.Lcd.printf("%03d:",display[2]);
   M5.Lcd.printf("%03d\n",display[3]);
   M5.Lcd.printf("Thing:set/pin\n");
-  M5.Lcd.printf("K:%d/%d P:%d/%d\n", keyswitch, digitalRead(KEYSWITCH), plug, digitalRead(PLUG));
+  M5.Lcd.printf("P:%d/%d\n", plug, digitalRead(PLUG));
+  M5.Lcd.printf("0:%d/%d 1:%d/%d\n", porthub.hub_d_read_value_A(HUB_ADDR[0]), porthub.hub_d_read_value_B(HUB_ADDR[0]), porthub.hub_d_read_value_A(HUB_ADDR[1]), porthub.hub_d_read_value_B(HUB_ADDR[1]));
   //M5.Lcd.printf("%lu", usecCount);
   M5.Lcd.printf("%d", timeLeft);
   Serial.println(usecCount); //print out seconds to the serial monitor
+
   delay(5); // delay for screen refresh NOTE: This directly affects performance of clock buttons
   //portEXIT_CRITICAL(&mutex);
   
