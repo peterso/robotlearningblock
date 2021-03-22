@@ -2,6 +2,22 @@
 #include <Wire.h>
 #include "porthub.h"
 
+#include <M5StickC.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include "secrets.h"
+
+const char* ssid = SECRET_SSID;        // WiFi name
+const char* password = SECRET_PASSWORD;    // WiFi password
+const char* mqtt_server = "mqtt.cloud.kaaiot.com";
+const String TOKEN = SECRET_TOKEN;        // Endpoint token - you get (or specify) it during device provisioning
+const String APP_VERSION = SECRET_APP_VERSION;  // Application version - you specify it during device provisioning
+
+const unsigned long fiveSeconds = 1 * 5 * 1000UL;
+static unsigned long lastPublish = 0 - fiveSeconds;
+
 #define LCDHIGH 240
 #define LCDWIDTH 320
 
@@ -12,6 +28,9 @@
 
 PortHub porthub;
 uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR};
+
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 //timer interrupt variable.
 volatile unsigned long usecCount = 0;
@@ -43,6 +62,13 @@ void setup()
   M5.begin(true, false, true);
   porthub.begin();
 
+  // Setup wireless connection
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+  M5.Lcd.setRotation(3);
+  M5.Lcd.setCursor(2,11,1);
+  M5.Lcd.print("Connecting to wifi...");
+
   //GPIO setting  
   pinMode(10, OUTPUT);              //GPIO10 the builtin LED
 
@@ -69,9 +95,56 @@ void setup()
   digitalWrite(10, HIGH); //turn off LED when red button is pressed
 }
 
+float accX = 0.0F;
+float accY = 0.0F;
+float accZ = 0.0F;
+
+float gyroX = 0.0F;
+float gyroY = 0.0F;
+float gyroZ = 0.0F;
+
+float pitch = 0.0F;
+float roll  = 0.0F;
+float yaw   = 0.0F;
+
+float temp   = 0.0F;
+
 void loop()
 {
   // put your main code here, to run repeatedly:
+
+  // Connect to wifi logic
+  setup_wifi();
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  // Reporting logic
+  unsigned long now = millis();
+  if (now - lastPublish >= fiveSeconds) {
+    lastPublish += fiveSeconds;
+    DynamicJsonDocument telemetry(1023);
+    telemetry.createNestedObject();
+    telemetry[0]["temperature"] = random(18, 23);
+    telemetry[0]["humidity"] = random(40, 60);
+    telemetry[0]["co2"] = random(900, 1200);
+    //telemetry[0]["weight"] = weight;
+    telemetry[0]["accX"] = accX;
+    telemetry[0]["accY"] = accY;
+    telemetry[0]["accZ"] = accZ;
+    telemetry[0]["keyswitch"] = porthub.hub_d_read_value_A(HUB_ADDR[2]);
+    telemetry[0]["plug"] = porthub.hub_d_read_value_A(HUB_ADDR[3]);
+    telemetry[0]["Btn0_A"] = porthub.hub_d_read_value_A(HUB_ADDR[0]);
+    telemetry[0]["Btn0_B"] = porthub.hub_d_read_value_B(HUB_ADDR[0]);
+    telemetry[0]["Btn1_A"] = porthub.hub_d_read_value_A(HUB_ADDR[1]);
+    telemetry[0]["Btn1_B"] = porthub.hub_d_read_value_B(HUB_ADDR[1]);
+    
+
+    String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
+    client.publish(topic.c_str(), telemetry.as<String>().c_str());
+    Serial.println("Published on topic: " + topic);
+  }
 
   //Start Button Check
   if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 0 && porthub.hub_d_read_value_A(HUB_ADDR[2]) == 1 && porthub.hub_d_read_value_A(HUB_ADDR[3]) == 1)
@@ -217,4 +290,72 @@ void loop()
   //portEXIT_CRITICAL(&mutex);
   
   timeLeft = TIMELIMIT - display[1];
+}
+
+
+// Custom Function Definitions
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.printf("\nHandling command message on topic: %s\n", topic);
+
+  DynamicJsonDocument doc(1023);
+  deserializeJson(doc, payload, length);
+  JsonVariant json_var = doc.as<JsonVariant>();
+
+  DynamicJsonDocument commandResponse(1023);
+  for (int i = 0; i < json_var.size(); i++) {
+    unsigned int command_id = json_var[i]["id"].as<unsigned int>();
+    commandResponse.createNestedObject();
+    commandResponse[i]["id"] = command_id;
+    commandResponse[i]["statusCode"] = 200;
+    commandResponse[i]["payload"] = "done";
+  }
+
+  String responseTopic = "kp1/" + APP_VERSION + "/cex/" + TOKEN + "/result/SWITCH";
+  client.publish(responseTopic.c_str(), commandResponse.as<String>().c_str());
+  Serial.println("Published response to SWITCH command on topic: " + responseTopic);
+}
+
+void setup_wifi() {
+  if (WiFi.status() != WL_CONNECTED) {
+    delay(200);
+    Serial.println();
+    Serial.printf("Connecting to [%s]", ssid);
+    WiFi.begin(ssid, password);
+    connectWiFi();
+  }
+}
+
+void connectWiFi() {
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.println("Attempting MQTT connection...");
+    char *client_id = "client-id-123ab";
+    if (client.connect(client_id)) {
+      Serial.println("Connected to WiFi");
+      // ... and resubscribe
+      subscribeToCommand();
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+void subscribeToCommand() {
+  String topic = "kp1/" + APP_VERSION + "/cex/" + TOKEN + "/command/SWITCH/status";
+  client.subscribe(topic.c_str());
+  Serial.println("Subscribed on topic: " + topic);
 }
