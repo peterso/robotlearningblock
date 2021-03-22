@@ -5,10 +5,6 @@
 #define LCDHIGH 240
 #define LCDWIDTH 320
 
-#define BTN_RED 32 // Dual Button Module - Red Button
-#define BTN_BLU 33 // Dual Button Module - Blue Button
-#define KEYSWITCH 36 // Keyswitch
-#define PLUG 0 // Plug
 #define TIMELIMIT 30  // Trial Time Limit in seconds
 
 #define BUTTON_ON 0
@@ -48,10 +44,6 @@ void setup()
   porthub.begin();
 
   //GPIO setting  
-  //pinMode(BTN_RED, INPUT);          //Button A = GPIO 39
-  //pinMode(BTN_BLU, INPUT);          //Button B = GPIO 38
-  //pinMode(KEYSWITCH, INPUT_PULLUP); //Button C = GPIO 36
-  pinMode(PLUG, INPUT_PULLUP);      //Button D = GPIO 0
   pinMode(10, OUTPUT);              //GPIO10 the builtin LED
 
   // Lcd display setup
@@ -82,7 +74,7 @@ void loop()
   // put your main code here, to run repeatedly:
 
   //Start Button Check
-  if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 0 && digitalRead(PLUG) == 1)
+  if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 0 && porthub.hub_d_read_value_A(HUB_ADDR[2]) == 1 && porthub.hub_d_read_value_A(HUB_ADDR[3]) == 1)
   {
     delay(1);
     if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF)
@@ -119,19 +111,19 @@ void loop()
       Serial.println(TIMELIMIT);
     delay(1);
   }
-/*
+
   //Keyswith Check
-  if (digitalRead(KEYSWITCH) != BUTTON_OFF && started == 1 && keyswitch == 0)
+  if (porthub.hub_d_read_value_A(HUB_ADDR[2]) != BUTTON_OFF && started == 1 && keyswitch == 0)
   {
     delay(1);
     keyswitch = 1;
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.println("Button Status: Key switched!");
   }
-*/
+
 
   //Plug Check
-  if (digitalRead(PLUG) != BUTTON_OFF && started == 1 && plug == 0)
+  if (porthub.hub_d_read_value_A(HUB_ADDR[3]) != BUTTON_OFF && started == 1 && plug == 0)
   {
     delay(1);
     plug = 1;
@@ -214,9 +206,9 @@ void loop()
   M5.Lcd.printf("%02d:",display[1]);
   M5.Lcd.printf("%03d:",display[2]);
   M5.Lcd.printf("%03d\n",display[3]);
-  M5.Lcd.printf("Thing:set/pin\n");
-  M5.Lcd.printf("P:%d/%d\n", plug, digitalRead(PLUG));
+  //M5.Lcd.printf("Thing:set/pin\n");
   M5.Lcd.printf("0:%d/%d 1:%d/%d\n", porthub.hub_d_read_value_A(HUB_ADDR[0]), porthub.hub_d_read_value_B(HUB_ADDR[0]), porthub.hub_d_read_value_A(HUB_ADDR[1]), porthub.hub_d_read_value_B(HUB_ADDR[1]));
+  M5.Lcd.printf("2:%d/%d 3:%d/%d\n", porthub.hub_d_read_value_A(HUB_ADDR[2]), porthub.hub_d_read_value_B(HUB_ADDR[2]), porthub.hub_d_read_value_A(HUB_ADDR[3]), porthub.hub_d_read_value_B(HUB_ADDR[3]));
   //M5.Lcd.printf("%lu", usecCount);
   M5.Lcd.printf("%d", timeLeft);
   Serial.println(usecCount); //print out seconds to the serial monitor
