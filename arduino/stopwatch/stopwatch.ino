@@ -29,8 +29,10 @@ static unsigned long lastPublish = 0 - fiveSeconds;
 PortHub porthub;
 uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR};
 
+/*
 WiFiClient espClient;
 PubSubClient client(espClient);
+*/
 
 //timer interrupt variable.
 volatile unsigned long usecCount = 0;
@@ -59,15 +61,17 @@ void IRAM_ATTR usecTimer()
 void setup()
 {
   // initialize the M5Stack object
-  M5.begin(true, false, true);
+  M5.begin(true, true, true); //screen, batt, serial
   porthub.begin();
 
+/*
   // Setup wireless connection
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
   M5.Lcd.setRotation(3);
   M5.Lcd.setCursor(2,11,1);
   M5.Lcd.print("Connecting to wifi...");
+*/
 
   //GPIO setting  
   pinMode(10, OUTPUT);              //GPIO10 the builtin LED
@@ -113,6 +117,7 @@ void loop()
 {
   // put your main code here, to run repeatedly:
 
+/*
   // Connect to wifi logic
   setup_wifi();
   if (!client.connected()) {
@@ -145,7 +150,7 @@ void loop()
     client.publish(topic.c_str(), telemetry.as<String>().c_str());
     Serial.println("Published on topic: " + topic);
   }
-
+*/
   //Start Button Check
   if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 0 && porthub.hub_d_read_value_A(HUB_ADDR[2]) == 1 && porthub.hub_d_read_value_A(HUB_ADDR[3]) == 1)
   {
@@ -218,7 +223,7 @@ void loop()
   }
 
   //Battery Hole 2 Check
-  if (porthub.hub_d_read_value_A(HUB_ADDR[1]) != BUTTON_OFF && started == 1 && batt2 == 0)
+  if (porthub.hub_d_read_value_B(HUB_ADDR[1]) != BUTTON_OFF && started == 1 && batt2 == 0)
   {
     delay(1);
     batt2 = 1;
@@ -242,6 +247,8 @@ void loop()
     started = 0;
     keyswitch = 0;
     plug = 0;
+    batt1 = 0;
+    batt2 = 0;
   }
 
   //Count Reset Check
@@ -292,7 +299,7 @@ void loop()
   timeLeft = TIMELIMIT - display[1];
 }
 
-
+/*
 // Custom Function Definitions
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.printf("\nHandling command message on topic: %s\n", topic);
@@ -359,3 +366,4 @@ void subscribeToCommand() {
   client.subscribe(topic.c_str());
   Serial.println("Subscribed on topic: " + topic);
 }
+*/
