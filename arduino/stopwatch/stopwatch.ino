@@ -29,10 +29,10 @@ static unsigned long lastPublish = 0 - fiveSeconds;
 PortHub porthub;
 uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR};
 
-/*
+
 WiFiClient espClient;
 PubSubClient client(espClient);
-*/
+
 
 //timer interrupt variable.
 volatile unsigned long usecCount = 0;
@@ -50,6 +50,7 @@ int plug = 0;
 int batt1 = 0;
 int batt2 = 0;
 int timeLeft = 0;
+int wifiEnabled = 0;
 
 void IRAM_ATTR usecTimer()
 {
@@ -64,14 +65,17 @@ void setup()
   M5.begin(true, true, true); //screen, batt, serial
   porthub.begin();
 
-/*
-  // Setup wireless connection
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
-  M5.Lcd.setRotation(3);
-  M5.Lcd.setCursor(2,11,1);
-  M5.Lcd.print("Connecting to wifi...");
-*/
+   if (!M5.BtnA.isPressed() == 0){
+    wifiEnabled = 1;
+    // Setup wireless connection
+    client.setServer(mqtt_server, 1883);
+    client.setCallback(callback);
+    M5.Lcd.setRotation(3);
+    M5.Lcd.setCursor(2,11,1);
+    //Serial.printf("Connecting to [%s]", ssid);
+    //M5.Lcd.print("ssid: [%s]\n", ssid);
+    M5.Lcd.print("Connecting to wifi...");
+   }
 
   //GPIO setting  
   pinMode(10, OUTPUT);              //GPIO10 the builtin LED
@@ -82,8 +86,8 @@ void setup()
   //M5.Lcd.setCursor(0, LCDWIDTH / 4);
   M5.Lcd.setTextColor(WHITE);
   M5.Lcd.setTextSize(2);
-  M5.Lcd.printf(" m: s: ms: us\n");
-  M5.Lcd.printf("00:00:000:000\n");
+  //M5.Lcd.printf(" m: s: ms: us\n");
+  //M5.Lcd.printf("00:00:000:000\n");
 
   //interrupt timer setting
   //timerBegin is count per 100 microsec.
@@ -117,13 +121,21 @@ void loop()
 {
   // put your main code here, to run repeatedly:
 
-/*
+  if (wifiEnabled == 1){
   // Connect to wifi logic
   setup_wifi();
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
+  
+  // get device accel data
+  //M5.IMU.getGyroData(&gyroX,&gyroY,&gyroZ);
+  //M5.IMU.getAccelData(&accX,&accY,&accZ);
+  M5.IMU.getAhrsData(&pitch,&roll,&yaw);
+  M5.IMU.getTempData(&temp);
+  M5.MPU6886.getAccelData(&accX, &accY, &accZ);
+  M5.MPU6886.getGyroData(&gyroX,&gyroY,&gyroZ);
 
   // Reporting logic
   unsigned long now = millis();
@@ -131,9 +143,6 @@ void loop()
     lastPublish += fiveSeconds;
     DynamicJsonDocument telemetry(1023);
     telemetry.createNestedObject();
-    telemetry[0]["temperature"] = random(18, 23);
-    telemetry[0]["humidity"] = random(40, 60);
-    telemetry[0]["co2"] = random(900, 1200);
     //telemetry[0]["weight"] = weight;
     telemetry[0]["accX"] = accX;
     telemetry[0]["accY"] = accY;
@@ -144,13 +153,16 @@ void loop()
     telemetry[0]["Btn0_B"] = porthub.hub_d_read_value_B(HUB_ADDR[0]);
     telemetry[0]["Btn1_A"] = porthub.hub_d_read_value_A(HUB_ADDR[1]);
     telemetry[0]["Btn1_B"] = porthub.hub_d_read_value_B(HUB_ADDR[1]);
+    telemetry[0]["trialTime"] = usecCount;
+    telemetry[0]["trialTimeRemaining"] = timeLeft;
     
 
     String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
     client.publish(topic.c_str(), telemetry.as<String>().c_str());
     Serial.println("Published on topic: " + topic);
   }
-*/
+  }
+  
   //Start Button Check
   if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 0 && porthub.hub_d_read_value_A(HUB_ADDR[2]) == 1 && porthub.hub_d_read_value_A(HUB_ADDR[3]) == 1)
   {
@@ -299,7 +311,7 @@ void loop()
   timeLeft = TIMELIMIT - display[1];
 }
 
-/*
+
 // Custom Function Definitions
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.printf("\nHandling command message on topic: %s\n", topic);
@@ -366,4 +378,3 @@ void subscribeToCommand() {
   client.subscribe(topic.c_str());
   Serial.println("Subscribed on topic: " + topic);
 }
-*/
