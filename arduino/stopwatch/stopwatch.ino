@@ -1,19 +1,25 @@
+// This is a prototype program to measure robot performance with the MSRM Task Board. 
+// Written by Peter So. December 2020.
+// Program will not run on board without being connected to the PbHub unit. 
+// Default program will not connect to the internet.
+// To connect to wifi you will need to ensure the correct credentials are added to the secrets.h file.
+// Press and hold the M5 button while powering up the device to have the device try to connect to the online DB.
+
 #include <M5StickC.h>
 #include <Wire.h>
 #include "porthub.h"
 
-#include <M5StickC.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include "secrets.h"
 
-const char* ssid = SECRET_SSID;        // WiFi name
-const char* password = SECRET_PASSWORD;    // WiFi password
+const char* ssid = SECRET_SSID;                   // WiFi name
+const char* password = SECRET_PASSWORD;           // WiFi password
 const char* mqtt_server = "mqtt.cloud.kaaiot.com";
-const String TOKEN = SECRET_TOKEN;        // Endpoint token - you get (or specify) it during device provisioning
-const String APP_VERSION = SECRET_APP_VERSION;  // Application version - you specify it during device provisioning
+const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
+const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you specify it during device provisioning
 
 const unsigned long fiveSeconds = 1 * 5 * 1000UL;
 static unsigned long lastPublish = 0 - fiveSeconds;
@@ -21,7 +27,7 @@ static unsigned long lastPublish = 0 - fiveSeconds;
 #define LCDHIGH 240
 #define LCDWIDTH 320
 
-#define TIMELIMIT 30  // Trial Time Limit in seconds
+#define TIMELIMIT 600  // Trial Time Limit in seconds
 
 #define BUTTON_ON 0
 #define BUTTON_OFF 1
@@ -29,10 +35,8 @@ static unsigned long lastPublish = 0 - fiveSeconds;
 PortHub porthub;
 uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR};
 
-
 WiFiClient espClient;
 PubSubClient client(espClient);
-
 
 //timer interrupt variable.
 volatile unsigned long usecCount = 0;
@@ -50,7 +54,13 @@ int plug = 0;
 int batt1 = 0;
 int batt2 = 0;
 int timeLeft = 0;
+int ptsCollected = 0;
 int wifiEnabled = 0;
+
+int TS_key = 0;
+int TS_plug = 0;
+int TS_batt1 = 0;
+int TS_batt2 = 0;
 
 void IRAM_ATTR usecTimer()
 {
@@ -106,15 +116,12 @@ void setup()
 float accX = 0.0F;
 float accY = 0.0F;
 float accZ = 0.0F;
-
 float gyroX = 0.0F;
 float gyroY = 0.0F;
 float gyroZ = 0.0F;
-
 float pitch = 0.0F;
 float roll  = 0.0F;
 float yaw   = 0.0F;
-
 float temp   = 0.0F;
 
 void loop()
@@ -144,6 +151,7 @@ void loop()
     DynamicJsonDocument telemetry(1023);
     telemetry.createNestedObject();
     //telemetry[0]["weight"] = weight;
+    telemetry[0]["temp"] = temp;
     telemetry[0]["accX"] = accX;
     telemetry[0]["accY"] = accY;
     telemetry[0]["accZ"] = accZ;
@@ -153,8 +161,10 @@ void loop()
     telemetry[0]["Btn0_B"] = porthub.hub_d_read_value_B(HUB_ADDR[0]);
     telemetry[0]["Btn1_A"] = porthub.hub_d_read_value_A(HUB_ADDR[1]);
     telemetry[0]["Btn1_B"] = porthub.hub_d_read_value_B(HUB_ADDR[1]);
+    telemetry[0]["trialStarted"] = started;
     telemetry[0]["trialTime"] = usecCount;
     telemetry[0]["trialTimeRemaining"] = timeLeft;
+    telemetry[0]["trialPoints"] = ptsCollected;
     
 
     String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
@@ -207,6 +217,7 @@ void loop()
   {
     delay(1);
     keyswitch = 1;
+    TS_key = usecCount;
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.println("Button Status: Key switched!");
   }
@@ -217,6 +228,7 @@ void loop()
   {
     delay(1);
     plug = 1;
+    TS_plug = usecCount;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
@@ -228,6 +240,7 @@ void loop()
   {
     delay(1);
     batt1 = 1;
+    TS_batt1 = usecCount;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
@@ -239,6 +252,7 @@ void loop()
   {
     delay(1);
     batt2 = 1;
+    TS_batt2 = usecCount;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
@@ -302,8 +316,10 @@ void loop()
   M5.Lcd.printf("0:%d/%d 1:%d/%d\n", porthub.hub_d_read_value_A(HUB_ADDR[0]), porthub.hub_d_read_value_B(HUB_ADDR[0]), porthub.hub_d_read_value_A(HUB_ADDR[1]), porthub.hub_d_read_value_B(HUB_ADDR[1]));
   M5.Lcd.printf("2:%d/%d 3:%d/%d\n", porthub.hub_d_read_value_A(HUB_ADDR[2]), porthub.hub_d_read_value_B(HUB_ADDR[2]), porthub.hub_d_read_value_A(HUB_ADDR[3]), porthub.hub_d_read_value_B(HUB_ADDR[3]));
   //M5.Lcd.printf("%lu", usecCount);
-  M5.Lcd.printf("%d", timeLeft);
-  Serial.println(usecCount); //print out seconds to the serial monitor
+  //M5.Lcd.printf("%d", timeLeft);
+  M5.Lcd.printf("Wifi:%d:%d, %d", wifiEnabled, WiFi.status(), timeLeft);
+  //Serial.println(usecCount); //print out seconds to the serial monitor
+  Serial.printf("Key: %d, Plug: %d, Batt1: %d, Batt2: %d, Time: %d\n", TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
 
   delay(5); // delay for screen refresh NOTE: This directly affects performance of clock buttons
   //portEXIT_CRITICAL(&mutex);
