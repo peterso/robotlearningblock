@@ -9,7 +9,6 @@
 #include <M5StickCPlus.h>
 #include <Wire.h>
 #include "porthub.h"
-
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <PubSubClient.h>
@@ -26,16 +25,14 @@ const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you s
 const unsigned long fiveSeconds = 1 * 5 * 1000UL;
 static unsigned long lastPublish = 0 - fiveSeconds;
 
-#define LCDHIGH 240
-#define LCDWIDTH 320
-
-#define TIMELIMIT 60  // Trial Time Limit in seconds
-
+#define PROTOCOL_ID "MSRM_9999"
+#define TIMELIMIT 10  // Trial Time Limit in seconds
 #define BUTTON_ON 0
 #define BUTTON_OFF 1
 
 PortHub porthub;
 uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR};
+//HX711 scale(33, 32);
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -60,12 +57,19 @@ int timeLeft = 0;
 int ptsCollected = 0;
 int wifiEnabled = 0;
 
+int startBtnState = -1;
+int resetBtnState = -1;
+int keyswitchState = -1;
+int plugState = -1;
+int batt1BtnState = -1;
+int batt2BtnState = -1;
+
 int TS_key = 0;
 int TS_plug = 0;
 int TS_batt1 = 0;
 int TS_batt2 = 0;
 
-HX711 scale(33, 32);
+uint8_t BoardState[6]={startBtnState,resetBtnState,keyswitchState,plugState,batt1BtnState,batt2BtnState};
 
 void IRAM_ATTR usecTimer()
 {
@@ -80,12 +84,14 @@ void setup()
   M5.begin(true, true, true); //screen, batt, serial
   porthub.begin();
 
+  // Lcd display setup
   M5.Lcd.setRotation(3);
-  M5.Lcd.setCursor(2,11,1);
+  M5.Lcd.fillScreen(BLACK);
+  M5.Lcd.setCursor(0, 0);
   M5.Lcd.setTextColor(WHITE);
   M5.Lcd.setTextSize(1);
 
-   if (!M5.BtnA.isPressed() == 0){
+  if (!M5.BtnA.isPressed() == 0){
     wifiEnabled = 1;
     // Setup wireless connection
     client.setServer(mqtt_server, 1883);
@@ -93,19 +99,10 @@ void setup()
     //Serial.printf("Connecting to [%s]", ssid);
     //M5.Lcd.print("ssid: [%s]\n", ssid);
     M5.Lcd.print("Connecting to wifi...");
-   }
+  }
 
   //GPIO setting  
   pinMode(10, OUTPUT);              //GPIO10 the builtin LED
-
-  // Lcd display setup
-  M5.Lcd.setRotation(3);
-  M5.Lcd.fillScreen(BLACK);
-  //M5.Lcd.setCursor(0, LCDWIDTH / 4);
-  M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.setTextSize(1);
-  //M5.Lcd.printf(" m: s: ms: us\n");
-  //M5.Lcd.printf("00:00:000:000\n");
 
   //interrupt timer setting
   //timerBegin is count per 100 microsec.
@@ -119,6 +116,7 @@ void setup()
   digitalWrite(10, LOW); //turn on LED when red button is pressed
   delay(2000); //tmp delay just to verify setup...
   digitalWrite(10, HIGH); //turn off LED when red button is pressed
+  
   Serial.begin(115200);
   M5.Imu.Init();
 }
@@ -141,100 +139,108 @@ void loop()
 {
   // put your main code here, to run repeatedly:
 
-  if (wifiEnabled == 1){
-  // Connect to wifi logic
-  setup_wifi();
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
-  
+  // READ INPUTS //
   // get device accel data
   M5.Imu.getGyroData(&gyroX,&gyroY,&gyroZ);
   M5.Imu.getAccelData(&accX,&accY,&accZ);
   M5.Imu.getAhrsData(&pitch,&roll,&yaw);
   M5.Imu.getTempData(&temp);
-//  M5.MPU6886.getAccelData(&accX, &accY, &accZ);
-//  M5.MPU6886.getGyroData(&gyroX,&gyroY,&gyroZ);
-//  M5.MPU6886.getTempData(&temp);
 
-//Weight Scale Logic
-  weight = scale.getGram();
+  //time calculation
+  display[3] = (int)(usecCount % 1000);
+  display[2] = (int)((usecCount % 1000000) / 1000);
+  display[1] = (int)((usecCount / 1000000) % 60);
+  display[0] = (int)((usecCount / 60000000) % 3600);
+
+  // Weight Module
+//  weight = scale.getGram();
+    weight = -1;
   if (M5.BtnA.wasReleased()) {
-    scale.setOffset(scale.averageValue());
+//    scale.setOffset(scale.averageValue());
   }
-  
-  // Reporting logic
-  unsigned long now = millis();
-  if (now - lastPublish >= fiveSeconds) 
-  {
-    lastPublish += fiveSeconds;
-    DynamicJsonDocument telemetry(1023);
-    telemetry.createNestedObject();
-    telemetry[0]["weight"] = weight;
-    telemetry[0]["temp"] = temp;
-    telemetry[0]["accX"] = accX * 1000;
-    telemetry[0]["accY"] = accY * 1000;
-    telemetry[0]["accZ"] = accZ * 1000;
-    telemetry[0]["keyswitch"] = porthub.hub_d_read_value_A(HUB_ADDR[2]);
-    telemetry[0]["plug"] = porthub.hub_d_read_value_A(HUB_ADDR[3]);
-    telemetry[0]["Btn0_A"] = porthub.hub_d_read_value_A(HUB_ADDR[0]);
-    telemetry[0]["Btn0_B"] = porthub.hub_d_read_value_B(HUB_ADDR[0]);
-    telemetry[0]["Btn1_A"] = porthub.hub_d_read_value_A(HUB_ADDR[1]);
-    telemetry[0]["Btn1_B"] = porthub.hub_d_read_value_B(HUB_ADDR[1]);
-    telemetry[0]["trialStarted"] = started;
-    telemetry[0]["trialTime"] = usecCount;
-    telemetry[0]["trialTimeRemaining"] = timeLeft;
-    telemetry[0]["trialPoints"] = ptsCollected;
-    
 
-    String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
-    client.publish(topic.c_str(), telemetry.as<String>().c_str());
-    Serial.println("Published on topic: " + topic);
-  }
+  // PbHub Module
+  startBtnState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
+  resetBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
+  keyswitchState = porthub.hub_d_read_value_A(HUB_ADDR[2]);
+  plugState = porthub.hub_d_read_value_A(HUB_ADDR[3]);
+  batt1BtnState = porthub.hub_d_read_value_A(HUB_ADDR[1]);
+  batt2BtnState = porthub.hub_d_read_value_B(HUB_ADDR[1]);
+
+  if (wifiEnabled == 1)
+  {
+    // Connect to wifi logic
+    setup_wifi();
+    if (!client.connected()) {
+      reconnect();
+    }
+    client.loop();
+  
+    // Reporting logic
+    unsigned long now = millis();
+    if (now - lastPublish >= fiveSeconds) 
+    {
+      lastPublish += fiveSeconds;
+      DynamicJsonDocument telemetry(1023);
+      telemetry.createNestedObject();
+      telemetry[0]["weight"] = weight;
+      telemetry[0]["temp"] = temp;
+      telemetry[0]["accX"] = accX * 1000;
+      telemetry[0]["accY"] = accY * 1000;
+      telemetry[0]["accZ"] = accZ * 1000;
+      telemetry[0]["keyswitch"] = keyswitchState;
+      telemetry[0]["plug"] = plugState;
+      telemetry[0]["Btn0_A"] = startBtnState;
+      telemetry[0]["Btn0_B"] = resetBtnState;
+      telemetry[0]["Btn1_A"] = batt1BtnState;
+      telemetry[0]["Btn1_B"] = batt2BtnState;
+      telemetry[0]["trialStarted"] = started;
+      telemetry[0]["trialTime"] = usecCount;
+      telemetry[0]["trialTimeRemaining"] = timeLeft;
+      telemetry[0]["trialPoints"] = ptsCollected;
+      
+      String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
+      client.publish(topic.c_str(), telemetry.as<String>().c_str());
+      Serial.println("Published on topic: " + topic);
+    }
   }
   
   //Start Button Check
-  if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 0 && porthub.hub_d_read_value_A(HUB_ADDR[2]) == 1 && porthub.hub_d_read_value_A(HUB_ADDR[3]) == 1)
+  if (startBtnState != BUTTON_OFF && started == 0 && plugState == 1 && keyswitchState == 1)
   {
     delay(1);
-    if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF)
+    if (startBtnState != BUTTON_OFF)
       countStart = 1;
-      digitalWrite(10, HIGH); //turn off LED
+      digitalWrite(10, LOW); //turn on LED
       Serial.println("Button Status: BtnA pressed");
-
-    for (;;)
-      if (porthub.hub_d_read_value_A(HUB_ADDR[0]) == BUTTON_OFF)
-        break;
     delay(1);
   }
 
   //Stop Button Check
-  if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 1 && keyswitch == 1 && plug == 1 && batt1 == 1 && batt2 == 1)
+  if (startBtnState != BUTTON_OFF && started == 1 && keyswitch == 1 && plug == 1 && batt1 == 1 && batt2 == 1)
   {
     delay(1);
-    if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF)
+    if (startBtnState != BUTTON_OFF)
       countStart = 0;
+      digitalWrite(10, HIGH); //turn off LED
       Serial.println("Button Status: BtnA pressed STOP!");
-
-    for (;;)
-      if (porthub.hub_d_read_value_A(HUB_ADDR[0]) == BUTTON_OFF)
-        break;
     delay(1);
   }
 
   //Time Limit Check
-  if (started == 1 && timeLeft <= 0)
+  timeLeft = round(TIMELIMIT - display[1]);
+  if (started == 1 && timeLeft <= 0) //TODO VERIFY THIS
   {
     delay(1);
       countStart = 0;
       Serial.print("Time's Up! Trial Time Limit: ");
       Serial.println(TIMELIMIT);
+      digitalWrite(10, HIGH); //turn off LED
     delay(1);
   }
 
   //Keyswith Check
-  if (porthub.hub_d_read_value_A(HUB_ADDR[3]) != BUTTON_OFF && started == 1 && keyswitch == 0)
+  if (keyswitchState != BUTTON_OFF && started == 1 && keyswitch == 0)
   {
     delay(1);
     keyswitch = 1;
@@ -245,9 +251,8 @@ void loop()
     Serial.println("Button Status: Key switched!");
   }
 
-
   //Plug Check
-  if (porthub.hub_d_read_value_A(HUB_ADDR[2]) != BUTTON_OFF && started == 1 && plug == 0)
+  if (plugState != BUTTON_OFF && started == 1 && plug == 0)
   {
     delay(1);
     plug = 1;
@@ -259,7 +264,7 @@ void loop()
   }
 
   //Battery Hole 1 Check
-  if (porthub.hub_d_read_value_A(HUB_ADDR[1]) != BUTTON_OFF && started == 1 && batt1 == 0)
+  if (batt1BtnState != BUTTON_OFF && started == 1 && batt1 == 0)
   {
     delay(1);
     batt1 = 1;
@@ -271,7 +276,7 @@ void loop()
   }
 
   //Battery Hole 2 Check
-  if (porthub.hub_d_read_value_B(HUB_ADDR[1]) != BUTTON_OFF && started == 1 && batt2 == 0)
+  if (batt2BtnState != BUTTON_OFF && started == 1 && batt2 == 0)
   {
     delay(1);
     batt2 = 1;
@@ -302,10 +307,10 @@ void loop()
   }
 
   //Count Reset Check
-  if (porthub.hub_d_read_value_B(HUB_ADDR[0]) != BUTTON_OFF && started == 0)
+  if (resetBtnState != BUTTON_OFF && started == 0)
   {
     delay(1);
-    if (porthub.hub_d_read_value_B(HUB_ADDR[0]) != BUTTON_OFF)
+    if (resetBtnState != BUTTON_OFF)
       Serial.println("Button Status: BtnB pressed");
       usecCount = 0;
       TS_key = 0;
@@ -315,65 +320,51 @@ void loop()
       trialTime = 0;
       cumWeight = 0;
       digitalWrite(10, HIGH); //turn off LED
-
-    for (;;)
-      if (porthub.hub_d_read_value_B(HUB_ADDR[0]) == BUTTON_OFF)
-        break;
     delay(1);
   }
 
-  //time calculation
-  display[3] = (int)(usecCount % 1000);
-  display[2] = (int)((usecCount % 1000000) / 1000);
-  display[1] = (int)((usecCount / 1000000) % 60);
-  display[0] = (int)((usecCount / 60000000) % 3600);
-
-  //collect weight during trial
+//  collect weight during trial
   if (started == 1)
   {
-    load = porthub.hub_a_read_value(HUB_ADDR[4]);
-//    load = 10;
-    cumWeight = load + cumWeight;
+    cumWeight = weight + cumWeight;
   }
  
   //count display
   //portENTER_CRITICAL(&mutex);
   M5.Lcd.setRotation(3);
   M5.Lcd.fillScreen(BLACK);
-  //M5.Lcd.setCursor(0, LCDWIDTH / 4);
   M5.Lcd.setTextColor(WHITE);
   M5.Lcd.setTextSize(1);
-  M5.Lcd.setCursor(0, 0);
+  M5.Lcd.setCursor(0, 5);
   M5.Lcd.printf("Smart Task Board\n");
-  M5.Lcd.printf("Wifi:%d:%d, %d\n", wifiEnabled, WiFi.status(), timeLeft);
+  M5.Lcd.printf("Wifi On:%d Status:%d\n", wifiEnabled, WiFi.status());
+  M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
+  M5.Lcd.printf("%d KEY_L:%d TS:%d\n", keyswitch, keyswitchState, TS_key); 
+  M5.Lcd.printf("%d USB_L:%d TS:%d\n", plug, plugState, TS_plug); 
+  M5.Lcd.printf("%d BAT_1:%d TS:%d\n", batt1, batt1BtnState, TS_batt1); 
+  M5.Lcd.printf("%d BAT_2:%d TS:%d\n", batt2, batt2BtnState, TS_batt2); 
+  M5.Lcd.printf("Started:%d Time Left: %d\n", started, timeLeft);
+  M5.Lcd.printf("Trial Time:");
   M5.Lcd.printf(" m: s: ms: us\n");
   M5.Lcd.printf("%02d:",display[0]);
   M5.Lcd.printf("%02d:",display[1]);
   M5.Lcd.printf("%03d:",display[2]);
   M5.Lcd.printf("%03d\n",display[3]);
-  M5.Lcd.printf("%d KEY_L:%d TS:%d\n", keyswitch, porthub.hub_d_read_value_A(HUB_ADDR[2]), TS_key); 
-  M5.Lcd.printf("%d USB_L:%d TS:%d\n", plug, porthub.hub_d_read_value_A(HUB_ADDR[3]), TS_plug); 
-  M5.Lcd.printf("%d BAT_1:%d TS:%d\n", batt1, porthub.hub_d_read_value_A(HUB_ADDR[1]), TS_batt1); 
-  M5.Lcd.printf("%d BAT_2:%d TS:%d\n", batt2, porthub.hub_d_read_value_B(HUB_ADDR[1]), TS_batt2); 
-  M5.Lcd.printf("Trial Time: %d\n", trialTime);
-//  M5.Lcd.printf("0:%d/%d 1:%d/%d\n", porthub.hub_d_read_value_A(HUB_ADDR[0]), porthub.hub_d_read_value_B(HUB_ADDR[0]), porthub.hub_d_read_value_A(HUB_ADDR[1]), porthub.hub_d_read_value_B(HUB_ADDR[1]));
-//  M5.Lcd.printf("2:%d/%d 3:%d/%d\n", porthub.hub_d_read_value_A(HUB_ADDR[2]), porthub.hub_d_read_value_B(HUB_ADDR[2]), porthub.hub_d_read_value_A(HUB_ADDR[3]), porthub.hub_d_read_value_B(HUB_ADDR[3]));
-  M5.Lcd.printf("%d weight: %d, cum: %0.2f\n", started, porthub.hub_a_read_value(HUB_ADDR[4]), cumWeight);
-  M5.Lcd.printf("accX:%0.2f accY:%0.2f accZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
+  M5.Lcd.printf("Force: %d, Total F: %0.2f\n", weight, cumWeight);
+  M5.Lcd.printf("acX:%0.2f acY:%0.2f acZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
   M5.Lcd.printf("gyX:%0.2f gyY:%0.2f gyZ:%0.2f\n", gyroX, gyroY, gyroZ);
   //M5.Lcd.printf("%lu", usecCount);
   //M5.Lcd.printf("%d", timeLeft);
   //Serial.println(usecCount); //print out seconds to the serial monitor
-  Serial.printf("Key: %d, Plug: %d, Batt1: %d, Batt2: %d, Time: %d\n", TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
+  Serial.printf("Key_TS: %d, Plug_TS: %d, Batt1_TS: %d, Batt2_TS: %d, Time: %d\n", TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
 
 //  delay(10); // delay for screen refresh NOTE: This directly affects performance of clock buttons
   //portEXIT_CRITICAL(&mutex);
-  
-  timeLeft = TIMELIMIT - display[1];
 }
 
-
-// Custom Function Definitions
+/////////////////////////////////
+// Custom Function Definitions //
+/////////////////////////////////
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.printf("\nHandling command message on topic: %s\n", topic);
 
