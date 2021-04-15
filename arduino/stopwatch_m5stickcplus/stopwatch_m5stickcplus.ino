@@ -80,13 +80,16 @@ void setup()
   M5.begin(true, true, true); //screen, batt, serial
   porthub.begin();
 
+  M5.Lcd.setRotation(3);
+  M5.Lcd.setCursor(2,11,1);
+  M5.Lcd.setTextColor(WHITE);
+  M5.Lcd.setTextSize(1);
+
    if (!M5.BtnA.isPressed() == 0){
     wifiEnabled = 1;
     // Setup wireless connection
     client.setServer(mqtt_server, 1883);
     client.setCallback(callback);
-    M5.Lcd.setRotation(3);
-    M5.Lcd.setCursor(2,11,1);
     //Serial.printf("Connecting to [%s]", ssid);
     //M5.Lcd.print("ssid: [%s]\n", ssid);
     M5.Lcd.print("Connecting to wifi...");
@@ -100,7 +103,7 @@ void setup()
   M5.Lcd.fillScreen(BLACK);
   //M5.Lcd.setCursor(0, LCDWIDTH / 4);
   M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.setTextSize(2);
+  M5.Lcd.setTextSize(1);
   //M5.Lcd.printf(" m: s: ms: us\n");
   //M5.Lcd.printf("00:00:000:000\n");
 
@@ -117,6 +120,7 @@ void setup()
   delay(2000); //tmp delay just to verify setup...
   digitalWrite(10, HIGH); //turn off LED when red button is pressed
   Serial.begin(115200);
+  M5.Imu.Init();
 }
 
 float weight = 0.0F;
@@ -146,10 +150,10 @@ void loop()
   client.loop();
   
   // get device accel data
-  M5.IMU.getGyroData(&gyroX,&gyroY,&gyroZ);
-  M5.IMU.getAccelData(&accX,&accY,&accZ);
-  M5.IMU.getAhrsData(&pitch,&roll,&yaw);
-  M5.IMU.getTempData(&temp);
+  M5.Imu.getGyroData(&gyroX,&gyroY,&gyroZ);
+  M5.Imu.getAccelData(&accX,&accY,&accZ);
+  M5.Imu.getAhrsData(&pitch,&roll,&yaw);
+  M5.Imu.getTempData(&temp);
 //  M5.MPU6886.getAccelData(&accX, &accY, &accZ);
 //  M5.MPU6886.getGyroData(&gyroX,&gyroY,&gyroZ);
 //  M5.MPU6886.getTempData(&temp);
@@ -206,8 +210,7 @@ void loop()
   }
 
   //Stop Button Check
-  if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 1 && keyswitch == 1 && batt1 == 1 && batt2 == 1)
-//  if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 1 && plug == 1 && batt1 == 1 && batt2 == 1)
+  if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF && started == 1 && keyswitch == 1 && plug == 1 && batt1 == 1 && batt2 == 1)
   {
     delay(1);
     if (porthub.hub_d_read_value_A(HUB_ADDR[0]) != BUTTON_OFF)
@@ -329,6 +332,7 @@ void loop()
   if (started == 1)
   {
     load = porthub.hub_a_read_value(HUB_ADDR[4]);
+//    load = 10;
     cumWeight = load + cumWeight;
   }
  
@@ -347,16 +351,16 @@ void loop()
   M5.Lcd.printf("%02d:",display[1]);
   M5.Lcd.printf("%03d:",display[2]);
   M5.Lcd.printf("%03d\n",display[3]);
-  M5.Lcd.printf("%d KEY_L:%d KEY_R:%d TS:%d\n", keyswitch, porthub.hub_d_read_value_A(HUB_ADDR[3]), porthub.hub_d_read_value_B(HUB_ADDR[3]), TS_key); 
-  M5.Lcd.printf("%d USB_L:%d USB_R:%d TS:%d\n", plug, porthub.hub_d_read_value_A(HUB_ADDR[2]), porthub.hub_d_read_value_B(HUB_ADDR[2]), TS_plug); 
-  M5.Lcd.printf("%d BAT_1:%d         TS:%d\n", batt1, porthub.hub_d_read_value_A(HUB_ADDR[1]), TS_batt1); 
-  M5.Lcd.printf("%d BAT_2:%d         TS:%d\n", batt2, porthub.hub_d_read_value_B(HUB_ADDR[1]), TS_batt2); 
+  M5.Lcd.printf("%d KEY_L:%d TS:%d\n", keyswitch, porthub.hub_d_read_value_A(HUB_ADDR[2]), TS_key); 
+  M5.Lcd.printf("%d USB_L:%d TS:%d\n", plug, porthub.hub_d_read_value_A(HUB_ADDR[3]), TS_plug); 
+  M5.Lcd.printf("%d BAT_1:%d TS:%d\n", batt1, porthub.hub_d_read_value_A(HUB_ADDR[1]), TS_batt1); 
+  M5.Lcd.printf("%d BAT_2:%d TS:%d\n", batt2, porthub.hub_d_read_value_B(HUB_ADDR[1]), TS_batt2); 
   M5.Lcd.printf("Trial Time: %d\n", trialTime);
 //  M5.Lcd.printf("0:%d/%d 1:%d/%d\n", porthub.hub_d_read_value_A(HUB_ADDR[0]), porthub.hub_d_read_value_B(HUB_ADDR[0]), porthub.hub_d_read_value_A(HUB_ADDR[1]), porthub.hub_d_read_value_B(HUB_ADDR[1]));
 //  M5.Lcd.printf("2:%d/%d 3:%d/%d\n", porthub.hub_d_read_value_A(HUB_ADDR[2]), porthub.hub_d_read_value_B(HUB_ADDR[2]), porthub.hub_d_read_value_A(HUB_ADDR[3]), porthub.hub_d_read_value_B(HUB_ADDR[3]));
-  M5.Lcd.printf("%d weight: %d, cum: %d\n", started, porthub.hub_a_read_value(HUB_ADDR[4]), cumWeight);
-//  M5.Lcd.printf("accX:%d accY:%d accZ:%d\n", accX*1000, accY*1000, accZ*1000);
-//M5.Lcd.printf("gyX:%.2f gyY:%.2f gyZ:%.2f\n", gyroX, gyroY, gyroZ);
+  M5.Lcd.printf("%d weight: %d, cum: %0.2f\n", started, porthub.hub_a_read_value(HUB_ADDR[4]), cumWeight);
+  M5.Lcd.printf("accX:%0.2f accY:%0.2f accZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
+  M5.Lcd.printf("gyX:%0.2f gyY:%0.2f gyZ:%0.2f\n", gyroX, gyroY, gyroZ);
   //M5.Lcd.printf("%lu", usecCount);
   //M5.Lcd.printf("%d", timeLeft);
   //Serial.println(usecCount); //print out seconds to the serial monitor
