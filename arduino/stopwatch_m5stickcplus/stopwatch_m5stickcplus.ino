@@ -91,14 +91,15 @@ void setup()
   M5.Lcd.setTextColor(WHITE);
   M5.Lcd.setTextSize(1);
 
-  if (!M5.BtnA.isPressed() == 0){
+  if (!M5.BtnA.isPressed() == 0){ // Press and hold M5 Button during power up to enter Wifi Mode
+//    M5.Lcd.print("ssid: %s\n", *ssid);
+    M5.Lcd.print("Connecting to wifi...");
     wifiEnabled = 1;
+    
     // Setup wireless connection
     client.setServer(mqtt_server, 1883);
-    client.setCallback(callback);
-    //Serial.printf("Connecting to [%s]", ssid);
-    //M5.Lcd.print("ssid: [%s]\n", ssid);
-    M5.Lcd.print("Connecting to wifi...");
+    client.setCallback(callback); 
+    
   }
 
   //GPIO setting  
