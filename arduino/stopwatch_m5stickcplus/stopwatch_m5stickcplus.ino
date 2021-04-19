@@ -14,7 +14,8 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include "secrets.h"
-#include "hx711.h"
+//#include "hx711.h"
+//#include "kaa.h"
 
 const char* ssid = SECRET_SSID;                   // WiFi name
 const char* password = SECRET_PASSWORD;           // WiFi password
@@ -32,10 +33,21 @@ static unsigned long lastPublish = 0 - fiveSeconds;
 
 PortHub porthub;
 uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR};
+
+// Startup Settings
+int wifiEnabled = 1;
+int scaleEnabled = 0;
+
 //HX711 scale(33, 32);
+//HX711 scale(porthub.hub_d_read_value_B(4), porthub.hub_d_read_value_A(4));
+//HX711 scale(porthub.hub_a_read_value(4), 32);
+//HX711 scale(porthub.hub_d_read_value_A(4), 32);
+//HX711 scale(porthub.hub_d_read_value_B(4), porthub.hub_d_read_value_A(4));
+//HX711 scale(porthub.hub_d_read_value_A(4), porthub.hub_d_read_value_B(4));
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+//Kaa kaa(&client, SECRET_TOKEN, SECRET_APP_VERSION);
 
 //timer interrupt variable.
 volatile unsigned long usecCount = 0;
@@ -55,7 +67,7 @@ int batt1 = 0;
 int batt2 = 0;
 int timeLeft = 0;
 int ptsCollected = 0;
-int wifiEnabled = 0;
+
 
 int startBtnState = -1;
 int resetBtnState = -1;
@@ -91,15 +103,14 @@ void setup()
   M5.Lcd.setTextColor(WHITE);
   M5.Lcd.setTextSize(1);
 
-  if (!M5.BtnA.isPressed() == 0){ // Press and hold M5 Button during power up to enter Wifi Mode
+  if (!M5.BtnA.isPressed() == 0 || wifiEnabled == 1){ // Press and hold M5 Button during power up to enter Wifi Mode
 //    M5.Lcd.print("ssid: %s\n", *ssid);
     M5.Lcd.print("Connecting to wifi...");
     wifiEnabled = 1;
     
     // Setup wireless connection
     client.setServer(mqtt_server, 1883);
-    client.setCallback(callback); 
-    
+    client.setCallback(callback);
   }
 
   //GPIO setting  
@@ -147,18 +158,17 @@ void loop()
   M5.Imu.getAhrsData(&pitch,&roll,&yaw);
   M5.Imu.getTempData(&temp);
 
-  //time calculation
-  display[3] = (int)(usecCount % 1000);
-  display[2] = (int)((usecCount % 1000000) / 1000);
-  display[1] = (int)((usecCount / 1000000) % 60);
-  display[0] = (int)((usecCount / 60000000) % 3600);
 
-  // Weight Module
-//  weight = scale.getGram();
-    weight = -1;
-  if (M5.BtnA.wasReleased()) {
-//    scale.setOffset(scale.averageValue());
-  }
+
+//  // Weight Module
+//  if (scaleEnabled == 1)
+//  {
+//    weight = scale.getGram();
+//    if (M5.BtnA.wasReleased()) {
+//      scale.setOffset(scale.averageValue());
+//  } else 
+//    weight = -1;
+//  }
 
   // PbHub Module
   startBtnState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
@@ -184,8 +194,12 @@ void loop()
       lastPublish += fiveSeconds;
       DynamicJsonDocument telemetry(1023);
       telemetry.createNestedObject();
+      telemetry[0]["temperature"] = random(18, 23);
+      telemetry[0]["humidity"] = random(40, 60);
+      telemetry[0]["co2"] = random(900, 1200);
+//      
       telemetry[0]["weight"] = weight;
-      telemetry[0]["temp"] = temp;
+//      telemetry[0]["temp"] = temp;
       telemetry[0]["accX"] = accX * 1000;
       telemetry[0]["accY"] = accY * 1000;
       telemetry[0]["accZ"] = accZ * 1000;
@@ -195,16 +209,22 @@ void loop()
       telemetry[0]["Btn0_B"] = resetBtnState;
       telemetry[0]["Btn1_A"] = batt1BtnState;
       telemetry[0]["Btn1_B"] = batt2BtnState;
-      telemetry[0]["trialStarted"] = started;
-      telemetry[0]["trialTime"] = usecCount;
+//      telemetry[0]["trialStarted"] = started;
+//      telemetry[0]["trialTime"] = usecCount;
       telemetry[0]["trialTimeRemaining"] = timeLeft;
-      telemetry[0]["trialPoints"] = ptsCollected;
+//      telemetry[0]["trialPoints"] = ptsCollected;
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
       Serial.println("Published on topic: " + topic);
     }
   }
+
+  //time calculation
+  display[3] = (int)(usecCount % 1000);
+  display[2] = (int)((usecCount % 1000000) / 1000);
+  display[1] = (int)((usecCount / 1000000) % 60);
+  display[0] = (int)((usecCount / 60000000) % 3600);
   
   //Start Button Check
   if (startBtnState != BUTTON_OFF && started == 0 && plugState == 1 && keyswitchState == 1)
