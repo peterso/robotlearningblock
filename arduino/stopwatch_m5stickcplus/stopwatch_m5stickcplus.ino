@@ -61,6 +61,7 @@ int display[4] = {0};
 unsigned long trialTime = 0;
 int countStart = 0;
 int started = 0;
+int buttonPush = 0;
 int keyswitch = 0;
 int plug = 0;
 int batt1 = 0;
@@ -68,14 +69,16 @@ int batt2 = 0;
 int timeLeft = 0;
 int ptsCollected = 0;
 
-
 int startBtnState = -1;
+int stopBtnState = -1;
 int resetBtnState = -1;
+int buttonPushState = -1;
 int keyswitchState = -1;
 int plugState = -1;
 int batt1BtnState = -1;
 int batt2BtnState = -1;
 
+int TS_button = 0;
 int TS_key = 0;
 int TS_plug = 0;
 int TS_batt1 = 0;
@@ -133,6 +136,11 @@ void setup()
   M5.Imu.Init();
 }
 
+float force = 0.0;
+float cumForce = 0.0;
+float startaccX = 0.0;
+float startaccY = 0.0;
+float startaccZ = 0.0;
 float weight = 0.0F;
 float load = 0.0F;
 float cumWeight = 0.0F;
@@ -158,8 +166,6 @@ void loop()
   M5.Imu.getAhrsData(&pitch,&roll,&yaw);
   M5.Imu.getTempData(&temp);
 
-
-
 //  // Weight Module
 //  if (scaleEnabled == 1)
 //  {
@@ -171,8 +177,11 @@ void loop()
 //  }
 
   // PbHub Module
-  startBtnState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
+//  startBtnState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
+  startBtnState = !M5.BtnA.read(); 
+  stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
   resetBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
+  buttonPushState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
   keyswitchState = porthub.hub_d_read_value_A(HUB_ADDR[2]);
   plugState = porthub.hub_d_read_value_A(HUB_ADDR[3]);
   batt1BtnState = porthub.hub_d_read_value_A(HUB_ADDR[1]);
@@ -192,31 +201,46 @@ void loop()
     if (now - lastPublish >= fiveSeconds) 
     {
       lastPublish += fiveSeconds;
-      DynamicJsonDocument telemetry(1023);
+//      DynamicJsonDocument telemetry(1023);
+      DynamicJsonDocument telemetry(8048);
       telemetry.createNestedObject();
-      telemetry[0]["temperature"] = random(18, 23);
-      telemetry[0]["humidity"] = random(40, 60);
-      telemetry[0]["co2"] = random(900, 1200);
-//      
-      telemetry[0]["weight"] = weight;
-//      telemetry[0]["temp"] = temp;
-      telemetry[0]["accX"] = accX * 1000;
-      telemetry[0]["accY"] = accY * 1000;
-      telemetry[0]["accZ"] = accZ * 1000;
-      telemetry[0]["keyswitch"] = keyswitchState;
-      telemetry[0]["plug"] = plugState;
-      telemetry[0]["Btn0_A"] = startBtnState;
-      telemetry[0]["Btn0_B"] = resetBtnState;
-      telemetry[0]["Btn1_A"] = batt1BtnState;
-      telemetry[0]["Btn1_B"] = batt2BtnState;
-//      telemetry[0]["trialStarted"] = started;
-//      telemetry[0]["trialTime"] = usecCount;
-      telemetry[0]["trialTimeRemaining"] = timeLeft;
-//      telemetry[0]["trialPoints"] = ptsCollected;
+//      telemetry[0]["temperature"] = random(18, 23);
+//      telemetry[0]["humidity"] = random(40, 60);
+//      telemetry[0]["co2"] = random(900, 1200);
+
+//      telemetry[0]["weight"] = weight; //Float
+//      telemetry[0]["tempIMU"] = temp; //Int
+      telemetry[0]["accX"] = accX * 1000; //Float
+      telemetry[0]["accY"] = accY * 1000; //Float
+      telemetry[0]["accZ"] = accZ * 1000; //Float
+//      telemetry[0]["gyroX"] = gyroX; //Float
+//      telemetry[0]["gyroY"] = gyroY; //Float
+//      telemetry[0]["gyroZ"] = gyroZ; //Float
+      telemetry[0]["keyswitch"] = keyswitchState; //BOOL
+      telemetry[0]["plug"] = plugState; //BOOL
+      telemetry[0]["Btn0_A"] = startBtnState; //BOOL
+      telemetry[0]["Btn0_B"] = resetBtnState; //BOOL
+      telemetry[0]["Btn1_A"] = batt1BtnState; //BOOL
+      telemetry[0]["Btn1_B"] = batt2BtnState; //BOOL
+      telemetry[0]["trialStarted"] = started; //BOOL
+//      telemetry[0]["trialTime"] = usecCount; //Float
+      telemetry[0]["trialTimeRemaining"] = timeLeft; //INT
+      telemetry[0]["Button_TS"] = TS_button;
+//      telemetry[0]["Key_TS"] = TS_key;
+//      telemetry[0]["Plug_TS"] = TS_plug;
+//      telemetry[0]["Batt1_TS"] = TS_batt1;
+//      telemetry[0]["Batt2_TS"] = TS_batt2;
+        telemetry[0]["cumForce"] = cumForce;
+//      telemetry[0]["trialPoints"] = ptsCollected; 
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
       Serial.println("Published on topic: " + topic);
+      Serial.printf("TimeRemaining: %d\n", timeLeft);
+      Serial.printf("M5Button Read Value: %d\n", startBtnState);
+//      Serial.printf("gyroX: %0.2f, gyroY: %0.2f, gyroZ: %0.2f", gyroX, gyroY, gyroZ);
+  //  Serial.printf("Key_TS: %d, Plug_TS: %d, Batt1_TS: %d, Batt2_TS: %d, Time: %d\n", TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
+
     }
   }
 
@@ -232,19 +256,22 @@ void loop()
     delay(1);
     if (startBtnState != BUTTON_OFF)
       countStart = 1;
+      startaccX = accX;
+      startaccY = accY;
+      startaccZ = accZ;
       digitalWrite(10, LOW); //turn on LED
-      Serial.println("Button Status: BtnA pressed");
+      Serial.println("Button Status: M5.BtnA pressed");
     delay(1);
   }
 
   //Stop Button Check
-  if (startBtnState != BUTTON_OFF && started == 1 && keyswitch == 1 && plug == 1 && batt1 == 1 && batt2 == 1)
+  if (stopBtnState != BUTTON_OFF && started == 1 && buttonPush == 1 && keyswitch == 1 && plug == 1 && batt1 == 1 && batt2 == 1)
   {
     delay(1);
-    if (startBtnState != BUTTON_OFF)
+    if (stopBtnState != BUTTON_OFF)
       countStart = 0;
       digitalWrite(10, HIGH); //turn off LED
-      Serial.println("Button Status: BtnA pressed STOP!");
+      Serial.println("Button Status: Red BtnB pressed STOP!");
     delay(1);
   }
 
@@ -258,6 +285,18 @@ void loop()
       Serial.println(TIMELIMIT);
       digitalWrite(10, HIGH); //turn off LED
     delay(1);
+  }
+
+  //Button Check TODO
+  if (buttonPushState != BUTTON_OFF && started == 1 && buttonPush == 0)
+  {
+    delay(1);
+    buttonPush = 1;
+    TS_button = usecCount;
+    digitalWrite(10, HIGH); //turn off LED when red button is pressed
+    delay(50);
+    digitalWrite(10, LOW); //turn on LED when red button is pressed
+    Serial.println("Button Status: Button pushed!");
   }
 
   //Keyswith Check
@@ -290,10 +329,13 @@ void loop()
     delay(1);
     batt1 = 1;
     TS_batt1 = usecCount;
+//    char TS_batt1_str[14];
+//    TS_batt1_str = display[0] +  ":" + display[1] + ":" + display[2];
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.println("Button Status: batt1 inserted!");
+//    Serial.println(TS_batt1_str);
   }
 
   //Battery Hole 2 Check
@@ -320,6 +362,7 @@ void loop()
   {
     timerAlarmDisable(interrupptTimer);
     started = 0;
+    buttonPush = 0;
     keyswitch = 0;
     plug = 0;
     batt1 = 0;
@@ -334,20 +377,24 @@ void loop()
     if (resetBtnState != BUTTON_OFF)
       Serial.println("Button Status: BtnB pressed");
       usecCount = 0;
+      TS_button = 0;
       TS_key = 0;
       TS_plug = 0;
       TS_batt1 = 0;
       TS_batt2 = 0;
       trialTime = 0;
       cumWeight = 0;
+      cumForce = 0;
       digitalWrite(10, HIGH); //turn off LED
     delay(1);
   }
 
-//  collect weight during trial
+  // collect weight during trial
   if (started == 1)
   {
     cumWeight = weight + cumWeight;
+    force = abs(accX - startaccX) + abs(accY - startaccY) + abs(accZ - startaccZ);  
+    cumForce = cumForce + force;
   }
  
   //count display
@@ -360,6 +407,7 @@ void loop()
   M5.Lcd.printf("Smart Task Board\n");
   M5.Lcd.printf("Wifi On:%d Status:%d\n", wifiEnabled, WiFi.status());
   M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
+  M5.Lcd.printf("%d BTN_1:%d TS:%d\n", buttonPush, buttonPushState, TS_button); 
   M5.Lcd.printf("%d KEY_L:%d TS:%d\n", keyswitch, keyswitchState, TS_key); 
   M5.Lcd.printf("%d USB_L:%d TS:%d\n", plug, plugState, TS_plug); 
   M5.Lcd.printf("%d BAT_1:%d TS:%d\n", batt1, batt1BtnState, TS_batt1); 
@@ -371,13 +419,14 @@ void loop()
   M5.Lcd.printf("%02d:",display[1]);
   M5.Lcd.printf("%03d:",display[2]);
   M5.Lcd.printf("%03d\n",display[3]);
-  M5.Lcd.printf("Force: %d, Total F: %0.2f\n", weight, cumWeight);
+//  M5.Lcd.printf("Weight: %d, Total W: %0.2f\n", weight, cumWeight);
+  M5.Lcd.printf("Force: %d, Total F: %0.2f\n", force, cumForce);
   M5.Lcd.printf("acX:%0.2f acY:%0.2f acZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
   M5.Lcd.printf("gyX:%0.2f gyY:%0.2f gyZ:%0.2f\n", gyroX, gyroY, gyroZ);
   //M5.Lcd.printf("%lu", usecCount);
   //M5.Lcd.printf("%d", timeLeft);
   //Serial.println(usecCount); //print out seconds to the serial monitor
-  Serial.printf("Key_TS: %d, Plug_TS: %d, Batt1_TS: %d, Batt2_TS: %d, Time: %d\n", TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
+//  Serial.printf("Key_TS: %d, Plug_TS: %d, Batt1_TS: %d, Batt2_TS: %d, Time: %d\n", TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
 
 //  delay(10); // delay for screen refresh NOTE: This directly affects performance of clock buttons
   //portEXIT_CRITICAL(&mutex);
@@ -389,11 +438,13 @@ void loop()
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.printf("\nHandling command message on topic: %s\n", topic);
 
-  DynamicJsonDocument doc(1023);
+//  DynamicJsonDocument doc(1023);
+  DynamicJsonDocument doc(2048);
   deserializeJson(doc, payload, length);
   JsonVariant json_var = doc.as<JsonVariant>();
 
-  DynamicJsonDocument commandResponse(1023);
+//  DynamicJsonDocument commandResponse(1023);
+  DynamicJsonDocument commandResponse(2048);
   for (int i = 0; i < json_var.size(); i++) {
     unsigned int command_id = json_var[i]["id"].as<unsigned int>();
     commandResponse.createNestedObject();
@@ -405,6 +456,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
   String responseTopic = "kp1/" + APP_VERSION + "/cex/" + TOKEN + "/result/SWITCH";
   client.publish(responseTopic.c_str(), commandResponse.as<String>().c_str());
   Serial.println("Published response to SWITCH command on topic: " + responseTopic);
+
+  // Receive and prase the payload
+  Serial.println("Payload: " + doc.as<String>()); //TODO troubleshoot
+//  if (remoteCmdFromKaa == 1) 
+//  {
+//    // start timer
+//    //TODO
+//  }
 }
 
 void setup_wifi() {
