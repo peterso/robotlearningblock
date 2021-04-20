@@ -228,15 +228,15 @@ void loop()
 //      telemetry[0]["Batt1BtnState"] = batt1BtnState; //BOOL
 //      telemetry[0]["Batt2BtnState"] = batt2BtnState; //BOOL
       telemetry[0]["trialStarted"] = started; //BOOL
-//      telemetry[0]["trialTime"] = usecCount; //Float
-      telemetry[0]["trialTimeRemaining"] = timeLeft; //INT
+      telemetry[0]["trialTime"] = usecCount; //Float
+//      telemetry[0]["trialTimeRemaining"] = timeLeft; //INT
       telemetry[0]["Button_TS"] = TS_button;
-//      telemetry[0]["Key_TS"] = TS_key;
-//      telemetry[0]["Plug_TS"] = TS_plug;
-//      telemetry[0]["Batt1_TS"] = TS_batt1;
-//      telemetry[0]["Batt2_TS"] = TS_batt2;
-        telemetry[0]["cumForce"] = cumForce;
-//      telemetry[0]["trialPoints"] = ptsCollected; 
+      telemetry[0]["Key_TS"] = TS_key;
+      telemetry[0]["Plug_TS"] = TS_plug;
+      telemetry[0]["Batt1_TS"] = TS_batt1;
+      telemetry[0]["Batt2_TS"] = TS_batt2;
+      telemetry[0]["cumForce"] = cumForce;
+      telemetry[0]["trialPoints"] = ptsCollected; 
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
