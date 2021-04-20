@@ -28,6 +28,11 @@ static unsigned long lastPublish = 0 - fiveSeconds;
 
 #define PROTOCOL_ID "MSRM_9999"
 #define TIMELIMIT 10  // Trial Time Limit in seconds
+#define PTS_BUTTON 1
+#define PTS_KEY 1
+#define PTS_PLUG 1
+#define PTS_BATT1 1
+#define PTS_BATT2 1
 #define BUTTON_ON 0
 #define BUTTON_OFF 1
 
@@ -61,11 +66,11 @@ int display[4] = {0};
 unsigned long trialTime = 0;
 int countStart = 0;
 int started = 0;
-int buttonPush = 0;
-int keyswitch = 0;
-int plug = 0;
-int batt1 = 0;
-int batt2 = 0;
+int buttonPushLatch = 0;
+int keyswitchLatch = 0;
+int plugLatch = 0;
+int batt1Latch = 0;
+int batt2Latch = 0;
 int timeLeft = 0;
 int ptsCollected = 0;
 
@@ -216,12 +221,12 @@ void loop()
 //      telemetry[0]["gyroX"] = gyroX; //Float
 //      telemetry[0]["gyroY"] = gyroY; //Float
 //      telemetry[0]["gyroZ"] = gyroZ; //Float
-      telemetry[0]["keyswitch"] = keyswitchState; //BOOL
-      telemetry[0]["plug"] = plugState; //BOOL
-      telemetry[0]["Btn0_A"] = startBtnState; //BOOL
-      telemetry[0]["Btn0_B"] = resetBtnState; //BOOL
-      telemetry[0]["Btn1_A"] = batt1BtnState; //BOOL
-      telemetry[0]["Btn1_B"] = batt2BtnState; //BOOL
+//      telemetry[0]["keyswitchState"] = keyswitchState; //BOOL
+//      telemetry[0]["plugState"] = plugState; //BOOL
+//      telemetry[0]["startButtonState"] = startBtnState; //BOOL
+//      telemetry[0]["resetButtonState"] = resetBtnState; //BOOL
+//      telemetry[0]["Batt1BtnState"] = batt1BtnState; //BOOL
+//      telemetry[0]["Batt2BtnState"] = batt2BtnState; //BOOL
       telemetry[0]["trialStarted"] = started; //BOOL
 //      telemetry[0]["trialTime"] = usecCount; //Float
       telemetry[0]["trialTimeRemaining"] = timeLeft; //INT
@@ -237,10 +242,6 @@ void loop()
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
       Serial.println("Published on topic: " + topic);
       Serial.printf("TimeRemaining: %d\n", timeLeft);
-      Serial.printf("M5Button Read Value: %d\n", startBtnState);
-//      Serial.printf("gyroX: %0.2f, gyroY: %0.2f, gyroZ: %0.2f", gyroX, gyroY, gyroZ);
-  //  Serial.printf("Key_TS: %d, Plug_TS: %d, Batt1_TS: %d, Batt2_TS: %d, Time: %d\n", TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
-
     }
   }
 
@@ -265,7 +266,7 @@ void loop()
   }
 
   //Stop Button Check
-  if (stopBtnState != BUTTON_OFF && started == 1 && buttonPush == 1 && keyswitch == 1 && plug == 1 && batt1 == 1 && batt2 == 1)
+  if (stopBtnState != BUTTON_OFF && started == 1 && buttonPushLatch == 1 && keyswitchLatch == 1 && plugLatch == 1 && batt1Latch == 1 && batt2Latch == 1)
   {
     delay(1);
     if (stopBtnState != BUTTON_OFF)
@@ -287,12 +288,13 @@ void loop()
     delay(1);
   }
 
-  //Button Check TODO
-  if (buttonPushState != BUTTON_OFF && started == 1 && buttonPush == 0)
+  //Button Check
+  if (buttonPushState != BUTTON_OFF && started == 1 && buttonPushLatch == 0)
   {
     delay(1);
-    buttonPush = 1;
+    buttonPushLatch = 1;
     TS_button = usecCount;
+    ptsCollected = ptsCollected + PTS_BUTTON;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
@@ -300,11 +302,12 @@ void loop()
   }
 
   //Keyswith Check
-  if (keyswitchState != BUTTON_OFF && started == 1 && keyswitch == 0)
+  if (keyswitchState != BUTTON_OFF && started == 1 && keyswitchLatch == 0)
   {
     delay(1);
-    keyswitch = 1;
+    keyswitchLatch = 1;
     TS_key = usecCount;
+    ptsCollected = ptsCollected + PTS_KEY;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
@@ -312,11 +315,12 @@ void loop()
   }
 
   //Plug Check
-  if (plugState != BUTTON_OFF && started == 1 && plug == 0)
+  if (plugState != BUTTON_OFF && started == 1 && plugLatch == 0)
   {
     delay(1);
-    plug = 1;
+    plugLatch = 1;
     TS_plug = usecCount;
+    ptsCollected = ptsCollected + PTS_PLUG;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
@@ -324,11 +328,12 @@ void loop()
   }
 
   //Battery Hole 1 Check
-  if (batt1BtnState != BUTTON_OFF && started == 1 && batt1 == 0)
+  if (batt1BtnState != BUTTON_OFF && started == 1 && batt1Latch == 0)
   {
     delay(1);
-    batt1 = 1;
+    batt1Latch = 1;
     TS_batt1 = usecCount;
+    ptsCollected = ptsCollected + PTS_BATT1;
 //    char TS_batt1_str[14];
 //    TS_batt1_str = display[0] +  ":" + display[1] + ":" + display[2];
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
@@ -339,11 +344,12 @@ void loop()
   }
 
   //Battery Hole 2 Check
-  if (batt2BtnState != BUTTON_OFF && started == 1 && batt2 == 0)
+  if (batt2BtnState != BUTTON_OFF && started == 1 && batt2Latch == 0)
   {
     delay(1);
-    batt2 = 1;
+    batt2Latch = 1;
     TS_batt2 = usecCount;
+    ptsCollected = ptsCollected + PTS_BATT2;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
@@ -362,11 +368,6 @@ void loop()
   {
     timerAlarmDisable(interrupptTimer);
     started = 0;
-    buttonPush = 0;
-    keyswitch = 0;
-    plug = 0;
-    batt1 = 0;
-    batt2 = 0;
     trialTime = usecCount;
   }
 
@@ -377,12 +378,18 @@ void loop()
     if (resetBtnState != BUTTON_OFF)
       Serial.println("Button Status: BtnB pressed");
       usecCount = 0;
+      buttonPushLatch = 0;
+      keyswitchLatch = 0;
+      plugLatch = 0;
+      batt1Latch = 0;
+      batt2Latch = 0;
       TS_button = 0;
       TS_key = 0;
       TS_plug = 0;
       TS_batt1 = 0;
       TS_batt2 = 0;
       trialTime = 0;
+      ptsCollected = 0;
       cumWeight = 0;
       cumForce = 0;
       digitalWrite(10, HIGH); //turn off LED
@@ -407,12 +414,12 @@ void loop()
   M5.Lcd.printf("Smart Task Board\n");
   M5.Lcd.printf("Wifi On:%d Status:%d\n", wifiEnabled, WiFi.status());
   M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
-  M5.Lcd.printf("%d BTN_1:%d TS:%d\n", buttonPush, buttonPushState, TS_button); 
-  M5.Lcd.printf("%d KEY_L:%d TS:%d\n", keyswitch, keyswitchState, TS_key); 
-  M5.Lcd.printf("%d USB_L:%d TS:%d\n", plug, plugState, TS_plug); 
-  M5.Lcd.printf("%d BAT_1:%d TS:%d\n", batt1, batt1BtnState, TS_batt1); 
-  M5.Lcd.printf("%d BAT_2:%d TS:%d\n", batt2, batt2BtnState, TS_batt2); 
-  M5.Lcd.printf("Started:%d Time Left: %d\n", started, timeLeft);
+  M5.Lcd.printf("%d BTN_1:%d TS:%d\n", buttonPushLatch, buttonPushState, TS_button); 
+  M5.Lcd.printf("%d KEY_L:%d TS:%d\n", keyswitchLatch, keyswitchState, TS_key); 
+  M5.Lcd.printf("%d USB_L:%d TS:%d\n", plugLatch, plugState, TS_plug); 
+  M5.Lcd.printf("%d BAT_1:%d TS:%d\n", batt1Latch, batt1BtnState, TS_batt1); 
+  M5.Lcd.printf("%d BAT_2:%d TS:%d\n", batt2Latch, batt2BtnState, TS_batt2); 
+  M5.Lcd.printf("Started:%d Time Left: %d Pts:%d\n", started, timeLeft, ptsCollected);
   M5.Lcd.printf("Trial Time:");
   M5.Lcd.printf(" m: s: ms: us\n");
   M5.Lcd.printf("%02d:",display[0]);
