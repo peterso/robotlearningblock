@@ -4,6 +4,7 @@
 // Default program will not connect to the internet.
 // To connect to wifi you will need to ensure the correct credentials are added to the secrets.h file.
 // Press and hold the M5 button while powering up the device to have the device try to connect to the online DB.
+// CAREFUL! Take care that the correct board library is used when flashing your board!
 
 //#include <M5StickC.h>
 #include <M5StickCPlus.h>
@@ -27,7 +28,7 @@ const unsigned long fiveSeconds = 1 * 5 * 1000UL;
 static unsigned long lastPublish = 0 - fiveSeconds;
 
 #define PROTOCOL_ID "MSRM_9999"
-#define TIMELIMIT 10  // Trial Time Limit in seconds
+#define TIMELIMIT 60  // Trial Time Limit in seconds
 #define PTS_BUTTON 1
 #define PTS_KEY 1
 #define PTS_PLUG 1
@@ -40,9 +41,10 @@ PortHub porthub;
 uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR};
 
 // Startup Settings
-int wifiEnabled = 1;
+int wifiEnabled = 0; 
 int scaleEnabled = 0;
 
+// Scale feature is disabled since there is a conflict in wiring as the M5stickc only has one grove port.
 //HX711 scale(33, 32);
 //HX711 scale(porthub.hub_d_read_value_B(4), porthub.hub_d_read_value_A(4));
 //HX711 scale(porthub.hub_a_read_value(4), 32);
@@ -111,15 +113,19 @@ void setup()
   M5.Lcd.setTextColor(WHITE);
   M5.Lcd.setTextSize(1);
 
-  if (!M5.BtnA.isPressed() == 0 || wifiEnabled == 1){ // Press and hold M5 Button during power up to enter Wifi Mode
+  if (!M5.BtnA.isPressed() == 1){ // Press and hold M5 Button during power up to enter LOCAL Mode
 //    M5.Lcd.print("ssid: %s\n", *ssid);
-    M5.Lcd.print("Connecting to wifi...");
+    M5.Lcd.print("Connecting to wifi...\n");
+    M5.Lcd.print("If unable to connect, power off and \n");
+    M5.Lcd.print("then on while holding M5 button");
     wifiEnabled = 1;
     
     // Setup wireless connection
     client.setServer(mqtt_server, 1883);
     client.setCallback(callback);
-  }
+  } else {
+      M5.Lcd.print("Booting Local Mode...");
+    }
 
   //GPIO setting  
   pinMode(10, OUTPUT);              //GPIO10 the builtin LED
@@ -185,7 +191,8 @@ void loop()
 //  startBtnState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
   startBtnState = !M5.BtnA.read(); 
   stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
-  resetBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
+  resetBtnState = !M5.BtnB.read();
+//  resetBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
   buttonPushState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
   keyswitchState = porthub.hub_d_read_value_A(HUB_ADDR[2]);
   plugState = porthub.hub_d_read_value_A(HUB_ADDR[3]);
@@ -215,9 +222,9 @@ void loop()
 
 //      telemetry[0]["weight"] = weight; //Float
 //      telemetry[0]["tempIMU"] = temp; //Int
-      telemetry[0]["accX"] = accX * 1000; //Float
-      telemetry[0]["accY"] = accY * 1000; //Float
-      telemetry[0]["accZ"] = accZ * 1000; //Float
+//      telemetry[0]["accX"] = accX * 1000; //Float
+//      telemetry[0]["accY"] = accY * 1000; //Float
+//      telemetry[0]["accZ"] = accZ * 1000; //Float
 //      telemetry[0]["gyroX"] = gyroX; //Float
 //      telemetry[0]["gyroY"] = gyroY; //Float
 //      telemetry[0]["gyroZ"] = gyroZ; //Float
@@ -230,13 +237,13 @@ void loop()
       telemetry[0]["trialStarted"] = started; //BOOL
       telemetry[0]["trialTime"] = usecCount; //Float
 //      telemetry[0]["trialTimeRemaining"] = timeLeft; //INT
-      telemetry[0]["Button_TS"] = TS_button;
-      telemetry[0]["Key_TS"] = TS_key;
-      telemetry[0]["Plug_TS"] = TS_plug;
-      telemetry[0]["Batt1_TS"] = TS_batt1;
-      telemetry[0]["Batt2_TS"] = TS_batt2;
-      telemetry[0]["cumForce"] = cumForce;
-      telemetry[0]["trialPoints"] = ptsCollected; 
+      telemetry[0]["Button_TS"] = TS_button; //INT
+      telemetry[0]["Key_TS"] = TS_key; //INT
+      telemetry[0]["Plug_TS"] = TS_plug; //INT
+      telemetry[0]["Batt1_TS"] = TS_batt1; //INT
+      telemetry[0]["Batt2_TS"] = TS_batt2; //INT
+      telemetry[0]["cumForce"] = cumForce;//Float
+      telemetry[0]["trialPoints"] = ptsCollected; //INT 
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
