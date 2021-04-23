@@ -28,7 +28,7 @@ const unsigned long fiveSeconds = 1 * 5 * 1000UL;
 static unsigned long lastPublish = 0 - fiveSeconds;
 
 #define PROTOCOL_ID "MSRM_9999"
-#define TIMELIMIT 60  // Trial Time Limit in seconds
+#define TIMELIMIT 10  // Trial Time Limit in seconds
 #define PTS_BUTTON 1
 #define PTS_KEY 1
 #define PTS_PLUG 1
@@ -123,8 +123,11 @@ void setup()
     // Setup wireless connection
     client.setServer(mqtt_server, 1883);
     client.setCallback(callback);
+    // Increase limit, this line fixed problem for my device
+    client.setBufferSize(8192);
   } else {
       M5.Lcd.print("Booting Local Mode...");
+      wifiEnabled = 0;
     }
 
   //GPIO setting  
@@ -214,7 +217,7 @@ void loop()
     {
       lastPublish += fiveSeconds;
 //      DynamicJsonDocument telemetry(1023);
-      DynamicJsonDocument telemetry(8048);
+      DynamicJsonDocument telemetry(8192);
       telemetry.createNestedObject();
 //      telemetry[0]["temperature"] = random(18, 23);
 //      telemetry[0]["humidity"] = random(40, 60);
@@ -222,18 +225,20 @@ void loop()
 
 //      telemetry[0]["weight"] = weight; //Float
 //      telemetry[0]["tempIMU"] = temp; //Int
-//      telemetry[0]["accX"] = accX * 1000; //Float
-//      telemetry[0]["accY"] = accY * 1000; //Float
-//      telemetry[0]["accZ"] = accZ * 1000; //Float
+      telemetry[0]["accX"] = accX * 1000; //Float
+      telemetry[0]["accY"] = accY * 1000; //Float
+      telemetry[0]["accZ"] = accZ * 1000; //Float
 //      telemetry[0]["gyroX"] = gyroX; //Float
 //      telemetry[0]["gyroY"] = gyroY; //Float
 //      telemetry[0]["gyroZ"] = gyroZ; //Float
-//      telemetry[0]["keyswitchState"] = keyswitchState; //BOOL
-//      telemetry[0]["plugState"] = plugState; //BOOL
-//      telemetry[0]["startButtonState"] = startBtnState; //BOOL
-//      telemetry[0]["resetButtonState"] = resetBtnState; //BOOL
-//      telemetry[0]["Batt1BtnState"] = batt1BtnState; //BOOL
-//      telemetry[0]["Batt2BtnState"] = batt2BtnState; //BOOL
+      telemetry[0]["keyswitchState"] = keyswitchState; //BOOL
+      telemetry[0]["plugState"] = plugState; //BOOL
+      telemetry[0]["startButtonState"] = startBtnState; //BOOL
+      telemetry[0]["resetButtonState"] = resetBtnState; //BOOL
+      telemetry[0]["pushButtonState"] = buttonPushState; // BOOL
+      telemetry[0]["stopButtonState"] = stopBtnState; // BOOL
+      telemetry[0]["Batt1BtnState"] = batt1BtnState; //BOOL
+      telemetry[0]["Batt2BtnState"] = batt2BtnState; //BOOL
       telemetry[0]["trialStarted"] = started; //BOOL
       telemetry[0]["trialTime"] = usecCount; //Float
 //      telemetry[0]["trialTimeRemaining"] = timeLeft; //INT
