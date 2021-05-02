@@ -496,7 +496,7 @@ void loop()
   M5.Lcd.printf("%03d:",display[2]);
   M5.Lcd.printf("%03d\n",display[3]);
 //  M5.Lcd.printf("Weight: %d, Total W: %0.2f\n", weight, cumWeight);
-  M5.Lcd.printf("Force: %d, Total F: %0.2f\n", force, cumForce);
+  M5.Lcd.printf("Total Force: %0.2f\n", cumForce);
   M5.Lcd.printf("acX:%0.2f acY:%0.2f acZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
   M5.Lcd.printf("gyX:%0.2f gyY:%0.2f gyZ:%0.2f\n", gyroX, gyroY, gyroZ);
   //M5.Lcd.printf("%lu", usecCount);
