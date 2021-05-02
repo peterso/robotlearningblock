@@ -10,6 +10,7 @@
 #include <M5StickCPlus.h>
 #include <Wire.h>
 #include "porthub.h"
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <PubSubClient.h>
@@ -75,6 +76,7 @@ int batt1Latch = 0;
 int batt2Latch = 0;
 int timeLeft = 0;
 int ptsCollected = 0;
+int kaaStartRequest = 0;
 
 int startBtnState = -1;
 int stopBtnState = -1;
@@ -114,11 +116,41 @@ void setup()
   M5.Lcd.setTextSize(1);
 
   if (!M5.BtnA.isPressed() == 1){ // Press and hold M5 Button during power up to enter LOCAL Mode
-//    M5.Lcd.print("ssid: %s\n", *ssid);
-    M5.Lcd.print("Connecting to wifi...\n");
+    //    M5.Lcd.print("ssid: %s\n", *ssid);
+    M5.Lcd.print("Attempting to connect to wifi...\n");
     M5.Lcd.print("If unable to connect, power off and \n");
-    M5.Lcd.print("then on while holding M5 button");
+    M5.Lcd.print("then on while holding M5 button\n");
+    M5.Lcd.print("to bypass and run locally only\n\n");
+    M5.Lcd.print("Try to configure new wifi credentials by\n");
+    M5.Lcd.print("connecting to AutoConnectAP-task-board\n");
+    M5.Lcd.print("then browse to 192.168.4.1 with your\n");
+    M5.Lcd.print("PC or phone to select new ssid\n");
+    M5.Lcd.print("and give new password\n");
     wifiEnabled = 1;
+    
+    //Wifi Manager Config START
+    WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
+  
+    //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
+    WiFiManager wm;
+  
+    //reset settings - wipe credentials for testing
+    //wm.resetSettings();
+  
+    bool res;
+    // res = wm.autoConnect(); // auto generated AP name from chipid
+    // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
+    res = wm.autoConnect("AutoConnectAP-task-board","password"); // password protected ap
+  
+    if(!res) {
+        Serial.println("Failed to connect");
+        // ESP.restart();
+    } 
+    else {
+        //if you get here you have connected to the WiFi    
+        Serial.println("connected...yeey :)");
+    }
+    //Wifi Manager Config END
     
     // Setup wireless connection
     client.setServer(mqtt_server, 1883);
@@ -192,13 +224,20 @@ void loop()
 
   // PbHub Module
 //  startBtnState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
-  startBtnState = !M5.BtnA.read(); 
+  if (kaaStartRequest == 0)
+    {
+      startBtnState = !M5.BtnA.read();
+    };
+  if (kaaStartRequest == 1)
+    {
+      startBtnState = kaaStartRequest;
+    } 
   stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
   resetBtnState = !M5.BtnB.read();
 //  resetBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
   buttonPushState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
-  keyswitchState = porthub.hub_d_read_value_A(HUB_ADDR[2]);
-  plugState = porthub.hub_d_read_value_A(HUB_ADDR[3]);
+  keyswitchState = porthub.hub_d_read_value_A(HUB_ADDR[3]);
+  plugState = porthub.hub_d_read_value_A(HUB_ADDR[2]);
   batt1BtnState = porthub.hub_d_read_value_A(HUB_ADDR[1]);
   batt2BtnState = porthub.hub_d_read_value_B(HUB_ADDR[1]);
 
@@ -253,7 +292,7 @@ void loop()
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
       Serial.println("Published on topic: " + topic);
-      Serial.printf("TimeRemaining: %d\n", timeLeft);
+//      Serial.printf("TimeRemaining: %d\n", timeLeft);
     }
   }
 
@@ -262,6 +301,26 @@ void loop()
   display[2] = (int)((usecCount % 1000000) / 1000);
   display[1] = (int)((usecCount / 1000000) % 60);
   display[0] = (int)((usecCount / 60000000) % 3600);
+
+
+  //Kaa Remote Switch
+  //DEBUG this is not getting set by the callback function...
+  if (kaaStartRequest == 1) 
+  {
+    Serial.println("kaaStartRequested!");
+    startBtnState == BUTTON_ON;
+    kaaStartRequest = 0;
+    //DEBUG blink 3x if this is triggered properly
+    digitalWrite(10, LOW); //turn on LED when red button is pressed
+    delay(50);
+    digitalWrite(10, HIGH); //turn off LED when red button is pressed
+    digitalWrite(10, LOW); //turn on LED when red button is pressed
+    delay(50);
+    digitalWrite(10, HIGH); //turn off LED when red button is pressed
+    digitalWrite(10, LOW); //turn on LED when red button is pressed
+    delay(50);
+    digitalWrite(10, HIGH); //turn off LED when red button is pressed
+  }
   
   //Start Button Check
   if (startBtnState != BUTTON_OFF && started == 0 && plugState == 1 && keyswitchState == 1)
@@ -273,7 +332,7 @@ void loop()
       startaccY = accY;
       startaccZ = accZ;
       digitalWrite(10, LOW); //turn on LED
-      Serial.println("Button Status: M5.BtnA pressed");
+      Serial.println("Board Status: M5.BtnA pressed");
     delay(1);
   }
 
@@ -284,7 +343,7 @@ void loop()
     if (stopBtnState != BUTTON_OFF)
       countStart = 0;
       digitalWrite(10, HIGH); //turn off LED
-      Serial.println("Button Status: Red BtnB pressed STOP!");
+      Serial.println("Board Status: Red BtnB pressed STOP!");
     delay(1);
   }
 
@@ -310,7 +369,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Button Status: Button pushed!");
+    Serial.println("Board Status: Button pushed!");
   }
 
   //Keyswith Check
@@ -323,7 +382,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Button Status: Key switched!");
+    Serial.println("Board Status: Key switched!");
   }
 
   //Plug Check
@@ -336,7 +395,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Button Status: plug seated!");
+    Serial.println("Board Status: plug seated!");
   }
 
   //Battery Hole 1 Check
@@ -346,12 +405,10 @@ void loop()
     batt1Latch = 1;
     TS_batt1 = usecCount;
     ptsCollected = ptsCollected + PTS_BATT1;
-//    char TS_batt1_str[14];
-//    TS_batt1_str = display[0] +  ":" + display[1] + ":" + display[2];
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Button Status: batt1 inserted!");
+    Serial.println("Board Status: batt1 inserted!");
 //    Serial.println(TS_batt1_str);
   }
 
@@ -365,7 +422,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Button Status: batt2 inserted!");
+    Serial.println("Board Status: batt2 inserted!");
   }
 
   //Time Count  Start
@@ -388,7 +445,7 @@ void loop()
   {
     delay(1);
     if (resetBtnState != BUTTON_OFF)
-      Serial.println("Button Status: BtnB pressed");
+      Serial.println("Board Status: BtnB pressed");
       usecCount = 0;
       buttonPushLatch = 0;
       keyswitchLatch = 0;
@@ -428,7 +485,7 @@ void loop()
   M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
   M5.Lcd.printf("%d BTN_1:%d TS:%d\n", buttonPushLatch, buttonPushState, TS_button); 
   M5.Lcd.printf("%d KEY_L:%d TS:%d\n", keyswitchLatch, keyswitchState, TS_key); 
-  M5.Lcd.printf("%d USB_L:%d TS:%d\n", plugLatch, plugState, TS_plug); 
+  M5.Lcd.printf("%d ETH_L:%d TS:%d\n", plugLatch, plugState, TS_plug); 
   M5.Lcd.printf("%d BAT_1:%d TS:%d\n", batt1Latch, batt1BtnState, TS_batt1); 
   M5.Lcd.printf("%d BAT_2:%d TS:%d\n", batt2Latch, batt2BtnState, TS_batt2); 
   M5.Lcd.printf("Started:%d Time Left: %d Pts:%d\n", started, timeLeft, ptsCollected);
@@ -461,7 +518,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
   DynamicJsonDocument doc(2048);
   deserializeJson(doc, payload, length);
   JsonVariant json_var = doc.as<JsonVariant>();
-
+  
+  Serial.println("kaaStartRequest received!");
+  kaaStartRequest == 1; //somehow this doesn't have any effect outside of this function...
+  digitalWrite(10, LOW); //turn on LED when red button is pressed
+  delay(50);
+  digitalWrite(10, HIGH); //turn off LED when red button is pressed
+  
 //  DynamicJsonDocument commandResponse(1023);
   DynamicJsonDocument commandResponse(2048);
   for (int i = 0; i < json_var.size(); i++) {
