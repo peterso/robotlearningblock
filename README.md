@@ -3,7 +3,6 @@ Repo for smart busy block for developing and evaluating robot manipulation skill
 
 The goal of the project is to provide an objective tool for measuring manipulation performance for both humans and robots. The microcontroller on the task box monitors the state of the mounted manipulation elements and records state change events and accelerometer readings to a cloud-hosted dashboard to aggregate performance data.
 
-
 An example demonstration of usage of the connected task board can be viewed on [youtube](https://youtu.be/LJFTypNZrFs).
 
 Below is a table of important stastics that can be collected using the connected task board.
@@ -17,6 +16,34 @@ TaskBoard-001   Protocol-001    012             pso         Panda-OTS   53sec   
 
 ![RobotSetupExample.png](/assets/images/RobotSetupExample.png)
 
+### Quick Start
+1. Plug in board to USB to charge.
+
+	1.1 Power On = Hold Left button (of M5) on 2sec, Power Off = Hold Left button 6sec
+
+	1.2 Reset Trial = Press Right button (of M5)
+
+2. Connect board to WiFi
+
+	2.1 Connect to Task Board SSID: “AutoConnectAP-task-board”
+
+	2.2 Open web browser and go to URL: “192.168.4.1”
+
+	2.3 Click ”Configure” button
+
+	2.4 Select Desired WiFi from scanned list
+
+	2.5 Enter WiFi password
+
+	2.6 Click “Save” Button. Board will attempt to connect to new WiFi and present Trial Start Screen after successful connection. 
+
+3. Begin using task board!
+
+	3.1 Ensure the task board components are on their starting position prior to starting.
+
+	3.2 Press M5 Button to Start trial!
+
+
 ### Core Features
 
 The core features of the microcontroller are:
@@ -25,6 +52,7 @@ The core features of the microcontroller are:
 - [Done] user can start a trial using the device without internet connection
 - [Done] task board reports the timestamps for each successful task interaction trial over USB
 - [Done] report the stae of the task box over wifi to the [Kaa internet dashboard](https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/) 
+- [Done] setup wifi greeter to allow user to supply own wifi ssid and password
 - [TODO] report the load cell readings on the task box surface
 - [TODO] report the state of the task box over USB
 - [TODO] device has a digital twin that can be represented in a robot simulator
