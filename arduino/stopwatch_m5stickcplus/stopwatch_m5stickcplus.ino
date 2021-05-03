@@ -28,8 +28,9 @@ const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you s
 const unsigned long fiveSeconds = 1 * 5 * 1000UL;
 static unsigned long lastPublish = 0 - fiveSeconds;
 
-#define PROTOCOL_ID "MSRM_9999"
-#define TIMELIMIT 10  // Trial Time Limit in seconds
+#define PROTOCOL_ID "MSRM_100"
+#define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
+
 #define PTS_BUTTON 1
 #define PTS_KEY 1
 #define PTS_PLUG 1
@@ -348,7 +349,8 @@ void loop()
   }
 
   //Time Limit Check
-  timeLeft = round(TIMELIMIT - display[1]);
+//  timeLeft = round(TIMELIMIT - display[1]);
+  timeLeft = round(TIMELIMIT - usecCount/1000000);
   if (started == 1 && timeLeft <= 0) //TODO VERIFY THIS
   {
     delay(1);
