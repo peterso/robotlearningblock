@@ -507,7 +507,7 @@ void loop()
   M5.Lcd.printf("Total Force: %0.2f\n", cumForce);
   M5.Lcd.printf("acX:%0.2f acY:%0.2f acZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
   M5.Lcd.printf("gyX:%0.2f gyY:%0.2f gyZ:%0.2f\n", gyroX, gyroY, gyroZ);
-  M5.Lcd.printf("OTA worked!");
+  M5.Lcd.printf("OTA worked! v0.0.4");
   //M5.Lcd.printf("%lu", usecCount);
   //M5.Lcd.printf("%d", timeLeft);
   //Serial.println(usecCount); //print out seconds to the serial monitor
@@ -630,7 +630,7 @@ void subscribeToCommand() {
 //OTA Functions from Kaa
 void reportCurrentFirmwareVersion() {
   String reportTopic = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/applied/json";
-  String reportPayload = "{\"configId\":\"0.0.1\"}"; //UPDATE this to match the OTA upgradeable from field on Kaa
+  String reportPayload = "{\"configId\":\"0.0.4\"}"; //UPDATE this to match the OTA upgradeable from field on Kaa
   Serial.println("Reporting current firmware version on topic: " + reportTopic + " and payload: " + reportPayload);
   client.publish(reportTopic.c_str(), reportPayload.c_str());
 }
