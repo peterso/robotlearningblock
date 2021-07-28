@@ -19,12 +19,15 @@
 #include "secrets.h"
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
-#include "hx711.h" // disabled until a solution can be found to filter the noise
 //#include "kaa.h"
 
-// Startup Settings
-//NONE
+// USER CONFIGURABLE SETTINGS
+#define PROTOCOL_ID "MSRM_100"
+#define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
 
+
+//////// SYSTEM SETTINGS /////////
+// DO NOT CHANGE SETTINGS BELOW //
 const char* ssid = SECRET_SSID;                   // WiFi name
 const char* password = SECRET_PASSWORD;           // WiFi password
 const char* mqtt_server = "mqtt.cloud.kaaiot.com";
@@ -33,9 +36,6 @@ const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you s
 
 const unsigned long fiveSeconds = 1 * 5 * 1000UL;
 static unsigned long lastPublish = 0 - fiveSeconds;
-
-#define PROTOCOL_ID "MSRM_100"
-#define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
 
 #define PTS_BUTTON 1
 #define PTS_KEY 1
@@ -94,6 +94,12 @@ int keyswitchState = -1;
 int plugState = -1;
 int batt1BtnState = -1;
 int batt2BtnState = -1;
+int buttonPushState_old = -1;
+int stopBtnState_old = -1;
+int keyswitchState_old = -1;
+int plugState_old = -1;
+int batt1BtnState_old = -1;
+int batt2BtnState_old = -1;
 
 int TS_button = 0;
 int TS_key = 0;
@@ -226,8 +232,8 @@ void loop()
   resetBtnState = !M5.BtnB.read();
 
   // Read from PbHub Module
-  stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
   buttonPushState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
+  stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
   keyswitchState = porthub.hub_d_read_value_A(HUB_ADDR[2]);
   plugState = porthub.hub_d_read_value_A(HUB_ADDR[3]);
   batt1BtnState = porthub.hub_d_read_value_A(HUB_ADDR[1]);
@@ -239,10 +245,11 @@ void loop()
     if (!client.connected()) {
       reconnect();
     }
+    //client.loop(); //SUSPICIOUS if this is really needed... causes irregular loop execution speeds
 
-    // Reporting logic
+    // Reporting logic to remote server
     unsigned long now = millis();
-    if (now - lastPublish >= fiveSeconds) 
+    if (now - lastPublish >= fiveSeconds) // publish to topic every 5 seconds
     {
       lastPublish += fiveSeconds;
       DynamicJsonDocument telemetry(8192); // increased from 1023
@@ -251,9 +258,9 @@ void loop()
       telemetry[0]["accX"] = accX * 1000; //Float
       telemetry[0]["accY"] = accY * 1000; //Float
       telemetry[0]["accZ"] = accZ * 1000; //Float
-      //telemetry[0]["gyroX"] = gyroX; //Float
-      //telemetry[0]["gyroY"] = gyroY; //Float
-      //telemetry[0]["gyroZ"] = gyroZ; //Float
+      telemetry[0]["gyroX"] = gyroX; //Float
+      telemetry[0]["gyroY"] = gyroY; //Float
+      telemetry[0]["gyroZ"] = gyroZ; //Float
       telemetry[0]["keyswitchState"] = keyswitchState; //BOOL
       telemetry[0]["plugState"] = plugState; //BOOL
       telemetry[0]["startButtonState"] = startBtnState; //BOOL
@@ -275,8 +282,6 @@ void loop()
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
       Serial.println("Published on topic: " + topic);
-
-      client.loop(); //SUSPICIOUS if this is really needed... causes irregular loop execution speeds
     }
   }
 
@@ -296,7 +301,7 @@ void loop()
       startaccY = accY;
       startaccZ = accZ;
       digitalWrite(10, LOW); //turn on LED
-      Serial.println("Board Status: M5.BtnA pressed");
+      Serial.println("Trial Status: M5.BtnA pressed, Trial Stated!");
     delay(1);
   }
 
@@ -307,7 +312,7 @@ void loop()
     if (stopBtnState != BUTTON_OFF)
       countStart = 0;
       digitalWrite(10, HIGH); //turn off LED
-      Serial.println("Board Status: Red BtnB pressed STOP!");
+      Serial.println("Trial Status: Red Button pressed, Trial Stopped!");
     delay(1);
   }
 
@@ -317,7 +322,7 @@ void loop()
   {
     delay(1);
       countStart = 0;
-      Serial.print("Time's Up! Trial Time Limit: ");
+      Serial.print("Trial Status: Time's Up! Trial Time Limit: ");
       Serial.println(TIMELIMIT);
       digitalWrite(10, HIGH); //turn off LED
     delay(1);
@@ -333,7 +338,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Board Status: Button pushed!");
+    Serial.println("Trial Status: Button pushed!");
   }
 
   //Keyswith Check
@@ -346,7 +351,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Board Status: Key switched!");
+    Serial.println("Trial Status: Key switched!");
   }
 
   //Plug Check
@@ -359,7 +364,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Board Status: plug seated!");
+    Serial.println("Trial Status: plug seated!");
   }
 
   //Battery Hole 1 Check
@@ -372,7 +377,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Board Status: batt1 inserted!");
+    Serial.println("Trial Status: batt1 inserted!");
   }
 
   //Battery Hole 2 Check
@@ -385,7 +390,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Board Status: batt2 inserted!");
+    Serial.println("Trial Status: batt2 inserted!");
   }
 
   //Time Count Start
@@ -408,7 +413,7 @@ void loop()
   {
     delay(1);
     if (resetBtnState != BUTTON_OFF)
-      Serial.println("Board Status: BtnB pressed");
+      Serial.println("Trial Status: Trial Reset pressed");
       usecCount = 0;
       buttonPushLatch = 0;
       keyswitchLatch = 0;
@@ -433,7 +438,27 @@ void loop()
     force = abs(accX - startaccX) + abs(accY - startaccY) + abs(accZ - startaccZ);  
     cumForce = cumForce + force;
   }
- 
+
+  // Report task board changes to Serial
+  if (buttonPushState == 0 && buttonPushState != buttonPushState_old){Serial.println("Blue Push Button Pressed");};
+  if (buttonPushState == 1 && buttonPushState != buttonPushState_old){Serial.println("Blue Push Button Released");};
+  buttonPushState_old = buttonPushState; // store current value
+  if (stopBtnState == 0 && stopBtnState != stopBtnState_old){Serial.println("Red Push Button Pressed");};
+  if (stopBtnState == 1 && stopBtnState != stopBtnState_old){Serial.println("Red Push Button Released");};
+  stopBtnState_old = stopBtnState; // store current value
+  if (keyswitchState == 0 && keyswitchState != keyswitchState_old){Serial.println("Key Switch Closed");};
+  if (keyswitchState == 1 && keyswitchState != keyswitchState_old){Serial.println("Key Switch Opened");};
+  keyswitchState_old = keyswitchState; // store current value
+  if (plugState == 0 && plugState != plugState_old){Serial.println("Plug Switch Closed");};
+  if (plugState == 1 && plugState != plugState_old){Serial.println("Plug Switch Opened");};
+  plugState_old = plugState; // store current value
+  if (batt1BtnState == 0 && batt1BtnState != batt1BtnState_old){Serial.println("Batt1 Button Pressed");};
+  if (batt1BtnState == 1 && batt1BtnState != batt1BtnState_old){Serial.println("Batt1 Button Released");};
+  batt1BtnState_old = batt1BtnState; // store current value
+  if (batt2BtnState == 0 && batt2BtnState != batt2BtnState_old){Serial.println("Batt2 Button Pressed");};
+  if (batt2BtnState == 1 && batt2BtnState != batt2BtnState_old){Serial.println("Batt2 Button Released");};
+  batt2BtnState_old = batt2BtnState; // store current value
+  
   // update display
   M5.Lcd.setRotation(3);
   M5.Lcd.fillScreen(BLACK);
