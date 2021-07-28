@@ -71,7 +71,7 @@ The core features of the microcontroller are:
 - [Done] report the stae of the task box over wifi to the [Kaa internet dashboard](https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/) 
 - [Done] setup wifi greeter to allow user to supply own wifi ssid and password
 - [TODO] report the load cell readings on the task box surface
-- [TODO] report the state of the task box over USB
+- [Done] report the state of the task box over USB
 - [TODO] device has a digital twin that can be represented in a robot simulator
 - [TODO] task board reports are integrated into a Microsoft Azure IoT dashboard
 
