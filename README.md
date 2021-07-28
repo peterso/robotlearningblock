@@ -5,7 +5,7 @@ The goal of the project is to provide an objective tool for measuring manipulati
 
 An example demonstration of usage of the connected task board can be viewed on [youtube](https://youtu.be/LJFTypNZrFs).
 
-The device was featured during an internationl robot manipulation competition, [Robothon Grand Challenge](www.robothon-grand-challenge.com).
+The device was featured during an internationl robot manipulation competition, [Robothon Grand Challenge](https://www.robothon-grand-challenge.com).
 
 Below is a table of important stastics that can be collected using the connected task board.
 
@@ -51,6 +51,8 @@ The agent under task, robot or human, can then proceed to complete the 5 sub tas
 
 ### Usage 
 The task board is designed to capture manipulation performance for use in the Robothon Grand Challenge. The microcontroller tracks users overall trial completion time, intermediate sub-task completion times, earned trial points, and cumulative interaction force. Performance trials are initiated by the user after restoring the components to their start configuration and then pressing the M5 button. A countdown timer ends trial attempts after 10 minutes. When the task board is connected to the internet, the microcontroller publishes the latest and ongoing trial data every 5 seconds to a remote cloud server. An interactive web dashboard renders the trial data from the task board to provide transparent, remote observability into performance trials. Trials end when the countdown timer expires or when all sub-tasks are completed and the user presses the red stop button. Final trial results are displayed on the task board LED display and on the web dashbaord.
+
+View the task board web dashboard at this URL: https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/ 
 
 ![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
 
