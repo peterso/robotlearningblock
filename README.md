@@ -54,7 +54,12 @@ The task board is designed to capture manipulation performance for use in the Ro
 
 View the task board web dashboard at this URL: https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/ 
 
+A publicly viewable version of the dashboard is available to view any of the released task boards here: https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad
+
 ![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
+
+![ManualTrialRun](/assets/gifs/manual_trial_run.gif)
+![InitializeTaskBoard](/assets/gifs/pickup_and_place_tb.gif)
 
 ### Core Features
 
