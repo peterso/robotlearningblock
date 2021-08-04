@@ -643,11 +643,23 @@ void loop()
 //      get_magnetometer(&magnetometerX, &magnetometerY, &magnetometerZ);
 
       sprintf_s(msgText, sizeof(msgText),
-                "{\"Temperature\":%.2f,\"Humidity\":%.2f,\"AmbientLight\":%.2f,\
-                \"Pitch\":%d,\"Roll\":%d,\"Pressure\":%.2f,\"Altitude\":%.2f,\
-                \"MagnetometerX\":%d,\"MagnetometerY\":%d,\"MagnetometerZ\":%d}",
-                temp, temp, temp, pitch, roll, accZ, temp,
-                accX, accY, accZ);
+                "{\"accX\":%.2f,\"accY\":%.2f,\"accZ\":%.2f,\
+                \"gyroX\":%.2f,\"gyroY\":%.2f,\"gyroZ\":%.2f,\
+                \"keyswitchState\":%d,\"plugState\":%d,\"startButtonState\":%d,\"resetButtonState\":%d,\
+                \"pushButtonState\":%d,\"stopButtonState\":%d,\"Batt1BtnState\":%d,\"Batt2BtnState\":%d,\
+                \"trialTime\":%d,\"cumForce\":%.2f,\"trialPoints\":%d}",
+                accX, accY, accZ, 
+                gyroX, gyroY, gyroZ, 
+                keyswitchState, plugState, startBtnState, resetBtnState,
+                buttonPushState, stopBtnState, batt1BtnState, batt2BtnState,
+                usecCount, cumForce, ptsCollected);
+                
+//       sprintf_s(msgText, sizeof(msgText),
+//                "{\"Temperature\":%.2f,\"Humidity\":%.2f,\"AmbientLight\":%.2f,\
+//                \"Pitch\":%d,\"Roll\":%d,\"Pressure\":%.2f,\"Altitude\":%.2f,\
+//                \"MagnetometerX\":%d,\"MagnetometerY\":%d,\"MagnetometerZ\":%d}",
+//                temp, temp, temp, pitch, roll, accZ, temp,
+//                accX, accY, accZ);
 
 //      sprintf_s(msgText, sizeof(msgText),
 //                "{\"Temperature\":%.2f,\"Humidity\":%.2f,\"AmbientLight\":%.2f,\
