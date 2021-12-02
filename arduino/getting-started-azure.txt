@@ -1,0 +1,17 @@
+Getting Started Azure 
+
+Devices need to be setup on Azure IoT Central before they can send telemetry data to Azure. Each registered device has a unique Device Name and Device ID assigned. 
+
+Verify your setup.
+1. Plug in the Azure Task Board and ensure it is connected to the internet.
+2. Check the data is being rendered on Azure IoT Central by browsing to the "Task Board Robothon 2021". 
+	https://msrm-connected-taskboards.azureiotcentral.com/dashboards/urn%3AhomepageView%3At5p7ozvr
+3. Check the task board is publishing data to the dashboard. Keep in mind the task board needs time to send data and the dashboard also needs time to process and render. Expect to check every 60secs after making any changes. 
+
+IMPORTANT NOTES:
+ - When logging into the Azure portal use your <user>@tumcsp.onmicrosoft.com account.
+ - Loading the firmware (stopwatch_azure-iotc/minimal_device_adapter/device/device.ino) has only been successful with the Arduino IDE. Visual Studio Code has broken dependencies with working with the M5Stack libraries. 
+
+How to simulate a device on your local PC (TODO)
+
+How to install firmware on a brand new microprocessor device (TODO)

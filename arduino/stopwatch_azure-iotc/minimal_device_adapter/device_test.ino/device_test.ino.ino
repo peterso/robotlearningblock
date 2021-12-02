@@ -646,12 +646,14 @@ void loop()
                 "{\"accX\":%.2f,\"accY\":%.2f,\"accZ\":%.2f,\
                 \"gyroX\":%.2f,\"gyroY\":%.2f,\"gyroZ\":%.2f,\
                 \"keyswitchState\":%d,\"plugState\":%d,\"startButtonState\":%d,\"resetButtonState\":%d,\
-                \"pushButtonState\":%d,\"stopButtonState\":%d,\"Batt1BtnState\":%d,\"Batt2BtnState\":%d,\
-                \"trialTime\":%d,\"cumForce\":%.2f,\"trialPoints\":%d}",
+                \"pushButtonState\":%d,\"stopButtonState\":%d,\"batt1BtnState\":%d,\"batt2BtnState\":%d,\
+                \"TS_button\":%d,\"TS_key\":%d,\"TS_plug\":%d,\"TS_batt1\":%d,\"TS_batt2\":%d,\
+                \"trialTime\":%d,\"cumForce\":%.2f,\"ptsCollected\":%d}",
                 accX, accY, accZ, 
                 gyroX, gyroY, gyroZ, 
                 keyswitchState, plugState, startBtnState, resetBtnState,
                 buttonPushState, stopBtnState, batt1BtnState, batt2BtnState,
+                TS_button, TS_key, TS_plug, TS_batt1, TS_batt2,
                 usecCount, cumForce, ptsCollected);
                 
 //       sprintf_s(msgText, sizeof(msgText),
