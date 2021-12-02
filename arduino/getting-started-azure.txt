@@ -11,6 +11,7 @@ Verify your setup.
 IMPORTANT NOTES:
  - When logging into the Azure portal use your <user>@tumcsp.onmicrosoft.com account.
  - Loading the firmware (stopwatch_azure-iotc/minimal_device_adapter/device_test/device_test.ino) has only been successful with the Arduino IDE. Visual Studio Code has broken dependencies with working with the M5Stack libraries. 
+ - Device data is stored long term in a blob storage under the iot-task-board resource group. https://portal.azure.com/#blade/Microsoft_Azure_Storage/ContainerMenuBlade/overview/storageAccountId/%2Fsubscriptions%2F8c33ed00-a1f1-4e90-a4ad-1372ebdebbb1%2Fresourcegroups%2Fiot-task-boards%2Fproviders%2FMicrosoft.Storage%2FstorageAccounts%2Ftaskboardblobstorage/path/taskboard-data/etag/%220x8D9B5AB33519752%22/defaultEncryptionScope/%24account-encryption-key/denyEncryptionScopeOverride//defaultId//publicAccessVal/None
 
 How to simulate a device on your local PC (TODO)
 
