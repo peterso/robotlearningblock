@@ -72,8 +72,9 @@ The core features of the microcontroller are:
 - [Done] setup wifi greeter to allow user to supply own wifi ssid and password
 - [TODO] report the load cell readings on the task box surface
 - [Done] report the state of the task box over USB
-- [TODO] device has a digital twin that can be represented in a robot simulator
-- [TODO] task board reports are integrated into a Microsoft Azure IoT dashboard
+- [TODO] device has a digital twin that can be represented in a robot simulator i.e. RViz
+- [Done] task board reports are integrated into a Microsoft Azure IoT dashboard
+- [TODO] integrate bluetooth power meter into task board telemetry
 
 ### System Architecture
 
@@ -90,6 +91,7 @@ Each task board is equipped with a microcontroller to monitor its state. Task bo
 - CAD Design [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)
 - Assembly Drawing [PDF](https://drive.google.com/file/d/1hJSEHZe9U0Q7VRQKNKOsz96tIN9Y0mhF/view?usp=sharing)
 - Wiring Diagram [Link](/assets/images/TaskBoard-5Level-Wiring.png)
+- Task Board Assembly Instructions [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)
 
 ### Deployment
 The initial task boards will be equipped with two microcontrollers to read and send the sensors and report them to the internet dashboard. The reason for this is the weigh module and pbhub units are compatible to run on a single m5stickc board as they both need to be connected to the single grove port. 

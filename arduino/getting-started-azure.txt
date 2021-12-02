@@ -10,8 +10,9 @@ Verify your setup.
 
 IMPORTANT NOTES:
  - When logging into the Azure portal use your <user>@tumcsp.onmicrosoft.com account.
- - Loading the firmware (stopwatch_azure-iotc/minimal_device_adapter/device/device.ino) has only been successful with the Arduino IDE. Visual Studio Code has broken dependencies with working with the M5Stack libraries. 
+ - Loading the firmware (stopwatch_azure-iotc/minimal_device_adapter/device_test/device_test.ino) has only been successful with the Arduino IDE. Visual Studio Code has broken dependencies with working with the M5Stack libraries. 
 
 How to simulate a device on your local PC (TODO)
 
 How to install firmware on a brand new microprocessor device (TODO)
+- You will need to update the connection string on the device firmware to match the Device ID and the Shared Access Key from Azure IOT Central when creating a new device.
