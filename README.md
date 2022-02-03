@@ -60,6 +60,7 @@ A publicly viewable version of the dashboard is available to view any of the rel
 
 ![ManualTrialRun](/assets/gifs/manual_trial_run.gif)
 ![InitializeTaskBoard](/assets/gifs/pickup_and_place_tb.gif)
+![AzureDashboard](/assets/gifs/Robothon2021-TaskBoardDemo-AzureIOTC.gif)
 
 ### Core Features
 
