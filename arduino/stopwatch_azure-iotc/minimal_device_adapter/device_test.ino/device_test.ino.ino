@@ -2,7 +2,8 @@
  * Azure IoT Central example for esp32-azure-kit adapted by pso.
  */
 
-#include <M5StickCPlus.h>
+//#include <M5StickCPlus.h>
+#include <M5StickC.h>
 #include "src/porthub.h"
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include "src/secrets.h"
@@ -12,12 +13,18 @@
 #include "src/parson.h"
 #include "src/sensor_manager.h"
 #include "src/led.h"
+//#include "src/hx711.h" //include load cell (loadcell) library
+
 
 #define TELEMETRY_INTERVAL 1000
 
 /*String containing Hostname, Device Id & Device Key in the format:                         */
 // handcrafted connection string
-static const char *connectionString = "HostName=iotc-111c2522-561d-4f03-9267-9c169ad02fe9.azure-devices.net;DeviceId=kresimir-hand-holding;SharedAccessKey=2zqujYgAegVVflrSQuuF7Nn75Cs9CQxU0i12SIx2vG0=";
+// NOTE: To commission a new device, update the DeviceID and SharedAccessKey in the connection string here.
+// https://msrm-connected-taskboards.azureiotcentral.com/devices/details/kresimir-hand-holding/rawdata 
+//static const char *connectionString = "HostName=iotc-111c2522-561d-4f03-9267-9c169ad02fe9.azure-devices.net;DeviceId=kresimir-hand-holding;SharedAccessKey=2zqujYgAegVVflrSQuuF7Nn75Cs9CQxU0i12SIx2vG0=";
+//static const char *connectionString = "HostName=iotc-111c2522-561d-4f03-9267-9c169ad02fe9.azure-devices.net;DeviceId=zk8s8ih1k1;SharedAccessKey=qJ6BYHNE7ECnqm5KA6+UeUO7WTYfD43EganzpsjWNWo=";
+static const char *connectionString = "HostName=iotc-111c2522-561d-4f03-9267-9c169ad02fe9.azure-devices.net;DeviceId=kresimir2;SharedAccessKey=iohrllySeNNMFie1NQAwEuCTck2f3+E1zf4k4Txc6hU=";
 
 /*  "HostName=<host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"                */
 /*  "HostName=<host_name>;DeviceId=<device_id>;SharedAccessSignature=<device_sas_token>"    */
@@ -48,8 +55,11 @@ static unsigned long lastPublish = 0 - fiveSeconds;
 
 // Setup PbHub device
 PortHub porthub;
-uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR};
+uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR}; //porthub pin setup
 
+// Setup the Load Cell module
+// Pins 33 and 32, i.e. "HX711 scale(33, 32)" work when the weight module is connected directly to the M5Stick device
+//HX711 scale(33, 32);    // initialize scale (loadcell) NOTE may need to update the pins bc chaining on the PbHub
 
 // Setup stopwatch interrupt specific settings
 //timer interrupt variable.
@@ -110,7 +120,7 @@ float cumForce = 0.0;
 float startaccX = 0.0;
 float startaccY = 0.0;
 float startaccZ = 0.0;
-float load = 0.0F;
+//float loadcell = 0.0F;
 float accX = 0.0F;
 float accY = 0.0F;
 float accZ = 0.0F;
@@ -605,6 +615,12 @@ void setup()
   Serial.println("Start sending events.");
   send_interval_ms = millis();
   check_interval_ms = millis();
+
+  //setup load cell scale
+  //TODO Wait a sec then tare the load cell value
+//  delay(500);  //wait for user to get off button before taring
+//  scale.setOffset(scale.averageValue()); // tare scale
+//  loadcell = 0;
 }
 
 void loop()
@@ -625,6 +641,9 @@ void loop()
   plugState = porthub.hub_d_read_value_A(HUB_ADDR[3]);
   batt1BtnState = porthub.hub_d_read_value_A(HUB_ADDR[1]);
   batt2BtnState = porthub.hub_d_read_value_B(HUB_ADDR[1]);
+  // TODO Read from Load Cell Module
+//  loadcell = scale.getGram();
+
 
   if (hasWifi && hasIoTHub)
   {
@@ -648,13 +667,13 @@ void loop()
                 \"keyswitchState\":%d,\"plugState\":%d,\"startButtonState\":%d,\"resetButtonState\":%d,\
                 \"pushButtonState\":%d,\"stopButtonState\":%d,\"batt1BtnState\":%d,\"batt2BtnState\":%d,\
                 \"TS_button\":%d,\"TS_key\":%d,\"TS_plug\":%d,\"TS_batt1\":%d,\"TS_batt2\":%d,\
-                \"trialTime\":%d,\"cumForce\":%.2f,\"ptsCollected\":%d}",
+                \"trialTime\":%d,\"cumForce\":%.2f,\"ptsCollected\":%d,\"trialRunning\":%d}",
                 accX, accY, accZ, 
                 gyroX, gyroY, gyroZ, 
                 keyswitchState, plugState, startBtnState, resetBtnState,
                 buttonPushState, stopBtnState, batt1BtnState, batt2BtnState,
                 TS_button, TS_key, TS_plug, TS_batt1, TS_batt2,
-                usecCount, cumForce, ptsCollected);
+                usecCount, cumForce, ptsCollected, countStart);
                 
 //       sprintf_s(msgText, sizeof(msgText),
 //                "{\"Temperature\":%.2f,\"Humidity\":%.2f,\"AmbientLight\":%.2f,\
@@ -703,12 +722,16 @@ void loop()
   {
     delay(1);
     if (startBtnState != BUTTON_OFF)
+      //TODO Wait a sec then tare the load cell value
+//      delay(500);  //wait for user to get off button before taring
+//      scale.setOffset(scale.averageValue()); // tare scale
+//      loadcell = 0;
       countStart = 1;
       startaccX = accX;
       startaccY = accY;
       startaccZ = accZ;
       digitalWrite(10, LOW); //turn on LED
-      Serial.println("Trial Status: M5.BtnA pressed, Trial Stated!");
+      Serial.println("Trial Status: M5.BtnA pressed, Trial Started!");
     delay(1);
   }
 
@@ -727,6 +750,7 @@ void loop()
   timeLeft = round(TIMELIMIT - usecCount/1000000);
   if (started == 1 && timeLeft <= 0)
   {
+    // Trial has ended
     delay(1);
       countStart = 0;
       Serial.print("Trial Status: Time's Up! Trial Time Limit: ");
@@ -873,6 +897,7 @@ void loop()
   M5.Lcd.setTextSize(1);
   M5.Lcd.setCursor(0, 5);
   M5.Lcd.printf("Smart Task Board\n");
+//  M5.Lcd.printf("LoadCell: %0.2f\n", loadcell);
   M5.Lcd.printf("Wifi On:%d Status:%d\n", wifiEnabled, WiFi.status());
   M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
   M5.Lcd.printf("%d BTN_1:%d TS:%d\n", buttonPushLatch, buttonPushState, TS_button); 
@@ -891,6 +916,7 @@ void loop()
   M5.Lcd.printf("acX:%0.2f acY:%0.2f acZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
   M5.Lcd.printf("gyX:%0.2f gyY:%0.2f gyZ:%0.2f\n", gyroX, gyroY, gyroZ);
   M5.Lcd.printf("Token: %s", SECRET_TOKEN);
+  
   //Serial.println(usecCount); //print out seconds to the serial monitor
   //Serial.printf("Key_TS: %d, Plug_TS: %d, Batt1_TS: %d, Batt2_TS: %d, Time: %d\n", TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
 
