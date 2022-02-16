@@ -14,6 +14,12 @@ TaskBoard-001   Protocol-001    011             pso         Panda-OTS   55sec   
 TaskBoard-001   Protocol-001    012             pso         Panda-OTS   53sec               100  
 ~~~
 
+Sample of the USB Serial Print Out when the task board is connected to a PC over USB.
+Use the python utility file to record the output to a local CSV file. See /python/scripts/read-serial.py.
+~~~
+b'Token:task-board-demo, CurrentState:BTN_1:1,KEY_L:1,ETH_L:0,BAT1:1,BAT2:1, Protocol:MSRM_100, TrialRunning:0, TimeLeft_sec:600, TrialPts:0, TotalTrialForce:0.00, Key_TS_us:0, Plug_TS_us:0, Batt1_TS_us:0, Batt2_TS_us:0, Time_us:0\
+~~~
+
 ![RobotSetupExample.png](/assets/images/RobotSetupExample.png)
 
 ### Quick Start
@@ -58,9 +64,15 @@ The core features of the microcontroller are:
 - [Done] report the stae of the task box over wifi to the [Kaa internet dashboard](https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/) 
 - [Done] setup wifi greeter to allow user to supply own wifi ssid and password
 - [TODO] report the load cell readings on the task box surface
-- [TODO] report the state of the task box over USB
+- [Done] report the state of the task box over USB
 - [TODO] device has a digital twin that can be represented in a robot simulator
 - [TODO] task board reports are integrated into a Microsoft Azure IoT dashboard
+
+### NEW Feature Requests
+- [TODO] Over-The-Air Updates
+- [TODO] Make the task board surface more stiff/rigid
+- [TODO] Add a testing procedure for a factory to execute prior to shipping task board
+- [TODO] Look into Device Management with BalenaOS for multiple OTA updates 
 
 ### System Architecture
 
