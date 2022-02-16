@@ -1,13 +1,14 @@
-// This is a prototype program to measure robot performance with the MSRM Task Board. 
+// This is a program to measure manipulation performance with the MSRM Task Board. 
 // Written by Peter So. December 2020.
+// Last updated July 2021
+//
 // Program will not run on board without being connected to the PbHub unit. 
-// Default program will not connect to the internet.
+// Default behavior is board will attempt to WiFi network. Hold M5 button during power up to use without WiFi.
+//
 // To connect to wifi you will need to ensure the correct credentials are added to the secrets.h file.
-// Press and hold the M5 button while powering up the device to have the device try to connect to the online DB.
-// CAREFUL! Take care that the correct board library is used when flashing your board!
 
-//#include <M5StickC.h>
-#include <M5StickCPlus.h>
+//#include <M5StickC.h> //uncomment if using only a M5Stick version device and comment the next line
+#include <M5StickCPlus.h> // https://github.com/m5stack/M5StickC-Plus
 #include <Wire.h>
 #include "porthub.h"
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
@@ -16,11 +17,17 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include "secrets.h"
-//#include "hx711.h"
-//#include "kaa.h"
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
+//#include "kaa.h"
 
+// USER CONFIGURABLE SETTINGS
+#define PROTOCOL_ID "MSRM_100"
+#define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
+#define FW_VERSION "0.0.1" // Firmware Version for OTA management
+
+//////// SYSTEM SETTINGS /////////
+// DO NOT CHANGE SETTINGS BELOW //
 const char* ssid = SECRET_SSID;                   // WiFi name
 const char* password = SECRET_PASSWORD;           // WiFi password
 const char* mqtt_server = "mqtt.cloud.kaaiot.com";
@@ -30,9 +37,6 @@ const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you s
 const unsigned long fiveSeconds = 1 * 5 * 1000UL;
 static unsigned long lastPublish = 0 - fiveSeconds;
 
-#define PROTOCOL_ID "MSRM_100"
-#define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
-
 #define PTS_BUTTON 1
 #define PTS_KEY 1
 #define PTS_PLUG 1
@@ -41,35 +45,37 @@ static unsigned long lastPublish = 0 - fiveSeconds;
 #define BUTTON_ON 0
 #define BUTTON_OFF 1
 
+// Setup PbHub device
 PortHub porthub;
 uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR};
 
-// Startup Settings
-int wifiEnabled = 0; 
-int scaleEnabled = 0;
-
-// Scale feature is disabled since there is a conflict in wiring as the M5stickc only has one grove port.
-//HX711 scale(33, 32);
-//HX711 scale(porthub.hub_d_read_value_B(4), porthub.hub_d_read_value_A(4));
-//HX711 scale(porthub.hub_a_read_value(4), 32);
-//HX711 scale(porthub.hub_d_read_value_A(4), 32);
-//HX711 scale(porthub.hub_d_read_value_B(4), porthub.hub_d_read_value_A(4));
-//HX711 scale(porthub.hub_d_read_value_A(4), porthub.hub_d_read_value_B(4));
-
+// Setup WiFi and PubSub client
 WiFiClient espClient;
 PubSubClient client(espClient);
 //Kaa kaa(&client, SECRET_TOKEN, SECRET_APP_VERSION);
 
+// Setup stopwatch interrupt specific settings
 //timer interrupt variable.
 volatile unsigned long usecCount = 0;
 hw_timer_t *interrupptTimer = NULL;
 portMUX_TYPE mutex = portMUX_INITIALIZER_UNLOCKED;
+void IRAM_ATTR usecTimer()
+{
+  portENTER_CRITICAL_ISR(&mutex);
+  usecCount += 5;
+  portEXIT_CRITICAL_ISR(&mutex);
+}
+
+///////////////////////////////
+/////// INITIALIZE VARS ///////
+///////////////////////////////
 
 //min,sec,msec,usec display.
 int display[4] = {0};
 
 //timer start/stop check variable
 unsigned long trialTime = 0;
+int wifiEnabled = 0;
 int countStart = 0;
 int started = 0;
 int buttonPushLatch = 0;
@@ -79,7 +85,6 @@ int batt1Latch = 0;
 int batt2Latch = 0;
 int timeLeft = 0;
 int ptsCollected = 0;
-int kaaStartRequest = 0;
 
 int startBtnState = -1;
 int stopBtnState = -1;
@@ -89,6 +94,12 @@ int keyswitchState = -1;
 int plugState = -1;
 int batt1BtnState = -1;
 int batt2BtnState = -1;
+int buttonPushState_old = -1;
+int stopBtnState_old = -1;
+int keyswitchState_old = -1;
+int plugState_old = -1;
+int batt1BtnState_old = -1;
+int batt2BtnState_old = -1;
 
 int TS_button = 0;
 int TS_key = 0;
@@ -96,14 +107,25 @@ int TS_plug = 0;
 int TS_batt1 = 0;
 int TS_batt2 = 0;
 
-uint8_t BoardState[6]={startBtnState,resetBtnState,keyswitchState,plugState,batt1BtnState,batt2BtnState};
+// Initialize program variables before running the main loop
+float force = 0.0;
+float cumForce = 0.0;
+float startaccX = 0.0;
+float startaccY = 0.0;
+float startaccZ = 0.0;
+float load = 0.0F;
+float accX = 0.0F;
+float accY = 0.0F;
+float accZ = 0.0F;
+float gyroX = 0.0F;
+float gyroY = 0.0F;
+float gyroZ = 0.0F;
+float pitch = 0.0F;
+float roll  = 0.0F;
+float yaw   = 0.0F;
+float temp   = 0.0F;
 
-void IRAM_ATTR usecTimer()
-{
-  portENTER_CRITICAL_ISR(&mutex);
-  usecCount += 5;
-  portEXIT_CRITICAL_ISR(&mutex);
-}
+uint8_t BoardState[6]={startBtnState,resetBtnState,keyswitchState,plugState,batt1BtnState,batt2BtnState};
 
 void setup()
 {
@@ -118,6 +140,7 @@ void setup()
   M5.Lcd.setTextColor(WHITE);
   M5.Lcd.setTextSize(1);
 
+  // Setup WiFi connection or boot in LOCAL MODE
   if (!M5.BtnA.isPressed() == 1){ // Press and hold M5 Button during power up to enter LOCAL Mode
     //    M5.Lcd.print("ssid: %s\n", *ssid);
     M5.Lcd.print("Attempting to connect to wifi...\n");
@@ -160,12 +183,14 @@ void setup()
     client.setCallback(callback);
     // Increase limit, this line fixed problem for my device
     client.setBufferSize(8192);
+    setup_wifi();
+
   } else {
       M5.Lcd.print("Booting Local Mode...");
       wifiEnabled = 0;
-    }
+  }
 
-  //GPIO setting  
+  // GPIO setting  
   pinMode(10, OUTPUT);              //GPIO10 the builtin LED
 
   //interrupt timer setting
@@ -184,100 +209,59 @@ void setup()
   Serial.begin(115200);
   M5.Imu.Init();
 
+  // Setup load cell device
+  //REMOVED
+
   //Check for new firmware
   delay(1000);
   reportCurrentFirmwareVersion();
   requestNewFirmware();
 }
 
-float force = 0.0;
-float cumForce = 0.0;
-float startaccX = 0.0;
-float startaccY = 0.0;
-float startaccZ = 0.0;
-float weight = 0.0F;
-float load = 0.0F;
-float cumWeight = 0.0F;
-float accX = 0.0F;
-float accY = 0.0F;
-float accZ = 0.0F;
-float gyroX = 0.0F;
-float gyroY = 0.0F;
-float gyroZ = 0.0F;
-float pitch = 0.0F;
-float roll  = 0.0F;
-float yaw   = 0.0F;
-float temp   = 0.0F;
-
 void loop()
 {
   // put your main code here, to run repeatedly:
 
-  // READ INPUTS //
+  /////// READ INPUTS //////
   // get device accel data
   M5.Imu.getGyroData(&gyroX,&gyroY,&gyroZ);
   M5.Imu.getAccelData(&accX,&accY,&accZ);
   M5.Imu.getAhrsData(&pitch,&roll,&yaw);
   M5.Imu.getTempData(&temp);
-
-//  // Weight Module
-//  if (scaleEnabled == 1)
-//  {
-//    weight = scale.getGram();
-//    if (M5.BtnA.wasReleased()) {
-//      scale.setOffset(scale.averageValue());
-//  } else 
-//    weight = -1;
-//  }
-
-  // PbHub Module
-//  startBtnState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
-  if (kaaStartRequest == 0)
-    {
-      startBtnState = !M5.BtnA.read();
-    };
-  if (kaaStartRequest == 1)
-    {
-      startBtnState = kaaStartRequest;
-    } 
-  stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
+  startBtnState = !M5.BtnA.read();
   resetBtnState = !M5.BtnB.read();
-//  resetBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
+
+  // Read from PbHub Module
   buttonPushState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
-  keyswitchState = porthub.hub_d_read_value_A(HUB_ADDR[3]);
-  plugState = porthub.hub_d_read_value_A(HUB_ADDR[2]);
+  stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
+  keyswitchState = porthub.hub_d_read_value_A(HUB_ADDR[2]);
+  plugState = porthub.hub_d_read_value_A(HUB_ADDR[3]);
   batt1BtnState = porthub.hub_d_read_value_A(HUB_ADDR[1]);
   batt2BtnState = porthub.hub_d_read_value_B(HUB_ADDR[1]);
 
   if (wifiEnabled == 1)
   {
     // Connect to wifi logic
-    setup_wifi();
     if (!client.connected()) {
+      Serial.println("Attempting to connect to WiFi...");
       reconnect();
     }
-    client.loop();
+    //client.loop(); //SUSPICIOUS if this is really needed... causes irregular loop execution speeds
 
-    // Reporting logic
+    // Reporting logic to remote server
     unsigned long now = millis();
-    if (now - lastPublish >= fiveSeconds) 
+    if (now - lastPublish >= fiveSeconds) // publish to topic every 5 seconds
     {
       lastPublish += fiveSeconds;
-//      DynamicJsonDocument telemetry(1023);
-      DynamicJsonDocument telemetry(8192);
+      DynamicJsonDocument telemetry(8192); // increased from 1023
       telemetry.createNestedObject();
-//      telemetry[0]["temperature"] = random(18, 23);
-//      telemetry[0]["humidity"] = random(40, 60);
-//      telemetry[0]["co2"] = random(900, 1200);
 
-//      telemetry[0]["weight"] = weight; //Float
-//      telemetry[0]["tempIMU"] = temp; //Int
       telemetry[0]["accX"] = accX * 1000; //Float
       telemetry[0]["accY"] = accY * 1000; //Float
       telemetry[0]["accZ"] = accZ * 1000; //Float
-//      telemetry[0]["gyroX"] = gyroX; //Float
-//      telemetry[0]["gyroY"] = gyroY; //Float
-//      telemetry[0]["gyroZ"] = gyroZ; //Float
+      telemetry[0]["gyroX"] = gyroX; //Float
+      telemetry[0]["gyroY"] = gyroY; //Float
+      telemetry[0]["gyroZ"] = gyroZ; //Float
       telemetry[0]["keyswitchState"] = keyswitchState; //BOOL
       telemetry[0]["plugState"] = plugState; //BOOL
       telemetry[0]["startButtonState"] = startBtnState; //BOOL
@@ -288,7 +272,6 @@ void loop()
       telemetry[0]["Batt2BtnState"] = batt2BtnState; //BOOL
       telemetry[0]["trialStarted"] = started; //BOOL
       telemetry[0]["trialTime"] = usecCount; //Float
-//      telemetry[0]["trialTimeRemaining"] = timeLeft; //INT
       telemetry[0]["Button_TS"] = TS_button; //INT
       telemetry[0]["Key_TS"] = TS_key; //INT
       telemetry[0]["Plug_TS"] = TS_plug; //INT
@@ -308,26 +291,6 @@ void loop()
   display[2] = (int)((usecCount % 1000000) / 1000);
   display[1] = (int)((usecCount / 1000000) % 60);
   display[0] = (int)((usecCount / 60000000) % 3600);
-
-
-//  //Kaa Remote Switch
-//  //DEBUG this is not getting set by the callback function...
-//  if (kaaStartRequest == 1) 
-//  {
-//    Serial.println("kaaStartRequested!");
-//    startBtnState == BUTTON_ON;
-//    kaaStartRequest = 0;
-//    //DEBUG blink 3x if this is triggered properly
-//    digitalWrite(10, LOW); //turn on LED when red button is pressed
-//    delay(50);
-//    digitalWrite(10, HIGH); //turn off LED when red button is pressed
-//    digitalWrite(10, LOW); //turn on LED when red button is pressed
-//    delay(50);
-//    digitalWrite(10, HIGH); //turn off LED when red button is pressed
-//    digitalWrite(10, LOW); //turn on LED when red button is pressed
-//    delay(50);
-//    digitalWrite(10, HIGH); //turn off LED when red button is pressed
-//  }
   
   //Start Button Check
   if (startBtnState != BUTTON_OFF && started == 0 && plugState == 1 && keyswitchState == 1)
@@ -339,7 +302,7 @@ void loop()
       startaccY = accY;
       startaccZ = accZ;
       digitalWrite(10, LOW); //turn on LED
-      Serial.println("Board Status: M5.BtnA pressed");
+      Serial.println("Trial Status: M5.BtnA pressed, Trial Stated!");
     delay(1);
   }
 
@@ -350,18 +313,17 @@ void loop()
     if (stopBtnState != BUTTON_OFF)
       countStart = 0;
       digitalWrite(10, HIGH); //turn off LED
-      Serial.println("Board Status: Red BtnB pressed STOP!");
+      Serial.println("Trial Status: Red Button pressed, Trial Stopped!");
     delay(1);
   }
 
   //Time Limit Check
-//  timeLeft = round(TIMELIMIT - display[1]);
   timeLeft = round(TIMELIMIT - usecCount/1000000);
-  if (started == 1 && timeLeft <= 0) //TODO VERIFY THIS
+  if (started == 1 && timeLeft <= 0)
   {
     delay(1);
       countStart = 0;
-      Serial.print("Time's Up! Trial Time Limit: ");
+      Serial.print("Trial Status: Time's Up! Trial Time Limit: ");
       Serial.println(TIMELIMIT);
       digitalWrite(10, HIGH); //turn off LED
     delay(1);
@@ -377,7 +339,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Board Status: Button pushed!");
+    Serial.println("Trial Status: Button pushed!");
   }
 
   //Keyswith Check
@@ -390,7 +352,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Board Status: Key switched!");
+    Serial.println("Trial Status: Key switched!");
   }
 
   //Plug Check
@@ -403,7 +365,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Board Status: plug seated!");
+    Serial.println("Trial Status: plug seated!");
   }
 
   //Battery Hole 1 Check
@@ -416,8 +378,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Board Status: batt1 inserted!");
-//    Serial.println(TS_batt1_str);
+    Serial.println("Trial Status: batt1 inserted!");
   }
 
   //Battery Hole 2 Check
@@ -430,10 +391,10 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.println("Board Status: batt2 inserted!");
+    Serial.println("Trial Status: batt2 inserted!");
   }
 
-  //Time Count  Start
+  //Time Count Start
   if (countStart == 1 && started == 0)
   {
     timerAlarmEnable(interrupptTimer);
@@ -453,7 +414,7 @@ void loop()
   {
     delay(1);
     if (resetBtnState != BUTTON_OFF)
-      Serial.println("Board Status: BtnB pressed");
+      Serial.println("Trial Status: Trial Reset pressed");
       usecCount = 0;
       buttonPushLatch = 0;
       keyswitchLatch = 0;
@@ -467,28 +428,46 @@ void loop()
       TS_batt2 = 0;
       trialTime = 0;
       ptsCollected = 0;
-      cumWeight = 0;
       cumForce = 0;
       digitalWrite(10, HIGH); //turn off LED
     delay(1);
   }
 
-  // collect weight during trial
+  // collect "force" during trial
   if (started == 1)
   {
-    cumWeight = weight + cumWeight;
     force = abs(accX - startaccX) + abs(accY - startaccY) + abs(accZ - startaccZ);  
     cumForce = cumForce + force;
   }
- 
-  //count display
-  //portENTER_CRITICAL(&mutex);
+
+  // Report task board changes to Serial
+  if (buttonPushState == 0 && buttonPushState != buttonPushState_old){Serial.println("Blue Push Button Pressed");};
+  if (buttonPushState == 1 && buttonPushState != buttonPushState_old){Serial.println("Blue Push Button Released");};
+  buttonPushState_old = buttonPushState; // store current value
+  if (stopBtnState == 0 && stopBtnState != stopBtnState_old){Serial.println("Red Push Button Pressed");};
+  if (stopBtnState == 1 && stopBtnState != stopBtnState_old){Serial.println("Red Push Button Released");};
+  stopBtnState_old = stopBtnState; // store current value
+  if (keyswitchState == 0 && keyswitchState != keyswitchState_old){Serial.println("Key Switch Closed");};
+  if (keyswitchState == 1 && keyswitchState != keyswitchState_old){Serial.println("Key Switch Opened");};
+  keyswitchState_old = keyswitchState; // store current value
+  if (plugState == 0 && plugState != plugState_old){Serial.println("Plug Switch Closed");};
+  if (plugState == 1 && plugState != plugState_old){Serial.println("Plug Switch Opened");};
+  plugState_old = plugState; // store current value
+  if (batt1BtnState == 0 && batt1BtnState != batt1BtnState_old){Serial.println("Batt1 Button Pressed");};
+  if (batt1BtnState == 1 && batt1BtnState != batt1BtnState_old){Serial.println("Batt1 Button Released");};
+  batt1BtnState_old = batt1BtnState; // store current value
+  if (batt2BtnState == 0 && batt2BtnState != batt2BtnState_old){Serial.println("Batt2 Button Pressed");};
+  if (batt2BtnState == 1 && batt2BtnState != batt2BtnState_old){Serial.println("Batt2 Button Released");};
+  batt2BtnState_old = batt2BtnState; // store current value
+
+  // update display
   M5.Lcd.setRotation(3);
   M5.Lcd.fillScreen(BLACK);
   M5.Lcd.setTextColor(WHITE);
   M5.Lcd.setTextSize(1);
   M5.Lcd.setCursor(0, 5);
-  M5.Lcd.printf("Smart Task Board\n");
+  M5.Lcd.printf("Smart Task Board");
+  M5.Lcd.printf("v %s\n", FW_VERSION);
   M5.Lcd.printf("Wifi On:%d Status:%d\n", wifiEnabled, WiFi.status());
   M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
   M5.Lcd.printf("%d BTN_1:%d TS:%d\n", buttonPushLatch, buttonPushState, TS_button); 
@@ -503,18 +482,13 @@ void loop()
   M5.Lcd.printf("%02d:",display[1]);
   M5.Lcd.printf("%03d:",display[2]);
   M5.Lcd.printf("%03d\n",display[3]);
-//  M5.Lcd.printf("Weight: %d, Total W: %0.2f\n", weight, cumWeight);
   M5.Lcd.printf("Total Force: %0.2f\n", cumForce);
   M5.Lcd.printf("acX:%0.2f acY:%0.2f acZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
   M5.Lcd.printf("gyX:%0.2f gyY:%0.2f gyZ:%0.2f\n", gyroX, gyroY, gyroZ);
-  M5.Lcd.printf("OTA worked!");
-  //M5.Lcd.printf("%lu", usecCount);
-  //M5.Lcd.printf("%d", timeLeft);
-  //Serial.println(usecCount); //print out seconds to the serial monitor
-//  Serial.printf("Key_TS: %d, Plug_TS: %d, Batt1_TS: %d, Batt2_TS: %d, Time: %d\n", TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
-
-//  delay(10); // delay for screen refresh NOTE: This directly affects performance of clock buttons
-  //portEXIT_CRITICAL(&mutex);
+  M5.Lcd.printf("Token: %s", SECRET_TOKEN);
+  
+  Serial.printf("Token:%s, CurrentState:BTN_1:%d,KEY_L:%d,ETH_L:%d,BAT1:%d,BAT2:%d, Protocol:%s, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Key_TS_us:%d, Plug_TS_us:%d, Batt1_TS_us:%d, Batt2_TS_us:%d, Time_us:%d\n", SECRET_TOKEN, buttonPushState, keyswitchState, plugState, batt1BtnState, batt2BtnState, PROTOCOL_ID, started, timeLeft, ptsCollected, cumForce, TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
+  //delay(10); // delay for screen refresh NOTE: This directly affects performance of clock buttons
 }
 
 /////////////////////////////////
@@ -534,19 +508,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     return;
   }
 
-//  DynamicJsonDocument doc(1023);
   DynamicJsonDocument doc(2048);
   deserializeJson(doc, payload, length);
   JsonVariant json_var = doc.as<JsonVariant>();
-
-//  // Peter's trying to trigger a function from Kaa. THIS DIDNT WORK...
-//  Serial.println("kaaStartRequest received!");
-//  kaaStartRequest = 1; //somehow this doesn't have any effect outside of this function...
-//  digitalWrite(10, LOW); //turn on LED when red button is pressed
-//  delay(50);
-//  digitalWrite(10, HIGH); //turn off LED when red button is pressed
   
-//  DynamicJsonDocument commandResponse(1023);
   DynamicJsonDocument commandResponse(2048);
   for (int i = 0; i < json_var.size(); i++) {
     unsigned int command_id = json_var[i]["id"].as<unsigned int>();
@@ -562,11 +527,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // Receive and parse the payload
   Serial.println("Payload: " + doc.as<String>()); //TODO troubleshoot
-//  if (remoteCmdFromKaa == 1) 
-//  {
-//    // start timer
-//    //TODO
-//  }
 }
 
 void setup_wifi() {
@@ -668,7 +628,7 @@ void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
     return;
   }
 
-//  return; //DEBUG escape do not actually update the firmware //commenting this line will enable OTA update.
+  //  return; //DEBUG escape do not actually update the firmware //commenting this line will enable OTA update.
   String firmwareLink = json_var["config"]["link"].as<String>();
 
   t_httpUpdate_return ret = httpUpdate.update(espClient, firmwareLink.c_str());
