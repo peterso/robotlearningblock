@@ -24,15 +24,16 @@
 // USER CONFIGURABLE SETTINGS
 #define PROTOCOL_ID "MSRM_100"
 #define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
-#define FW_VERSION "0.0.1" // Firmware Version for OTA management
 
 //////// SYSTEM SETTINGS /////////
 // DO NOT CHANGE SETTINGS BELOW //
 const char* ssid = SECRET_SSID;                   // WiFi name
 const char* password = SECRET_PASSWORD;           // WiFi password
-const char* mqtt_server = "mqtt.cloud.kaaiot.com";
+//const char* mqtt_server = "mqtt.cloud.kaaiot.com";
+const char* mqttServer = "mqtt.cloud.kaaiot.com";
 const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
 const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you specify it during device provisioning
+const String FW_VERSION = "0.0.2"; // Firmware Version for OTA management
 
 const unsigned long fiveSeconds = 1 * 5 * 1000UL;
 static unsigned long lastPublish = 0 - fiveSeconds;
@@ -183,7 +184,7 @@ void setup()
     //Wifi Manager Config END
     
     // Setup wireless connection
-    client.setServer(mqtt_server, 1883);
+//    client.setServer(mqtt_server, 1883); //DEBUG
     client.setCallback(callback);
     // Increase limit, this line fixed problem for my device
     client.setBufferSize(8192);
@@ -216,7 +217,17 @@ void setup()
   // Setup load cell device
   //REMOVED
 
-  //Check for new firmware
+  //KAA Setup //DEBUG
+  client.setServer(mqttServer, 1883);
+  client.setCallback(handleOtaUpdate);
+  initServerConnection();
+
+  if (client.setBufferSize(1023)) {
+    Serial.println("Successfully reallocated internal buffer size");
+  } else {
+    Serial.println("Failed to reallocated internal buffer size");
+  }
+
   delay(1000);
   reportCurrentFirmwareVersion();
   requestNewFirmware();
@@ -225,7 +236,8 @@ void setup()
 void loop()
 {
   // put your main code here, to run repeatedly:
-
+  initServerConnection();
+  
   /////// READ INPUTS //////
   // get device accel data
   M5.Imu.getGyroData(&gyroX,&gyroY,&gyroZ);
@@ -542,6 +554,7 @@ void setup_wifi() {
   }
 }
 
+/*
 void connectWiFi() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -553,6 +566,7 @@ void connectWiFi() {
   Serial.println(WiFi.localIP());
 }
 
+
 void reconnect() {
   while (!client.connected()) {
     Serial.println("Attempting MQTT connection...");
@@ -561,6 +575,13 @@ void reconnect() {
       Serial.println("Connected to WiFi");
       // ... and resubscribe
       subscribeToCommand();
+      
+      //DEBUG
+      delay(1000);
+      reportCurrentFirmwareVersion();
+      requestNewFirmware();
+      //DEBUG
+      
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -589,11 +610,14 @@ void subscribeToCommand() {
   client.subscribe(serverFirmwareErrorResponse.c_str());
   Serial.println("Subscribed to server firmware response on topic: " + serverFirmwareErrorResponse);
 }
+*/
 
 //OTA Functions from Kaa
+/*
 void reportCurrentFirmwareVersion() {
   String reportTopic = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/applied/json";
-  String reportPayload = "{\"configId\":\"0.0.1\"}"; //UPDATE this to match the OTA upgradeable from field on Kaa
+  String reportPayload = "{\"configId\":\"" + FW_VERSION + "\"}"; //UPDATE this to match the OTA upgradeable from field on Kaa
+//  String reportPayload = "{\"configId\":\"0.0.1\"}"; //UPDATE this to match the OTA upgradeable from field on Kaa
   Serial.println("Reporting current firmware version on topic: " + reportTopic + " and payload: " + reportPayload);
   client.publish(reportTopic.c_str(), reportPayload.c_str());
 }
@@ -649,4 +673,130 @@ void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
       Serial.println("HTTP_UPDATE_OK");
       break;
   }
+}
+*/
+
+//DEBUG copied from https://docs.kaaiot.io/KAA/docs/current/Tutorials/device-integration/hardware-guides/esp32-ota-updates/ 
+//
+
+void reportCurrentFirmwareVersion() {
+  String reportTopic = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/applied/json";
+//  String reportPayload = "{\"configId\":\"1.0.0\"}";
+  String reportPayload = "{\"configId\":\"" + FW_VERSION + "\"}"; //UPDATE this to match the OTA upgradeable from field on Kaa
+  Serial.println("Reporting current firmware version on topic: " + reportTopic + " and payload: " + reportPayload);
+  client.publish(reportTopic.c_str(), reportPayload.c_str());
+}
+
+void requestNewFirmware() {
+  
+  int requestID = random(0, 99);
+  String firmwareRequestTopic = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/" + requestID;
+  Serial.println("Requesting firmware using topic: " + firmwareRequestTopic);
+  client.publish(firmwareRequestTopic.c_str(), "{\"observe\":true}"); // observe is used to specify whether the client wants to accept server pushes
+}
+
+
+void initServerConnection() {
+  setupWifi();
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+}
+
+void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
+  Serial.printf("\nHandling firmware update message on topic: %s and payload: ", topic);
+
+   //DEBUG with Denys
+  //This fixed the issue!
+  //This checks that the topic is indeed a cmx_ota message. 
+  if (!String(topic).startsWith("kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN)) {
+  return;
+  }
+  //END DEBUG
+  
+  DynamicJsonDocument doc(1023);
+  deserializeJson(doc, payload, length);
+  JsonVariant json_var = doc.as<JsonVariant>();
+  Serial.println(json_var.as<String>());
+  if (json_var.isNull()) {
+    Serial.println("No new firmware version is available");
+    return;
+  }
+
+  unsigned int statusCode = json_var["statusCode"].as<unsigned int>();
+  if (statusCode != 200) {
+    Serial.printf("Firmware message's status code is not 200, but: %d\n", statusCode);
+    return;
+  }
+
+  String firmwareLink = json_var["config"]["link"].as<String>();
+
+  t_httpUpdate_return ret = httpUpdate.update(espClient, firmwareLink.c_str());
+
+  switch (ret) {
+    case HTTP_UPDATE_FAILED:
+      Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+      break;
+
+    case HTTP_UPDATE_NO_UPDATES:
+      Serial.println("HTTP_UPDATE_NO_UPDATES");
+      break;
+
+    case HTTP_UPDATE_OK:
+      Serial.println("HTTP_UPDATE_OK");
+      break;
+  }
+}
+
+void setupWifi() {
+  if (WiFi.status() != WL_CONNECTED) {
+    delay(200);
+    Serial.println();
+    Serial.printf("Connecting to [%s]", ssid);
+    WiFi.begin(ssid, password);
+    connectWiFi();
+  }
+}
+
+void connectWiFi() {
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.println("Attempting MQTT connection...");
+    char *client_id = "bqf1uai03p4cop6jr3u0";
+    if (client.connect(client_id)) {
+      Serial.println("Connected to WiFi");
+      subscribeToFirmwareUpdates();
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+void subscribeToFirmwareUpdates() {
+  String serverPushOnConnect = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/#";
+  client.subscribe(serverPushOnConnect.c_str());
+  Serial.println("Subscribed to server firmware push on topic: " + serverPushOnConnect);
+
+  String serverFirmwareResponse = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/status/#";
+  client.subscribe(serverFirmwareResponse.c_str());
+  Serial.println("Subscribed to server firmware response on topic: " + serverFirmwareResponse);
+
+  String serverFirmwareErrorResponse = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/status/error";
+  client.subscribe(serverFirmwareErrorResponse.c_str());
+  Serial.println("Subscribed to server firmware response on topic: " + serverFirmwareErrorResponse);
 }
