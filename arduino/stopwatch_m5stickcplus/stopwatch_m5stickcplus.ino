@@ -8,7 +8,7 @@
 // To connect to wifi you will need to ensure the correct credentials are added to the secrets.h file.
 
 //#include <M5StickC.h> //uncomment if using only a M5Stick version device and comment the next line
-#include <M5StickCPlus.h>
+#include <M5StickCPlus.h> // https://github.com/m5stack/M5StickC-Plus
 #include <Wire.h>
 #include "porthub.h"
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
@@ -25,18 +25,21 @@
 #define PROTOCOL_ID "MSRM_100"
 #define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
 
-
 //////// SYSTEM SETTINGS /////////
 // DO NOT CHANGE SETTINGS BELOW //
 const char* ssid = SECRET_SSID;                   // WiFi name
 const char* password = SECRET_PASSWORD;           // WiFi password
-const char* mqtt_server = "mqtt.cloud.kaaiot.com";
+//const char* mqtt_server = "mqtt.cloud.kaaiot.com";
+const char* mqttServer = "mqtt.cloud.kaaiot.com";
 const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
 const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you specify it during device provisioning
+const String FW_VERSION = "0.0.2"; // Firmware Version for OTA management
 
 const unsigned long fiveSeconds = 1 * 5 * 1000UL;
 static unsigned long lastPublish = 0 - fiveSeconds;
 
+#define TFT1STCOL 5
+#define TFT1STROW 5
 #define PTS_BUTTON 1
 #define PTS_KEY 1
 #define PTS_PLUG 1
@@ -92,6 +95,7 @@ int resetBtnState = -1;
 int buttonPushState = -1;
 int keyswitchState = -1;
 int plugState = -1;
+int plugRState = -1;
 int batt1BtnState = -1;
 int batt2BtnState = -1;
 int buttonPushState_old = -1;
@@ -136,7 +140,7 @@ void setup()
   // Lcd display setup
   M5.Lcd.setRotation(3);
   M5.Lcd.fillScreen(BLACK);
-  M5.Lcd.setCursor(0, 0);
+  M5.Lcd.setCursor(TFT1STCOL, TFT1STROW);
   M5.Lcd.setTextColor(WHITE);
   M5.Lcd.setTextSize(1);
 
@@ -148,7 +152,8 @@ void setup()
     M5.Lcd.print("then on while holding M5 button\n");
     M5.Lcd.print("to bypass and run locally only\n\n");
     M5.Lcd.print("Try to configure new wifi credentials by\n");
-    M5.Lcd.print("connecting to AutoConnectAP-task-board\n");
+    M5.Lcd.print("connecting to \"AutoConnectAP-task-board\"\n");
+    M5.Lcd.print("password is \"password\". \n\n");
     M5.Lcd.print("then browse to 192.168.4.1 with your\n");
     M5.Lcd.print("PC or phone to select new ssid\n");
     M5.Lcd.print("and give new password\n");
@@ -179,7 +184,7 @@ void setup()
     //Wifi Manager Config END
     
     // Setup wireless connection
-    client.setServer(mqtt_server, 1883);
+//    client.setServer(mqtt_server, 1883); //DEBUG
     client.setCallback(callback);
     // Increase limit, this line fixed problem for my device
     client.setBufferSize(8192);
@@ -212,7 +217,17 @@ void setup()
   // Setup load cell device
   //REMOVED
 
-  //Check for new firmware
+  //KAA Communication Setup and Check Firmware Version
+  client.setServer(mqttServer, 1883);
+  client.setCallback(handleOtaUpdate);
+  initServerConnection();
+
+  if (client.setBufferSize(1023)) {
+    Serial.println("Successfully reallocated internal buffer size");
+  } else {
+    Serial.println("Failed to reallocated internal buffer size");
+  }
+
   delay(1000);
   reportCurrentFirmwareVersion();
   requestNewFirmware();
@@ -221,6 +236,7 @@ void setup()
 void loop()
 {
   // put your main code here, to run repeatedly:
+  initServerConnection();
 
   /////// READ INPUTS //////
   // get device accel data
@@ -236,6 +252,7 @@ void loop()
   stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
   keyswitchState = porthub.hub_d_read_value_A(HUB_ADDR[2]);
   plugState = porthub.hub_d_read_value_A(HUB_ADDR[3]);
+  plugRState = porthub.hub_d_read_value_B(HUB_ADDR[3]);
   batt1BtnState = porthub.hub_d_read_value_A(HUB_ADDR[1]);
   batt2BtnState = porthub.hub_d_read_value_B(HUB_ADDR[1]);
 
@@ -243,6 +260,7 @@ void loop()
   {
     // Connect to wifi logic
     if (!client.connected()) {
+      Serial.println("Attempting to connect to WiFi...");
       reconnect();
     }
     //client.loop(); //SUSPICIOUS if this is really needed... causes irregular loop execution speeds
@@ -286,10 +304,10 @@ void loop()
   }
 
   //time calculation
-  display[3] = (int)(usecCount % 1000);
-  display[2] = (int)((usecCount % 1000000) / 1000);
-  display[1] = (int)((usecCount / 1000000) % 60);
-  display[0] = (int)((usecCount / 60000000) % 3600);
+  display[3] = (int)(usecCount % 1000);               //nanoseconds
+  display[2] = (int)((usecCount % 1000000) / 1000);   //microseconds
+  display[1] = (int)((usecCount / 1000000) % 60);     //seconds
+  display[0] = (int)((usecCount / 60000000) % 3600);  //minutes
   
   //Start Button Check
   if (startBtnState != BUTTON_OFF && started == 0 && plugState == 1 && keyswitchState == 1)
@@ -301,7 +319,7 @@ void loop()
       startaccY = accY;
       startaccZ = accZ;
       digitalWrite(10, LOW); //turn on LED
-      Serial.println("Trial Status: M5.BtnA pressed, Trial Stated!");
+      Serial.println("Trial Status: M5.BtnA pressed, Trial Started!");
     delay(1);
   }
 
@@ -458,36 +476,33 @@ void loop()
   if (batt2BtnState == 0 && batt2BtnState != batt2BtnState_old){Serial.println("Batt2 Button Pressed");};
   if (batt2BtnState == 1 && batt2BtnState != batt2BtnState_old){Serial.println("Batt2 Button Released");};
   batt2BtnState_old = batt2BtnState; // store current value
-  
+
   // update display
   M5.Lcd.setRotation(3);
   M5.Lcd.fillScreen(BLACK);
   M5.Lcd.setTextColor(WHITE);
   M5.Lcd.setTextSize(1);
-  M5.Lcd.setCursor(0, 5);
-  M5.Lcd.printf("Smart Task Board\n");
-  M5.Lcd.printf("Wifi On:%d Status:%d\n", wifiEnabled, WiFi.status());
+  M5.Lcd.setCursor(0, TFT1STROW); //col, row
+  M5.Lcd.printf("Smart Task Board ");
+  M5.Lcd.printf("FW:%s\n", FW_VERSION);
+  M5.Lcd.printf("Token:%s\n", SECRET_TOKEN);
+  M5.Lcd.printf("WiFi On:%d Status:%d\n", wifiEnabled, WiFi.status());
   M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
-  M5.Lcd.printf("%d BTN_1:%d TS:%d\n", buttonPushLatch, buttonPushState, TS_button); 
-  M5.Lcd.printf("%d KEY_L:%d TS:%d\n", keyswitchLatch, keyswitchState, TS_key); 
-  M5.Lcd.printf("%d ETH_L:%d TS:%d\n", plugLatch, plugState, TS_plug); 
-  M5.Lcd.printf("%d BAT_1:%d TS:%d\n", batt1Latch, batt1BtnState, TS_batt1); 
-  M5.Lcd.printf("%d BAT_2:%d TS:%d\n", batt2Latch, batt2BtnState, TS_batt2); 
-  M5.Lcd.printf("Started:%d Time Left: %d Pts:%d\n", started, timeLeft, ptsCollected);
-  M5.Lcd.printf("Trial Time:");
-  M5.Lcd.printf(" m: s: ms: us\n");
-  M5.Lcd.printf("%02d:",display[0]);
-  M5.Lcd.printf("%02d:",display[1]);
-  M5.Lcd.printf("%03d:",display[2]);
-  M5.Lcd.printf("%03d\n",display[3]);
-  M5.Lcd.printf("Total Force: %0.2f\n", cumForce);
-  M5.Lcd.printf("acX:%0.2f acY:%0.2f acZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
-  M5.Lcd.printf("gyX:%0.2f gyY:%0.2f gyZ:%0.2f\n", gyroX, gyroY, gyroZ);
-  M5.Lcd.printf("Token: %s", SECRET_TOKEN);
-  //Serial.println(usecCount); //print out seconds to the serial monitor
-  //Serial.printf("Key_TS: %d, Plug_TS: %d, Batt1_TS: %d, Batt2_TS: %d, Time: %d\n", TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
-
-  //delay(10); // delay for screen refresh NOTE: This directly affects performance of clock buttons
+  M5.Lcd.printf("Task  | Done  | State | Time (ms) \n");
+  M5.Lcd.setCursor(0, 15*3); //col, row
+  M5.Lcd.printf("BUTTON  %d       %d       %d\n", buttonPushLatch, buttonPushState, TS_button/1000); 
+  M5.Lcd.printf("KEYSW   %d       %d       %d\n", keyswitchLatch, keyswitchState, TS_key/1000); 
+  M5.Lcd.printf("PLUG    %d       %d       %d\n", plugLatch, plugState, TS_plug/1000); 
+  M5.Lcd.printf("BATT1   %d       %d       %d\n", batt1Latch, batt1BtnState, TS_batt1/1000); 
+  M5.Lcd.printf("BATT2   %d       %d       %d\n", batt2Latch, batt2BtnState, TS_batt2/1000); 
+  M5.Lcd.printf("Trial Clock: %02dm:%02ds:%03dms\n", display[0],display[1],display[2]);
+  M5.Lcd.printf("Time Left:%d Points:%d/5\n", timeLeft, ptsCollected);
+  M5.Lcd.printf("Trial Sensitivity:%0.2f\n", cumForce);
+  M5.Lcd.printf("accX:%0.2f accY:%0.2f accZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
+  M5.Lcd.printf("gyroX:%0.2f gyroY:%0.2f gyroZ:%0.2f\n", gyroX, gyroY, gyroZ);
+  
+  Serial.printf("Token:%s, CurrentState:BUTTON:%d,KEY_L:%d,PLUG_L:%d,PLUG_R:%d,BATT1:%d,BATT2:%d, Protocol:%s, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Key_TS_us:%d, Plug_TS_us:%d, Batt1_TS_us:%d, Batt2_TS_us:%d, Time_us:%d\n", SECRET_TOKEN, buttonPushState, keyswitchState, plugState, plugRState, batt1BtnState, batt2BtnState, PROTOCOL_ID, started, timeLeft, ptsCollected, cumForce, TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
+//  delay(10); // delay in ms for screen refresh NOTE: This directly affects performance of clock buttons
 }
 
 /////////////////////////////////
@@ -538,79 +553,34 @@ void setup_wifi() {
   }
 }
 
-void connectWiFi() {
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println();
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-}
-
-void reconnect() {
-  while (!client.connected()) {
-    Serial.println("Attempting MQTT connection...");
-    char *client_id = "client-id-123ab";
-    if (client.connect(client_id)) {
-      Serial.println("Connected to WiFi");
-      // ... and resubscribe
-      subscribeToCommand();
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
-}
-
-void subscribeToCommand() {
-  String topic = "kp1/" + APP_VERSION + "/cex/" + TOKEN + "/command/SWITCH/status";
-  client.subscribe(topic.c_str());
-  Serial.println("Subscribed on topic: " + topic);
-
-  //Inserting from OTA Example function subscribeToFirmwareUpdates()
-  String serverPushOnConnect = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/#";
-  client.subscribe(serverPushOnConnect.c_str());
-  Serial.println("Subscribed to server firmware push on topic: " + serverPushOnConnect);
-
-  String serverFirmwareResponse = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/status/#";
-  client.subscribe(serverFirmwareResponse.c_str());
-  Serial.println("Subscribed to server firmware response on topic: " + serverFirmwareResponse);
-
-  String serverFirmwareErrorResponse = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/status/error";
-  client.subscribe(serverFirmwareErrorResponse.c_str());
-  Serial.println("Subscribed to server firmware response on topic: " + serverFirmwareErrorResponse);
-}
-
-//OTA Functions from Kaa
+//Kaa Stuff copied from https://docs.kaaiot.io/KAA/docs/current/Tutorials/device-integration/hardware-guides/esp32-ota-updates/ 
 void reportCurrentFirmwareVersion() {
   String reportTopic = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/applied/json";
-  String reportPayload = "{\"configId\":\"0.0.1\"}"; //UPDATE this to match the OTA upgradeable from field on Kaa
+//  String reportPayload = "{\"configId\":\"1.0.0\"}";
+  String reportPayload = "{\"configId\":\"" + FW_VERSION + "\"}"; //UPDATE this to match the OTA upgradeable from field on Kaa
   Serial.println("Reporting current firmware version on topic: " + reportTopic + " and payload: " + reportPayload);
   client.publish(reportTopic.c_str(), reportPayload.c_str());
 }
 
 void requestNewFirmware() {
+  
   int requestID = random(0, 99);
   String firmwareRequestTopic = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/" + requestID;
   Serial.println("Requesting firmware using topic: " + firmwareRequestTopic);
   client.publish(firmwareRequestTopic.c_str(), "{\"observe\":true}"); // observe is used to specify whether the client wants to accept server pushes
 }
 
+
+void initServerConnection() {
+  setupWifi();
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+}
+
 void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
   Serial.printf("\nHandling firmware update message on topic: %s and payload: ", topic);
-
-  //DEBUG with Denys
-  //This fixed the issue!
-  //This checks that the topic is indeed a cmx_ota message. 
-  if (!String(topic).startsWith("kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN)) {
-  return;
-  }
-  //END DEBUG
   
   DynamicJsonDocument doc(1023);
   deserializeJson(doc, payload, length);
@@ -627,7 +597,6 @@ void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
     return;
   }
 
-  //  return; //DEBUG escape do not actually update the firmware //commenting this line will enable OTA update.
   String firmwareLink = json_var["config"]["link"].as<String>();
 
   t_httpUpdate_return ret = httpUpdate.update(espClient, firmwareLink.c_str());
@@ -645,4 +614,56 @@ void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
       Serial.println("HTTP_UPDATE_OK");
       break;
   }
+}
+
+void setupWifi() {
+  if (WiFi.status() != WL_CONNECTED) {
+    delay(200);
+    Serial.println();
+    Serial.printf("Connecting to [%s]", ssid);
+    WiFi.begin(ssid, password);
+    connectWiFi();
+  }
+}
+
+void connectWiFi() {
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.println("Attempting MQTT connection...");
+    char *client_id = "bqf1uai03p4cop6jr3u0";
+    if (client.connect(client_id)) {
+      Serial.println("Connected to WiFi");
+      subscribeToFirmwareUpdates();
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+void subscribeToFirmwareUpdates() {
+  String serverPushOnConnect = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/#";
+  client.subscribe(serverPushOnConnect.c_str());
+  Serial.println("Subscribed to server firmware push on topic: " + serverPushOnConnect);
+
+  String serverFirmwareResponse = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/status/#";
+  client.subscribe(serverFirmwareResponse.c_str());
+  Serial.println("Subscribed to server firmware response on topic: " + serverFirmwareResponse);
+
+  String serverFirmwareErrorResponse = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/status/error";
+  client.subscribe(serverFirmwareErrorResponse.c_str());
+  Serial.println("Subscribed to server firmware response on topic: " + serverFirmwareErrorResponse);
 }
