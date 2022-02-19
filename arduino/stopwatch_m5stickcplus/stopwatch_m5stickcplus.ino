@@ -217,7 +217,7 @@ void setup()
   // Setup load cell device
   //REMOVED
 
-  //KAA Setup //DEBUG
+  //KAA Communication Setup and Check Firmware Version
   client.setServer(mqttServer, 1883);
   client.setCallback(handleOtaUpdate);
   initServerConnection();
@@ -237,7 +237,7 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   initServerConnection();
-  
+
   /////// READ INPUTS //////
   // get device accel data
   M5.Imu.getGyroData(&gyroX,&gyroY,&gyroZ);
@@ -501,7 +501,6 @@ void loop()
   M5.Lcd.printf("accX:%0.2f accY:%0.2f accZ:%0.2f\n", accX*1000, accY*1000, accZ*1000);
   M5.Lcd.printf("gyroX:%0.2f gyroY:%0.2f gyroZ:%0.2f\n", gyroX, gyroY, gyroZ);
   
-  
   Serial.printf("Token:%s, CurrentState:BUTTON:%d,KEY_L:%d,PLUG_L:%d,PLUG_R:%d,BATT1:%d,BATT2:%d, Protocol:%s, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Key_TS_us:%d, Plug_TS_us:%d, Batt1_TS_us:%d, Batt2_TS_us:%d, Time_us:%d\n", SECRET_TOKEN, buttonPushState, keyswitchState, plugState, plugRState, batt1BtnState, batt2BtnState, PROTOCOL_ID, started, timeLeft, ptsCollected, cumForce, TS_key, TS_plug, TS_batt1, TS_batt2, usecCount); //print out seconds to the serial monitor
 //  delay(10); // delay in ms for screen refresh NOTE: This directly affects performance of clock buttons
 }
@@ -554,131 +553,7 @@ void setup_wifi() {
   }
 }
 
-/*
-void connectWiFi() {
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println();
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-}
-
-
-void reconnect() {
-  while (!client.connected()) {
-    Serial.println("Attempting MQTT connection...");
-    char *client_id = "client-id-123ab";
-    if (client.connect(client_id)) {
-      Serial.println("Connected to WiFi");
-      // ... and resubscribe
-      subscribeToCommand();
-      
-      //DEBUG
-      delay(1000);
-      reportCurrentFirmwareVersion();
-      requestNewFirmware();
-      //DEBUG
-      
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
-}
-
-void subscribeToCommand() {
-  String topic = "kp1/" + APP_VERSION + "/cex/" + TOKEN + "/command/SWITCH/status";
-  client.subscribe(topic.c_str());
-  Serial.println("Subscribed on topic: " + topic);
-
-  //Inserting from OTA Example function subscribeToFirmwareUpdates()
-  String serverPushOnConnect = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/#";
-  client.subscribe(serverPushOnConnect.c_str());
-  Serial.println("Subscribed to server firmware push on topic: " + serverPushOnConnect);
-
-  String serverFirmwareResponse = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/status/#";
-  client.subscribe(serverFirmwareResponse.c_str());
-  Serial.println("Subscribed to server firmware response on topic: " + serverFirmwareResponse);
-
-  String serverFirmwareErrorResponse = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/status/error";
-  client.subscribe(serverFirmwareErrorResponse.c_str());
-  Serial.println("Subscribed to server firmware response on topic: " + serverFirmwareErrorResponse);
-}
-*/
-
-//OTA Functions from Kaa
-/*
-void reportCurrentFirmwareVersion() {
-  String reportTopic = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/applied/json";
-  String reportPayload = "{\"configId\":\"" + FW_VERSION + "\"}"; //UPDATE this to match the OTA upgradeable from field on Kaa
-//  String reportPayload = "{\"configId\":\"0.0.1\"}"; //UPDATE this to match the OTA upgradeable from field on Kaa
-  Serial.println("Reporting current firmware version on topic: " + reportTopic + " and payload: " + reportPayload);
-  client.publish(reportTopic.c_str(), reportPayload.c_str());
-}
-
-void requestNewFirmware() {
-  int requestID = random(0, 99);
-  String firmwareRequestTopic = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/config/json/" + requestID;
-  Serial.println("Requesting firmware using topic: " + firmwareRequestTopic);
-  client.publish(firmwareRequestTopic.c_str(), "{\"observe\":true}"); // observe is used to specify whether the client wants to accept server pushes
-}
-
-void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
-  Serial.printf("\nHandling firmware update message on topic: %s and payload: ", topic);
-
-  //DEBUG with Denys
-  //This fixed the issue!
-  //This checks that the topic is indeed a cmx_ota message. 
-  if (!String(topic).startsWith("kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN)) {
-  return;
-  }
-  //END DEBUG
-  
-  DynamicJsonDocument doc(1023);
-  deserializeJson(doc, payload, length);
-  JsonVariant json_var = doc.as<JsonVariant>();
-  Serial.println(json_var.as<String>());
-  if (json_var.isNull()) {
-    Serial.println("No new firmware version is available");
-    return;
-  }
-
-  unsigned int statusCode = json_var["statusCode"].as<unsigned int>();
-  if (statusCode != 200) {
-    Serial.printf("Firmware message's status code is not 200, but: %d\n", statusCode);
-    return;
-  }
-
-  //  return; //DEBUG escape do not actually update the firmware //commenting this line will enable OTA update.
-  String firmwareLink = json_var["config"]["link"].as<String>();
-
-  t_httpUpdate_return ret = httpUpdate.update(espClient, firmwareLink.c_str());
-
-  switch (ret) {
-    case HTTP_UPDATE_FAILED:
-      Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
-      break;
-
-    case HTTP_UPDATE_NO_UPDATES:
-      Serial.println("HTTP_UPDATE_NO_UPDATES");
-      break;
-
-    case HTTP_UPDATE_OK:
-      Serial.println("HTTP_UPDATE_OK");
-      break;
-  }
-}
-*/
-
-//DEBUG copied from https://docs.kaaiot.io/KAA/docs/current/Tutorials/device-integration/hardware-guides/esp32-ota-updates/ 
-//
-
+//Kaa Stuff copied from https://docs.kaaiot.io/KAA/docs/current/Tutorials/device-integration/hardware-guides/esp32-ota-updates/ 
 void reportCurrentFirmwareVersion() {
   String reportTopic = "kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN + "/applied/json";
 //  String reportPayload = "{\"configId\":\"1.0.0\"}";
