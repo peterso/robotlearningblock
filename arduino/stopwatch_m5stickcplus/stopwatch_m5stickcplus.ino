@@ -706,14 +706,6 @@ void initServerConnection() {
 
 void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
   Serial.printf("\nHandling firmware update message on topic: %s and payload: ", topic);
-
-   //DEBUG with Denys
-  //This fixed the issue!
-  //This checks that the topic is indeed a cmx_ota message. 
-  if (!String(topic).startsWith("kp1/" + APP_VERSION + "/cmx_ota/" + TOKEN)) {
-  return;
-  }
-  //END DEBUG
   
   DynamicJsonDocument doc(1023);
   deserializeJson(doc, payload, length);
