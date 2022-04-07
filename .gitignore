@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# Arduino stuff
+*.DS_Store
+
 # Compiled Object files
 *.slo
 *.lo
