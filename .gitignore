@@ -1,3 +1,6 @@
+# Unnecessary files
+*.DS_Store
+
 # Prerequisites
 *.d
 

@@ -1,0 +1,19 @@
+Getting Started Azure 
+
+Devices need to be setup on Azure IoT Central before they can send telemetry data to Azure. Each registered device has a unique Device Name and Device ID assigned. 
+
+Verify your setup.
+1. Plug in the Azure Task Board and ensure it is connected to the internet.
+2. Check the data is being rendered on Azure IoT Central by browsing to the "Task Board Robothon 2021". 
+	https://msrm-connected-taskboards.azureiotcentral.com/dashboards/urn%3AhomepageView%3At5p7ozvr
+3. Check the task board is publishing data to the dashboard. Keep in mind the task board needs time to send data and the dashboard also needs time to process and render. Expect to check every 60secs after making any changes. 
+
+IMPORTANT NOTES:
+ - When logging into the Azure portal use your <user>@tumcsp.onmicrosoft.com account.
+ - Loading the firmware (stopwatch_azure-iotc/minimal_device_adapter/device_test/device_test.ino) has only been successful with the Arduino IDE. Visual Studio Code has broken dependencies with working with the M5Stack libraries. 
+ - Device data is stored long term in a blob storage under the iot-task-board resource group. https://portal.azure.com/#blade/Microsoft_Azure_Storage/ContainerMenuBlade/overview/storageAccountId/%2Fsubscriptions%2F8c33ed00-a1f1-4e90-a4ad-1372ebdebbb1%2Fresourcegroups%2Fiot-task-boards%2Fproviders%2FMicrosoft.Storage%2FstorageAccounts%2Ftaskboardblobstorage/path/taskboard-data/etag/%220x8D9B5AB33519752%22/defaultEncryptionScope/%24account-encryption-key/denyEncryptionScopeOverride//defaultId//publicAccessVal/None
+
+How to simulate a device on your local PC (TODO)
+
+How to install firmware on a brand new microprocessor device (TODO)
+- You will need to update the connection string on the device firmware to match the Device ID and the Shared Access Key from Azure IOT Central when creating a new device.

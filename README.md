@@ -5,6 +5,8 @@ The goal of the project is to provide an objective tool for measuring manipulati
 
 An example demonstration of usage of the connected task board can be viewed on [youtube](https://youtu.be/LJFTypNZrFs).
 
+The device was featured during an internationl robot manipulation competition, [Robothon Grand Challenge](https://www.robothon-grand-challenge.com).
+
 Below is a table of important stastics that can be collected using the connected task board.
 
 ~~~
@@ -49,10 +51,21 @@ b'Token:task-board-demo, CurrentState:BTN_1:1,KEY_L:1,ETH_L:0,BAT1:1,BAT2:1, Pro
 
 	3.2 Press M5 Button to Start trial!
 
-![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
+The agent under task, robot or human, can then proceed to complete the 5 sub tasks populated on the task board. The results are recorded locally on the device and displayed on the included LED screen. The microcontroller publishes the latest available device data to the remote server every 5 seconds when the device is connected to the internet over wifi. 
+
+![TaskBoardProtocolMap.png](/assets/images/TaskBoardProtocolMap.png)
 
 ### Usage 
 The task board is designed to capture manipulation performance for use in the Robothon Grand Challenge. The microcontroller tracks users overall trial completion time, intermediate sub-task completion times, earned trial points, and cumulative interaction force. Performance trials are initiated by the user after restoring the components to their start configuration and then pressing the M5 button. A countdown timer ends trial attempts after 10 minutes. When the task board is connected to the internet, the microcontroller publishes the latest and ongoing trial data every 5 seconds to a remote cloud server. An interactive web dashboard renders the trial data from the task board to provide transparent, remote observability into performance trials. Trials end when the countdown timer expires or when all sub-tasks are completed and the user presses the red stop button. Final trial results are displayed on the task board LED display and on the web dashbaord.
+
+View the task board web dashboard at this URL: https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/ 
+
+A publicly viewable version of the dashboard is available to view any of the released task boards here: https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad
+
+![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
+
+![ManualTrialRun](/assets/gifs/manual_trial_run.gif)
+![InitializeTaskBoard](/assets/gifs/pickup_and_place_tb.gif)
 
 ### Core Features
 
@@ -65,8 +78,9 @@ The core features of the microcontroller are:
 - [Done] setup wifi greeter to allow user to supply own wifi ssid and password
 - [TODO] report the load cell readings on the task box surface
 - [Done] report the state of the task box over USB
-- [TODO] device has a digital twin that can be represented in a robot simulator
-- [TODO] task board reports are integrated into a Microsoft Azure IoT dashboard
+- [TODO] device has a digital twin that can be represented in a robot simulator i.e. RViz
+- [Done] task board reports are integrated into a Microsoft Azure IoT dashboard
+- [TODO] integrate bluetooth power meter into task board telemetry
 
 ### NEW Feature Requests
 - [TODO] Over-The-Air Updates
@@ -89,6 +103,7 @@ Each task board is equipped with a microcontroller to monitor its state. Task bo
 - CAD Design [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)
 - Assembly Drawing [PDF](https://drive.google.com/file/d/1hJSEHZe9U0Q7VRQKNKOsz96tIN9Y0mhF/view?usp=sharing)
 - Wiring Diagram [Link](/assets/images/TaskBoard-5Level-Wiring.png)
+- Task Board Assembly Instructions [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)
 
 ### Deployment
 The initial task boards will be equipped with two microcontrollers to read and send the sensors and report them to the internet dashboard. The reason for this is the weigh module and pbhub units are compatible to run on a single m5stickc board as they both need to be connected to the single grove port. 
