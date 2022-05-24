@@ -1,4 +1,5 @@
 # robotlearningblock
+
 Repo for smart busy block for developing and evaluating robot manipulation skills in the real-world.
 
 The goal of the project is to provide an objective tool for measuring manipulation performance for both humans and robots. The microcontroller on the task box monitors the state of the mounted manipulation elements and records state change events and accelerometer readings to a cloud-hosted dashboard to aggregate performance data.
@@ -25,6 +26,7 @@ b'Token:task-board-demo, CurrentState:BTN_1:1,KEY_L:1,ETH_L:0,BAT1:1,BAT2:1, Pro
 ![RobotSetupExample.png](/assets/images/RobotSetupExample.png)
 
 ### Quick Start
+
 1. Plug in board to USB to charge.
 
 	1.1 Power On = Hold Left button (of M5) on 2sec, Power Off = Hold Left button 6sec
@@ -56,6 +58,7 @@ The agent under task, robot or human, can then proceed to complete the 5 sub tas
 ![TaskBoardProtocolMap.png](/assets/images/TaskBoardProtocolMap.png)
 
 ### Usage 
+
 The task board is designed to capture manipulation performance for use in the Robothon Grand Challenge. The microcontroller tracks users overall trial completion time, intermediate sub-task completion times, earned trial points, and cumulative interaction force. Performance trials are initiated by the user after restoring the components to their start configuration and then pressing the M5 button. A countdown timer ends trial attempts after 10 minutes. When the task board is connected to the internet, the microcontroller publishes the latest and ongoing trial data every 5 seconds to a remote cloud server. An interactive web dashboard renders the trial data from the task board to provide transparent, remote observability into performance trials. Trials end when the countdown timer expires or when all sub-tasks are completed and the user presses the red stop button. Final trial results are displayed on the task board LED display and on the web dashbaord.
 
 View the task board web dashboard at this URL: https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/ 
@@ -63,14 +66,13 @@ View the task board web dashboard at this URL: https://cloud.kaaiot.com/solution
 A publicly viewable version of the dashboard is available to view any of the released task boards here: https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad
 
 ![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
-
 ![ManualTrialRun](/assets/gifs/manual_trial_run.gif)
 ![InitializeTaskBoard](/assets/gifs/pickup_and_place_tb.gif)
 
 ### Core Features
 
 The core features of the microcontroller are:
-- [Status] Feature Description
+[Status] Feature Description
 - [Done] task board monitors a digital state of all mounted manipulation elements
 - [Done] user can start a trial using the device without internet connection
 - [Done] task board reports the timestamps for each successful task interaction trial over USB
@@ -83,8 +85,9 @@ The core features of the microcontroller are:
 - [TODO] integrate bluetooth power meter into task board telemetry
 
 ### NEW Feature Requests
-- [TODO] Over-The-Air Updates
-- [TODO] Make the task board surface more stiff/rigid
+
+- [TODO] Over-The-Air Updates for task boards
+- [Done] Make the task board surface more stiff/rigid -> removed load cell and mount top plate to housing directly
 - [TODO] Add a testing procedure for a factory to execute prior to shipping task board
 - [TODO] Look into Device Management with BalenaOS for multiple OTA updates 
 
@@ -99,19 +102,23 @@ Each task board is equipped with a microcontroller to monitor its state. Task bo
 ![SystemArchitecture.png](/assets/images/SystemArchitecture.png)
 
 ### Relevant Documents
-- BOM [Google Sheet](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit?usp=sharing)
+- Bill of Materials BOM [Google Sheet](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit?usp=sharing)
 - CAD Design [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)
 - Assembly Drawing [PDF](https://drive.google.com/file/d/1hJSEHZe9U0Q7VRQKNKOsz96tIN9Y0mhF/view?usp=sharing)
 - Wiring Diagram [Link](/assets/images/TaskBoard-5Level-Wiring.png)
 - Task Board Assembly Instructions [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)
+- Task Board Inventory Tracking [Google Sheet](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit#gid=701724046)
 
 ### Deployment
-The initial task boards will be equipped with two microcontrollers to read and send the sensors and report them to the internet dashboard. The reason for this is the weigh module and pbhub units are compatible to run on a single m5stickc board as they both need to be connected to the single grove port. 
+- An initial 15 task boards will be fabricated to be used in the Robothon 2021 competition at Automatica.
+- 20 task boards were built for the Robothon 2022 competition.
 
-An initial 15 task boards will be fabricated to be used in the Robothon 2021 competition at Automatica.
 
-	controller1: taskboard state monitor 	Program: stopwatch_m5stickcplus.ino
-	controller2: weight			Program: KAAweight2.ino
+### Battery Recycling
+- WEF Report on battery recycling [Link](https://www3.weforum.org/docs/WEF_A_New_Circular_Vision_for_Electronics.pdf)
+- German Battery Collection with GRS Batterien [Link](https://www.en.grs-batterien.de/grs-batterien/)
+- Fun, kids video Curiousity Quest showing many of the processes [YouTube](https://www.youtube.com/watch?v=lMn-sDvgj4Q&ab_channel=curiosityquest)
+
 
 ### References
 - [M5Stack Docs](https://docs.m5stack.com/#/)
