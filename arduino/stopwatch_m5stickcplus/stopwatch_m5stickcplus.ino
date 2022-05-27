@@ -22,6 +22,7 @@
 //#include "kaa.h"
 
 // USER CONFIGURABLE SETTINGS
+#define LABEL "task-board-133"
 #define PROTOCOL_ID "MIRMI_100"
 #define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
 #define MAC WiFi.macAddress()
@@ -31,8 +32,8 @@
 const char* ssid = SECRET_SSID;                   // WiFi name
 const char* password = SECRET_PASSWORD;           // WiFi password
 const char* mqtt_server = "mqtt.cloud.kaaiot.com";
-//const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
-const String TOKEN = WiFi.macAddress();                // Endpoint token - you get (or specify) it during device provisioning
+const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
+//const String TOKEN = WiFi.macAddress();                // Endpoint token - you get (or specify) it during device provisioning
 const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you specify it during device provisioning
 const String FW_VERSION = "0.0.8"; // Firmware Version for OTA management
 
@@ -324,7 +325,8 @@ void setup()
     //    M5.Lcd.print("ssid: %s\n", *ssid);
     M5.Lcd.print(" Smart Task Board ");
     M5.Lcd.printf("v %s\n ", FW_VERSION);
-    M5.Lcd.printf("TOKEN: %s\n\n ", MAC);
+//    M5.Lcd.printf("TOKEN: %s\n\n ", MAC);
+    M5.Lcd.printf("TOKEN: %s\n\n ", LABEL);
     M5.Lcd.print(" Connecting to WiFi...\n\n");
     M5.Lcd.print(" Configure new WiFi credentials by\n");
     M5.Lcd.print(" with phone or PC then browse to \n");
@@ -694,7 +696,7 @@ void loop()
     M5.Lcd.printf("Smart Task Board ");
     M5.Lcd.printf("v %s\n ", FW_VERSION);
     M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
-    M5.Lcd.printf("Token: %s\n ", TOKEN);
+    M5.Lcd.printf("Token: %s\n ", LABEL);
     M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
     M5.Lcd.printf("%d BTN_1:%d TS:%d\n ", buttonPushLatch, buttonPushState, TS_button); 
     M5.Lcd.printf("%d KEY_L:%d TS:%d\n ", keyswitchLatch, keyswitchState, TS_key); 
