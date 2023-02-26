@@ -22,3 +22,7 @@ If you want to flash the firware onto the M5StickPlus (ESP32) device then you wi
 Use the flash-bin-no-ide.zip folder as a shareable object with the client. Compile the new target firmware with the Arduino IDE and then copy the *.bin files from your local PC into a new .zip folder.
 
 The location of the *.bin files after compiling will be listed in the Arduino IDE in the terminal output when "verbose" flag for compiling is on in the Preferences menu. On a Mac, the location is something like: `/var/folders/bf/p280vkg91qj8wl5_1w4gn32h0000gn/T/arduino_build_168910/`
+
+## Helpful Coding Resources
+- M5Stack LCD Library Documentation: https://github.com/m5stack/m5-docs/blob/master/docs/en/api/lcd.md 
+- ESP32 Persistent Memory Example: https://randomnerdtutorials.com/esp32-save-data-permanently-preferences/ 
