@@ -38,6 +38,8 @@
 #define MAC WiFi.macAddress()
 #define BUTTON_ON 0
 #define BUTTON_OFF 1
+#define SCREEN_ROWS 135
+#define SCREEN_COLS 240
 
 int verbose = 0; // set to 1 to enable serial output
 
@@ -136,6 +138,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   
   //Check if message is related to a command message
   if (!String(topic).startsWith("kp1/" + APP_VERSION + "/cex/" + TOKEN)) {
+    // TODO: Debug handling of command messages sent from the Kaa dashboard
     return;
   }
 
@@ -372,8 +375,10 @@ void screen4(){
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]); 
     // M5.Lcd.printf("ST3 Time: %d\n", TS_fader);
     int x_offset = map(faderValue, 0, 700, 10, 210); 
+    int x_goal = map(FADERSP, 0,700,10,210);
     M5.Lcd.fillRect(0, 80, 240, 25, BLACK);
     M5.Lcd.fillTriangle(0+x_offset, 80, 20+x_offset, 80, 10+x_offset, 100, RED);
+    M5.Lcd.fillTriangle(0+x_goal, 120, 20+x_goal, 120, 10+x_goal, 100, GREEN);
 }
 void screen5(){
     M5.Lcd.fillCircle(100, 10, 8, GREEN);
