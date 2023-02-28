@@ -28,7 +28,7 @@
 #define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
 #define FADERSP 300 // This value should be updateable via the web commands from Kaa
 #define FADERTOLERANCE 20 // This value should be updateable via the web commands from Kaa
-#define ANGLESP 260 
+#define ANGLESP 270 
 #define PTS_BUTTON 1
 #define PTS_FADER 1
 #define PTS_CIRCUIT_PROBE 1
@@ -57,7 +57,9 @@ const String TOKEN = "simulated-one";                // Endpoint token - you get
 const String APP_VERSION = "bvhkhrtbhnjc0btkj7r0-v0";    // Application version - you specify it during device provisioning FOR DEVELOPMENT ONLY
 const String FW_VERSION = "1.0.1"; // Firmware Version for OTA management
 
-const unsigned long fiveSeconds = 1 * 5 * 1000UL;
+
+const unsigned long trialPublishRate = 1 * 0.05 * 1000UL; //500ms
+const unsigned long fiveSeconds = 1 * 5 * 1000UL; //5 seconds
 static unsigned long lastPublish = 0 - fiveSeconds;
 
 // Setup Persistent Memory
@@ -104,7 +106,7 @@ unsigned long trialTime = 0;
 int wifiEnabled = 0;
 int countStart = 0;
 int trialRunning = 0,  timeLeft = 0,  ptsCollected = 0;
-int buttonPushLatch = 0,  faderLatch = 0,  angleLatch = 0,  cableWrapLatch = 0,  probeGoalLatch = 0,  OP180_1_Latch = 0,  OP180_2_Latch = 0;
+int buttonPushLatch = 0,  faderLatch = 0,  angleLatch = 0,  cableWrapLatch = 0,  probeGoalLatch = 0,  OP180_1_Latch = 0,  OP180_2_Latch = 0, trialCompletedLatch = 0;
 
 int startBtnState = -1,  stopBtnState = -1,  resetBtnState = -1,  buttonPushState = -1,  faderValue = -1;
 int keyswitchRState = -1,  keyswitchLState = -1,  angleValue = -1,  portRState = -1,  portLState = -1;
@@ -297,8 +299,83 @@ void resetCounter(){
     Serial.printf("Counter value reset!\n");  // Print the counter to Serial Monitor. 
 }
 
+void publish_telemetry(){
+      DynamicJsonDocument telemetry(8192); // increased from 1023
+      telemetry.createNestedObject();
+
+      telemetry[0]["accX"] = accX * 1000; //Float
+      telemetry[0]["accY"] = accY * 1000; //Float
+      telemetry[0]["accZ"] = accZ * 1000; //Float
+      telemetry[0]["gyroX"] = gyroX; //Float
+      telemetry[0]["gyroY"] = gyroY; //Float
+      telemetry[0]["gyroZ"] = gyroZ; //Float
+      telemetry[0]["trialCounter"] = trialCounter; //INT
+      telemetry[0]["faderValue"] = faderValue; //BOOL
+      telemetry[0]["angleValue"] = angleValue; //BOOL
+      telemetry[0]["startButtonState"] = startBtnState; //BOOL
+      telemetry[0]["resetButtonState"] = resetBtnState; //BOOL
+      telemetry[0]["pushButtonState"] = buttonPushState; // BOOL
+      telemetry[0]["stopButtonState"] = stopBtnState; // BOOL
+      telemetry[0]["probeStartState"] = probeStartState; //BOOL
+      telemetry[0]["probeGoalState"] = probeGoalState; //BOOL
+      telemetry[0]["trialStarted"] = trialRunning; //BOOL
+      telemetry[0]["trialTime"] = trialTime; //Float
+      telemetry[0]["Time_Button"] = TS_button; //INT
+      telemetry[0]["Time_Fader"] = TS_fader; //INT
+      telemetry[0]["Time_Angle"] = TS_angle; //INT
+      telemetry[0]["Time_CableWrap"] = TS_cableWrap; //INT
+      telemetry[0]["Time_ProbeGoal"] = TS_probeGoal; //INT
+      telemetry[0]["cumForce"] = cumForce;//Float
+      telemetry[0]["trialPoints"] = ptsCollected; //INT 
+//      telemetry[0]["FW_Version"] = 8; //STR Kaa doesn't seem to accept strings in this way...
+//      telemetry[0]["PROTOCOL"] = PROTOCOL_ID; //STR 
+      
+      String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
+      client.publish(topic.c_str(), telemetry.as<String>().c_str());
+      Serial.println("Published on topic: " + topic);
+}
+
 // SCREEN DEFINITIONS
 void home_screen(){
+    M5.Lcd.drawCircle(10, 10, 10, WHITE);
+    if (buttonPushLatch){
+      M5.Lcd.fillCircle(10, 10, 8, GREEN);
+    }
+    M5.Lcd.drawCircle(40, 10, 10, WHITE);
+    if (faderLatch){
+      M5.Lcd.fillCircle(40, 10, 8, GREEN);
+    }
+    M5.Lcd.drawCircle(70, 10, 10, WHITE);
+    if (angleLatch){
+      M5.Lcd.fillCircle(70, 10, 8, GREEN);
+    }
+    M5.Lcd.drawCircle(100, 10, 10, WHITE);
+    if (probeGoalLatch){
+      M5.Lcd.fillCircle(100, 10, 8, GREEN);
+    }
+    M5.Lcd.drawCircle(130, 10, 10, WHITE);
+    if (cableWrapLatch){
+      M5.Lcd.fillCircle(130, 10, 8, GREEN);
+    }
+    M5.Lcd.drawCircle(160, 10, 10, WHITE);
+    if (stopBtnState == BUTTON_ON && trialCompletedLatch == 0){
+      M5.Lcd.fillCircle(160, 10, 8, GREEN);
+      trialCompletedLatch = 1;
+    }
+    M5.Lcd.setCursor(5, 25);
+    M5.Lcd.setTextSize(1);
+    M5.Lcd.printf("Smart Task Board ");
+    M5.Lcd.printf("v%s\n ", FW_VERSION);
+    M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
+    M5.Lcd.printf("Token: %s\n ", LABEL);
+    M5.Lcd.printf("PROTOCOL: %s TrialCount:%d\n ", PROTOCOL_ID, trialCounter);
+    M5.Lcd.printf("Progress: %d %d %d %d %d\n ", buttonPushLatch, probeGoalLatch, faderLatch, angleLatch, cableWrapLatch); 
+    M5.Lcd.printf("Points: %d Interaction:%0.2f\n ", ptsCollected, cumForce);
+    M5.Lcd.printf("Trial Time:\n ");
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);    
+}
+void develop_screen(){
     M5.Lcd.setCursor(5, 5);
     M5.Lcd.setTextSize(1);
     M5.Lcd.printf("Smart Task Board ");
@@ -585,42 +662,14 @@ void loop()
 
     // Reporting logic to remote server
     unsigned long now = millis();
+    if (trialRunning == 1 && now - lastPublish >= trialPublishRate){
+      lastPublish += trialPublishRate;
+      publish_telemetry();
+    }
     if (now - lastPublish >= fiveSeconds) // publish to topic every 5 seconds
     {
       lastPublish += fiveSeconds;
-      DynamicJsonDocument telemetry(8192); // increased from 1023
-      telemetry.createNestedObject();
-
-      telemetry[0]["accX"] = accX * 1000; //Float
-      telemetry[0]["accY"] = accY * 1000; //Float
-      telemetry[0]["accZ"] = accZ * 1000; //Float
-      telemetry[0]["gyroX"] = gyroX; //Float
-      telemetry[0]["gyroY"] = gyroY; //Float
-      telemetry[0]["gyroZ"] = gyroZ; //Float
-      telemetry[0]["trialCounter"] = trialCounter; //INT
-      telemetry[0]["faderValue"] = faderValue; //BOOL
-      telemetry[0]["angleValue"] = angleValue; //BOOL
-      telemetry[0]["startButtonState"] = startBtnState; //BOOL
-      telemetry[0]["resetButtonState"] = resetBtnState; //BOOL
-      telemetry[0]["pushButtonState"] = buttonPushState; // BOOL
-      telemetry[0]["stopButtonState"] = stopBtnState; // BOOL
-      telemetry[0]["probeStartState"] = probeStartState; //BOOL
-      telemetry[0]["probeGoalState"] = probeGoalState; //BOOL
-      telemetry[0]["trialStarted"] = trialRunning; //BOOL
-      telemetry[0]["trialTime"] = trialTime; //Float
-      telemetry[0]["Time_Button"] = TS_button; //INT
-      telemetry[0]["Time_Fader"] = TS_fader; //INT
-      telemetry[0]["Time_Angle"] = TS_angle; //INT
-      telemetry[0]["Time_CableWrap"] = TS_cableWrap; //INT
-      telemetry[0]["Time_ProbeGoal"] = TS_probeGoal; //INT
-      telemetry[0]["cumForce"] = cumForce;//Float
-      telemetry[0]["trialPoints"] = ptsCollected; //INT 
-//      telemetry[0]["FW_Version"] = 8; //STR Kaa doesn't seem to accept strings in this way...
-//      telemetry[0]["PROTOCOL"] = PROTOCOL_ID; //STR 
-      
-      String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
-      client.publish(topic.c_str(), telemetry.as<String>().c_str());
-      Serial.println("Published on topic: " + topic);
+      publish_telemetry();
     }
   }
 
@@ -645,7 +694,7 @@ void loop()
       M5.Lcd.setTextColor(BLACK, BLUE);
       trialCounter++; //increment trial counter
       preferences.putUInt("trialCounter", trialCounter);  // Store the counter to the Preferences namespace
-      screenSelector = 1;
+      // screenSelector = 1;
     delay(1);
   }
 
@@ -658,7 +707,7 @@ void loop()
       digitalWrite(10, HIGH); //turn off LED
       Serial.printf("Trial Status: Red Button pressed, Trial Stopped! Time(us):%d\n", usecCount);
       // trialRunning = 0; //this seems correct here but isn't compatible with the logic of countStart
-      screenSelector = 0;
+      // screenSelector = 0;
     delay(1);
   }
 
@@ -705,6 +754,7 @@ void loop()
         delay(200);
         M5.Lcd.fillScreen(BLACK);
         delay(200);
+        // screenSelector = 0;
       }
     delay(1);
   }
@@ -721,12 +771,12 @@ void loop()
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("Trial Status: Button pushed! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
-    screenSelector = 2;
-    trialRunning++;
+    // screenSelector = 2;
+    // trialRunning++;
   }
 
     //Insert Probe Check
-  if (probeGoalState == BUTTON_ON && trialRunning == 2 && probeGoalLatch == 0)
+  if (probeGoalState == BUTTON_ON && trialRunning == 1 && probeGoalLatch == 0)
   {
     probeGoalLatch = 1;
     TS_probeGoal = usecCount;
@@ -734,14 +784,14 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.printf("Trial Status: Probe Goal achieved! Time(us):%d\n", usecCount);
+    Serial.printf("Trial Status: Probe Inserted achieved! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
     screenSelector = 3;
-    trialRunning++;
+    // trialRunning++;
   }
 
   //Fader Check
-  if (faderValue > FADERSP - FADERTOLERANCE && faderValue < FADERSP + FADERTOLERANCE && trialRunning == 3 && faderLatch == 0)
+  if (faderValue > FADERSP - FADERTOLERANCE && faderValue < FADERSP + FADERTOLERANCE && trialRunning == 1 && faderLatch == 0)
   {
     delay(1);
     faderLatch = 1;
@@ -752,12 +802,13 @@ void loop()
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("Trial Status: Fader Matched! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
-    screenSelector = 4;
-    trialRunning++;
+    // screenSelector = 4;
+    screenSelector = 0;
+    // trialRunning++;
   }
 
   //Angle & Circuit Probed Check
-  if (angleValue < ANGLESP && trialRunning == 4 && angleLatch == 0 && probeStartState == BUTTON_ON)
+  if (angleValue < ANGLESP && trialRunning == 1 && angleLatch == 0 && probeStartState == BUTTON_ON)
   {
     delay(1);
     angleLatch = 1;
@@ -768,12 +819,12 @@ void loop()
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("Trial Status: Door Angle achieved AND Circuit Probed! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
-    screenSelector = 5;
-    trialRunning++;
+    // screenSelector = 5;
+    // trialRunning++;
   }
 
   //Cable Wrapping and Probe Stowed Check
-  if (OP180_1_State == BUTTON_OFF && OP180_2_State == BUTTON_OFF && trialRunning == 5 && cableWrapLatch == 0 && angleLatch == 1 && probeGoalState == BUTTON_ON)
+  if (OP180_1_State == BUTTON_OFF && OP180_2_State == BUTTON_OFF && trialRunning == 1 && cableWrapLatch == 0 && angleLatch == 1 && probeGoalState == BUTTON_ON)
   {
     delay(1);
     cableWrapLatch = 1;
@@ -784,8 +835,8 @@ void loop()
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("Trial Status: Cable successfully wrapped AND Probe Stowed! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
-    screenSelector = 6;
-    trialRunning++;
+    // screenSelector = 6;
+    // trialRunning++;
   }
 
   //Time Count Start
@@ -828,6 +879,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED
     M5.Lcd.fillScreen(BLACK); //clear screen
     M5.Lcd.setTextColor(WHITE, BLACK);
+    trialCompletedLatch = 0;
   }
 
   // collect "force" during trial
@@ -871,7 +923,7 @@ void loop()
       M5.Lcd.fillScreen(WHITE);
       delay(50);
       M5.Lcd.fillScreen(BLACK);
-      if (screenSelector < 6){
+      if (screenSelector < 7){
         screenSelector++;
       } else {
         screenSelector = 0;
@@ -909,6 +961,9 @@ void loop()
       break;
     case 6:
       screen7();
+      break;
+    case 7:
+      develop_screen();
       break;
     default:
       Serial.print("No code is available");
