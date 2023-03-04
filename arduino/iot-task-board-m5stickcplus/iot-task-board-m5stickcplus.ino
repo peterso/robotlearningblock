@@ -1,6 +1,6 @@
 // This is a program to measure manipulation performance with the MSRM Task Board. 
 // Written by Peter So. December 2020.
-// Last updated July 2021
+// Last updated March 2023
 //
 // Program will not run on board without being connected to the PbHub unit. 
 // Default behavior is board will attempt to WiFi network. Hold M5 button during power up to use without WiFi.
@@ -23,14 +23,13 @@
 //#include "kaa.h"
 
 // USER CONFIGURABLE SETTINGS
-#define LABEL "task-board-144"
 #define TASK_BOARD_PW "robothon"
 #define PROTOCOL_ID "ROBOTHON_2023"
 #define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
 #define FADERSP 2000 // This value should be updateable via the web commands from Kaa
 #define FADERSP2 1500 // This value should be updateable via the web commands from Kaa
 #define FADERTOLERANCE 50 // This value should be updateable via the web commands from Kaa
-#define ANGLESP 2400 
+#define ANGLESP 2400 // Make sure this works for all task boards with the installed set screw
 #define PTS_BUTTON 1
 #define PTS_FADER 1
 #define PTS_CIRCUIT_PROBE 1
@@ -47,19 +46,15 @@
 int verbose = 0; // set to 1 to enable serial output
 
 //////// SYSTEM SETTINGS /////////
-// DO NOT CHANGE SETTINGS BELOW //
-const char* ssid = "FRITZ!Box 7530 WE";                   // WiFi name
-const char* password = "70348511462386919316";           // WiFi password
-const char* mqtt_server = "mqtt.cloud.kaaiot.com";
-//const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
-// const String TOKEN = "task-board-dev";                // Endpoint token - you get (or specify) it during device provisioning
-const String TOKEN = "task-board-144";                // Endpoint token - you get (or specify) it during device provisioning
-//const String TOKEN = WiFi.macAddress();                // Endpoint token - you get (or specify) it during device provisioning
-//const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you specify it during device provisioning
-// const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";    // Application version - you specify it during device provisioning
+const String TOKEN = "task-board-dev";                // Endpoint token - you get (or specify) it during device provisioning
 const String APP_VERSION = "bvhkhrtbhnjc0btkj7r0-v0";    // Application version - you specify it during device provisioning FOR DEVELOPMENT ONLY
 const String FW_VERSION = "1.0.1"; // Firmware Version for OTA management
 
+// DO NOT CHANGE SETTINGS BELOW //
+const char* mqtt_server = "mqtt.cloud.kaaiot.com";
+//const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
+//const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you specify it during device provisioning
+// const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";    // Application version - you specify it during device provisioning
 
 const unsigned long trialPublishRate = 1 * 0.05 * 1000UL; //500ms
 const unsigned long fiveSeconds = 1 * 5 * 1000UL; //5 seconds
@@ -96,7 +91,7 @@ void IRAM_ATTR usecTimer()
 
 // Initialize program variables before running the setu and main loops
 
-String token, task_board_ssid, unique_ssid;
+String task_board_ssid, unique_ssid;
 
 //min,sec,msec,usec display.
 int display[4] = {0};
@@ -177,8 +172,8 @@ void setup_wifi() {
   if (WiFi.status() != WL_CONNECTED) {
     delay(200);
     Serial.println();
-    Serial.printf("Connecting to [%s]", ssid);
-    WiFi.begin(ssid, password);
+    Serial.printf("Connecting to [%s]", unique_ssid);
+    WiFi.begin(unique_ssid.c_str(), TASK_BOARD_PW);
     connectWiFi();
   }
 }
@@ -375,7 +370,7 @@ void home_screen(){
     M5.Lcd.printf("Smart Task Board ");
     M5.Lcd.printf("v%s\n ", FW_VERSION);
     M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
-    M5.Lcd.printf("Token: %s\n ", LABEL);
+    M5.Lcd.printf("Token: %s\n ", TOKEN.c_str());
     M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
     M5.Lcd.printf("TrialCount:%d\n ", trialCounter);
     M5.Lcd.printf("Progress: %d %d %d %d %d\n ", buttonPushLatch, faderLatch, probeGoalLatch, angleLatch, cableWrapLatch); 
@@ -390,7 +385,7 @@ void develop_screen(){
     M5.Lcd.printf("Smart Task Board ");
     M5.Lcd.printf("v%s I/O SCREEN\n ", FW_VERSION);
     M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
-    M5.Lcd.printf("Token: %s\n ", LABEL);
+    M5.Lcd.printf("Token: %s\n ", TOKEN.c_str());
     M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
     M5.Lcd.printf("TrialCount:%d\n ", trialCounter);
     M5.Lcd.printf("%d FIND_BTN:%d STOP_BTN:%d TS:%d\n ", buttonPushLatch, buttonPushState, stopBtnState, TS_button); 
@@ -579,10 +574,9 @@ void setup()
   Serial.println(WiFi.macAddress());
 
   // Build string for SSID
-  token = String(LABEL);
   task_board_ssid = String("AutoConnect_");
   unique_ssid = String();
-  unique_ssid = task_board_ssid + token;
+  unique_ssid = task_board_ssid + TOKEN.c_str();
   
   // Lcd display setup
   M5.Lcd.setRotation(3);
@@ -596,8 +590,8 @@ void setup()
     M5.Lcd.print(" Smart Task Board ");
     M5.Lcd.printf("v%s\n ", FW_VERSION);
     //M5.Lcd.printf("TOKEN: %s\n\n ", MAC);
-    M5.Lcd.printf("TOKEN:%s\n\n", LABEL);
-    M5.Lcd.print(" Set default WiFi by connecting to task board \n");
+    M5.Lcd.printf("TOKEN:%s\n\n", TOKEN.c_str());
+    M5.Lcd.print(" Set default WiFi by connecting to board \n");
     M5.Lcd.print(" SSID with a PC then browse to \n");
     M5.Lcd.print(" \"192.168.4.1\" and select preferred\n");
     M5.Lcd.print(" WiFi network and enter password.\n\n");
@@ -1082,10 +1076,7 @@ void loop()
   }
   
    //print out seconds to the serial monitor
-   // Serial.printf("DeviceToken:%s, CurrentState:BTN_1:%d,Fader:%d,Angle:%d,ProbeStart:%d,ProbeGoal:%d,Post1:%d,Post2:%d, Protocol:%s, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Key_TS_us:%d, Plug_TS_us:%d, Batt1_TS_us:%d, Batt2_TS_us:%d, Time_us:%d\n", LABEL, buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, trialRunning, timeLeft, ptsCollected, cumForce, TS_fader, TS_angle, TS_cableWrap, TS_probeGoal, usecCount);
    if (verbose == 1){
-     Serial.printf("DeviceToken:%s, State:Btn:%d,Fader:%d,Angle:%d,ProbeInserted:%d,CircuitProbed:%d,Post1:%d,Post2:%d, Protocol:%s, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Time_us:%d\n", LABEL, buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, trialRunning, timeLeft, ptsCollected, cumForce, usecCount);
+     Serial.printf("DeviceToken:%s, State:Btn:%d,Fader:%d,Angle:%d,ProbeInserted:%d,CircuitProbed:%d,Post1:%d,Post2:%d, Protocol:%s, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Time_us:%d\n", TOKEN.c_str(), buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, trialRunning, timeLeft, ptsCollected, cumForce, usecCount);
    }
-
-//  Serial.println();
 }
