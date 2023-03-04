@@ -23,6 +23,16 @@ Use the flash-bin-no-ide.zip folder as a shareable object with the client. Compi
 
 The location of the *.bin files after compiling will be listed in the Arduino IDE in the terminal output when "verbose" flag for compiling is on in the Preferences menu. On a Mac, the location is something like: `/var/folders/bf/p280vkg91qj8wl5_1w4gn32h0000gn/T/arduino_build_168910/`
 
+For Linux
+
+Run the following two commands in a shell.
+
+`$ cd <PATH-to-UNZIPPED-FILES>`
+`$ python esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 1500000 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 80m --flash_size detect 0xe000 ./boot_app0.bin 0x1000 ./bootloader_dio_80m.bin 0x10000 ./stopwatch_m5stickcplus.ino.bin 0x8000 ./stopwatch_m5stickcplus.ino.partitions.bin`
+
+Tip: if you get a permission denied on /dev/ttyUSB0 try the following command:
+`sudo chmod a+rw /dev/ttyUSB0`
+
 ## Helpful Coding Resources
 - M5Stack LCD Library Documentation: https://github.com/m5stack/m5-docs/blob/master/docs/en/api/lcd.md 
 - ESP32 Persistent Memory Example: https://randomnerdtutorials.com/esp32-save-data-permanently-preferences/ 
