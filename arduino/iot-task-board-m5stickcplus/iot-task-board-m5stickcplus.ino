@@ -23,7 +23,8 @@
 //#include "kaa.h"
 
 // USER CONFIGURABLE SETTINGS
-#define LABEL "task_board_dev"
+#define LABEL "task-board-144"
+#define TASK_BOARD_PW "robothon"
 #define PROTOCOL_ID "ROBOTHON_2023"
 #define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
 #define FADERSP 2000 // This value should be updateable via the web commands from Kaa
@@ -45,11 +46,6 @@
 // This value should be updateable via the web commands from Kaa
 int verbose = 0; // set to 1 to enable serial output
 
-// String task_board_ssid = string("AutoConnectAP-" + LABEL);
-// String task_board_password = "robothon";
-// String myLabel = string(LABEL);
-// String test = myLabel.concat(LABEL);
-
 //////// SYSTEM SETTINGS /////////
 // DO NOT CHANGE SETTINGS BELOW //
 const char* ssid = "FRITZ!Box 7530 WE";                   // WiFi name
@@ -57,7 +53,7 @@ const char* password = "70348511462386919316";           // WiFi password
 const char* mqtt_server = "mqtt.cloud.kaaiot.com";
 //const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
 // const String TOKEN = "task-board-dev";                // Endpoint token - you get (or specify) it during device provisioning
-const String TOKEN = "simulated-one";                // Endpoint token - you get (or specify) it during device provisioning
+const String TOKEN = "task-board-144";                // Endpoint token - you get (or specify) it during device provisioning
 //const String TOKEN = WiFi.macAddress();                // Endpoint token - you get (or specify) it during device provisioning
 //const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you specify it during device provisioning
 // const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";    // Application version - you specify it during device provisioning
@@ -99,6 +95,8 @@ void IRAM_ATTR usecTimer()
 ///////////////////////////////
 
 // Initialize program variables before running the setu and main loops
+
+String token, task_board_ssid, unique_ssid;
 
 //min,sec,msec,usec display.
 int display[4] = {0};
@@ -576,8 +574,15 @@ void setup()
   // GPIO setting  
   pinMode(10, OUTPUT);  //GPIO10 the builtin LED
 
+  // Print out the device's unique MAC address
   Serial.print("ESP Board MAC Address:  ");
   Serial.println(WiFi.macAddress());
+
+  // Build string for SSID
+  token = String(LABEL);
+  task_board_ssid = String("AutoConnect_");
+  unique_ssid = String();
+  unique_ssid = task_board_ssid + token;
   
   // Lcd display setup
   M5.Lcd.setRotation(3);
@@ -588,20 +593,16 @@ void setup()
 
   // Setup WiFi connection or boot in LOCAL MODE
   if (!M5.BtnA.isPressed() == 1){ 
-    //    M5.Lcd.print("ssid: %s\n", *ssid);
     M5.Lcd.print(" Smart Task Board ");
     M5.Lcd.printf("v%s\n ", FW_VERSION);
     //M5.Lcd.printf("TOKEN: %s\n\n ", MAC);
     M5.Lcd.printf("TOKEN:%s\n\n", LABEL);
-    M5.Lcd.print(" Configure new WiFi credentials by\n");
-    M5.Lcd.print(" with phone or PC then browse to \n");
+    M5.Lcd.print(" Set default WiFi by connecting to task board \n");
+    M5.Lcd.print(" SSID with a PC then browse to \n");
     M5.Lcd.print(" \"192.168.4.1\" and select preferred\n");
     M5.Lcd.print(" WiFi network and enter password.\n\n");
-    // String = "AutoConnectAP-task-board";
-    M5.Lcd.printf(" Task Board SSID: %s\n", ssid);
-    // M5.Lcd.print(" \"AutoConnectAP-task-board\"\n");
-    M5.Lcd.printf(" Password: %s\n\n", password);
-    // M5.Lcd.print(" %s\n\n", password);
+    M5.Lcd.printf(" Task Board SSID: \n%s\n", unique_ssid.c_str());
+    M5.Lcd.printf(" Password: \n%s\n\n", TASK_BOARD_PW);
     M5.Lcd.print(" Connecting to last saved WiFi SSID...");
     wifiEnabled = 1;
     
@@ -612,14 +613,13 @@ void setup()
     WiFiManager wm;
   
     //reset settings - wipe credentials for testing
-    //wm.resetSettings();
+    // wm.resetSettings();
   
     bool res;
     // res = wm.autoConnect(); // auto generated AP name from chipid
     // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-    res = wm.autoConnect("AutoConnectAP-task-board","robothon"); // password protected ap
-    // res = wm.autoConnect(task_board_ssid, task_board_password); // password protected ap
-
+    // res = wm.autoConnect("AutoConnectAP-task-board","robothon"); // password protected ap
+    res = wm.autoConnect(unique_ssid.c_str(), TASK_BOARD_PW); // password protected ap
   
     if(!res) {
         Serial.println("Failed to connect");
@@ -1012,25 +1012,22 @@ void loop()
   if (stopBtnState == 0 && stopBtnState != stopBtnState_old){Serial.println("Red Push Button Pressed");};
   if (stopBtnState == 1 && stopBtnState != stopBtnState_old){Serial.println("Red Push Button Released");};
   stopBtnState_old = stopBtnState; // store current value
-  if (faderValue == 0 && faderValue != faderValue_old){Serial.println("Fader Matched");};
-  if (faderValue == 1 && faderValue != faderValue_old){Serial.println("Fader not Matched");};
+  // if (faderValue == 0 && faderValue != faderValue_old){Serial.println("Fader Matched");};
+  // if (faderValue == 1 && faderValue != faderValue_old){Serial.println("Fader not Matched");};
   faderValue_old = faderValue; // store current value
-  if (angleValue == 0 && angleValue != angleValue_old){Serial.println("Angle Achieved");};
-  if (angleValue == 1 && angleValue != angleValue_old){Serial.println("Angle not Achieved");};
+  // if (angleValue < ANGLESP && angleValue != angleValue_old){Serial.println("Door Angle Target Achieved");};
+  // if (angleValue >= ANGLESP && angleValue != angleValue_old){Serial.println("Door Angle Target not Achieved");};
   angleValue_old = angleValue; // store current value
-  if (probeStartState == 0 && probeStartState != probeStartState_old){Serial.println("Probe in Start Position");};
-  if (probeStartState == 1 && probeStartState != probeStartState_old){Serial.println("Probe not in Start Position");};
+  if (probeStartState == 0 && probeStartState != probeStartState_old){Serial.println("Probe is touching goal circuit");};
+  if (probeStartState == 1 && probeStartState != probeStartState_old){Serial.println("Probe is not touching goal circuit");};
   probeStartState_old = probeStartState; // store current value
-  if (probeGoalState == 0 && probeGoalState != probeGoalState_old){Serial.println("Probe in contact with Goal");};
-  if (probeGoalState == 1 && probeGoalState != probeGoalState_old){Serial.println("Probe not in contact with Goal");};
+  if (probeGoalState == 0 && probeGoalState != probeGoalState_old){Serial.println("Probe is plugged in and in holder");};
+  if (probeGoalState == 1 && probeGoalState != probeGoalState_old){Serial.println("Probe is not plugged in");};
   probeGoalState_old = probeGoalState; // store current value
 
-// TODO: Allow the task board to connect to the eduroam network https://github.com/martinius96/ESP32-eduroam 
+// TODO: Enable the task board to connect to the eduroam network https://github.com/martinius96/ESP32-eduroam 
 // TODO: Implement a ring buffer to hold the accelerometer and gyro data in between the fiveSecond publish intervals. https://www.arduino.cc/reference/en/libraries/ringbuffer/ 
 // TODO: Implement an interval timer for the main loop to know how fast the main process is running. Do NOT do this with a delay but instead dividing into a timer. 
-
-// [x] TODO: Force the protocol execution in a specific order 
-// TODO: Make the fader task more difficult by moving to at least 3 different setpoints before considering the task complete.
 
   // Screen switching logic
   if(M5.BtnB.isPressed()){
