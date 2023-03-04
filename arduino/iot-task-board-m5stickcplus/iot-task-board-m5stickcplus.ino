@@ -23,17 +23,18 @@
 //#include "kaa.h"
 
 // USER CONFIGURABLE SETTINGS
-#define LABEL "task-board-dev"
+#define LABEL "task_board_dev"
 #define PROTOCOL_ID "ROBOTHON_2023"
 #define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
-#define FADERSP 800 // This value should be updateable via the web commands from Kaa
-#define FADERTOLERANCE 20 // This value should be updateable via the web commands from Kaa
+#define FADERSP 2000 // This value should be updateable via the web commands from Kaa
+#define FADERSP2 1500 // This value should be updateable via the web commands from Kaa
+#define FADERTOLERANCE 50 // This value should be updateable via the web commands from Kaa
 #define ANGLESP 2400 
 #define PTS_BUTTON 1
 #define PTS_FADER 1
 #define PTS_CIRCUIT_PROBE 1
 #define PTS_CABLEWRAP 1
-#define PTS_PROBEGOAL 1
+#define PTS_PROBEINSERT 1
 
 #define MAC WiFi.macAddress()
 #define BUTTON_ON 0
@@ -42,6 +43,11 @@
 #define SCREEN_COLS 240 // pixels
 
 int verbose = 0; // set to 1 to enable serial output
+
+// String task_board_ssid = string("AutoConnectAP-" + LABEL);
+// String task_board_password = "robothon";
+// String myLabel = string(LABEL);
+// String test = myLabel.concat(LABEL);
 
 //////// SYSTEM SETTINGS /////////
 // DO NOT CHANGE SETTINGS BELOW //
@@ -99,6 +105,7 @@ int display[4] = {0};
 //timer start/stop check variable
 int screenSelector = 0; // int to navigate multiple screens
 int screenSelector_count = 0;
+int coin = 0;
 
 int forceStop = 0;
 int trialCounter = 0;
@@ -107,6 +114,8 @@ int wifiEnabled = 0;
 int countStart = 0;
 int trialRunning = 0,  timeLeft = 0,  ptsCollected = 0;
 int buttonPushLatch = 0,  faderLatch = 0,  angleLatch = 0,  cableWrapLatch = 0,  probeGoalLatch = 0,  OP180_1_Latch = 0,  OP180_2_Latch = 0, trialCompletedLatch = 0;
+int faderLatch2 = 0;
+int faderGoal2 = 0;
 
 int startBtnState = -1,  stopBtnState = -1,  resetBtnState = -1,  buttonPushState = -1,  faderValue = -1;
 int keyswitchRState = -1,  keyswitchLState = -1,  angleValue = -1,  portRState = -1,  portLState = -1;
@@ -346,11 +355,11 @@ void home_screen(){
       M5.Lcd.fillCircle(40, 10, 8, GREEN);
     }
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
-    if (angleLatch){
+    if (probeGoalLatch){
       M5.Lcd.fillCircle(70, 10, 8, GREEN);
     }
     M5.Lcd.drawCircle(100, 10, 10, WHITE);
-    if (probeGoalLatch){
+    if (angleLatch){
       M5.Lcd.fillCircle(100, 10, 8, GREEN);
     }
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
@@ -368,7 +377,8 @@ void home_screen(){
     M5.Lcd.printf("v%s\n ", FW_VERSION);
     M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
     M5.Lcd.printf("Token: %s\n ", LABEL);
-    M5.Lcd.printf("PROTOCOL: %s TrialCount:%d\n ", PROTOCOL_ID, trialCounter);
+    M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
+    M5.Lcd.printf("TrialCount:%d\n ", trialCounter);
     M5.Lcd.printf("Progress: %d %d %d %d %d\n ", buttonPushLatch, probeGoalLatch, faderLatch, angleLatch, cableWrapLatch); 
     M5.Lcd.printf("Points: %d Interaction:%0.2f\n ", ptsCollected, cumForce);
     M5.Lcd.printf("Trial Time:\n ");
@@ -382,7 +392,8 @@ void develop_screen(){
     M5.Lcd.printf("v%s\n ", FW_VERSION);
     M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
     M5.Lcd.printf("Token: %s\n ", LABEL);
-    M5.Lcd.printf("PROTOCOL: %s TrialCount:%d\n ", PROTOCOL_ID, trialCounter);
+    M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
+    M5.Lcd.printf("TrialCount:%d\n ", trialCounter);
     M5.Lcd.printf("%d FIND_BTN:%d STOP_BTN:%d TS:%d\n ", buttonPushLatch, buttonPushState, stopBtnState, TS_button); 
     M5.Lcd.printf("%d SP:%d Tol:%d Fader:%d TS:%d\n ", faderLatch, FADERSP, FADERTOLERANCE, faderValue, TS_fader); 
     M5.Lcd.printf("%d SP:%d Angle:%d TS:%d\n ", angleLatch, ANGLESP, angleValue, TS_angle); 
@@ -398,7 +409,8 @@ void develop_screen(){
 }
 
 void screen2(){
-    M5.Lcd.fillCircle(10, 10, 8, GREEN);
+    // M5.Lcd.fillCircle(10, 10, 8, GREEN);
+    M5.Lcd.drawCircle(10, 10, 9, YELLOW);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
@@ -417,9 +429,10 @@ void screen2(){
 
 }
 void screen3(){
-    M5.Lcd.fillCircle(40, 10, 8, GREEN);
+    // M5.Lcd.fillCircle(40, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
+    M5.Lcd.drawCircle(40, 10, 9, YELLOW);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
     M5.Lcd.drawCircle(100, 10, 10, WHITE);
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
@@ -435,10 +448,11 @@ void screen3(){
     // M5.Lcd.printf("ST2 Time: %d\n", TS_probeGoal);
 }
 void screen4(){
-    M5.Lcd.fillCircle(70, 10, 8, GREEN);
+    // M5.Lcd.fillCircle(70, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
+    M5.Lcd.drawCircle(70, 10, 9, YELLOW);
     M5.Lcd.drawCircle(100, 10, 10, WHITE);
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
@@ -450,19 +464,34 @@ void screen4(){
     M5.Lcd.printf("Move Slider to Setpoint\n");
     M5.Lcd.setTextSize(3);
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]); 
+    M5.Lcd.setTextSize(1);
     // M5.Lcd.printf("ST3 Time: %d\n", TS_fader);
-    int x_offset = map(faderValue, 0, 700, 10, 210); 
-    int x_goal = map(FADERSP, 0,4000,10,210);
+    int x_offset = map(faderValue, 0, 4000, 10, 210); 
+    int x_goal = map(FADERSP, 0, 4000,10,210);
+    int x_goal2 = map(faderGoal2, 0, 4000,10,210);
     M5.Lcd.fillRect(0, 80, 240, 25, BLACK);
     M5.Lcd.fillTriangle(0+x_offset, 80, 20+x_offset, 80, 10+x_offset, 100, RED);
-    M5.Lcd.fillTriangle(0+x_goal, 120, 20+x_goal, 120, 10+x_goal, 100, GREEN);
+    M5.Lcd.fillTriangle(0+x_goal, 120, 20+x_goal, 120, 10+x_goal, 100, YELLOW);
+    // M5.Lcd.setCursor(x_goal, 100);
+    // M5.Lcd.setTextColor(WHITE, GREEN);
+    // M5.Lcd.printf("1");
+    if (faderLatch2 == 1){
+      // 1st fader position has been reached...
+      M5.Lcd.fillTriangle(0+x_goal2, 120, 20+x_goal2, 120, 10+x_goal2, 100, GREEN);
+      // M5.Lcd.setCursor(x_goal2, 100);
+      // M5.Lcd.setTextColor(WHITE, YELLOW);
+      // M5.Lcd.printf("2");
+    }
+    M5.Lcd.setTextColor(WHITE, BLUE);
+    
 }
 void screen5(){
-    M5.Lcd.fillCircle(100, 10, 8, GREEN);
+    // M5.Lcd.fillCircle(100, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
     M5.Lcd.drawCircle(100, 10, 10, WHITE);
+    M5.Lcd.drawCircle(100, 10, 9, YELLOW);
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.setCursor(5, 15);
@@ -476,12 +505,13 @@ void screen5(){
     // M5.Lcd.printf("ST4 Time: %d\n", TS_angle);
 }
 void screen6(){
-    M5.Lcd.fillCircle(130, 10, 8, GREEN);
+    // M5.Lcd.fillCircle(130, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
     M5.Lcd.drawCircle(100, 10, 10, WHITE);
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
+    M5.Lcd.drawCircle(130, 10, 9, YELLOW);
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
@@ -494,13 +524,14 @@ void screen6(){
     // M5.Lcd.printf("ST5 Time: %d\n", TS_cableWrap);
 }
 void screen7(){
-    M5.Lcd.fillCircle(160, 10, 8, GREEN);
+    // M5.Lcd.fillCircle(160, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
     M5.Lcd.drawCircle(100, 10, 10, WHITE);
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
+    M5.Lcd.drawCircle(160, 10, 9, YELLOW);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
     M5.Lcd.printf("\n");
@@ -565,7 +596,8 @@ void setup()
     // res = wm.autoConnect(); // auto generated AP name from chipid
     // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
     res = wm.autoConnect("AutoConnectAP-task-board","robothon"); // password protected ap
-    
+    // res = wm.autoConnect(task_board_ssid, task_board_password); // password protected ap
+
   
     if(!res) {
         Serial.println("Failed to connect");
@@ -688,10 +720,45 @@ void loop()
   display[0] = (int)((usecCount / 60000000) % 3600);
   
   //Start Trial on M5 Button Press Check
-  if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0 && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF) 
+  // if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0 && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF) 
+  if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0) 
   {
     delay(1);
-    if (startBtnState == BUTTON_ON)
+    if (faderValue > 20){
+      // flash alert screen to adjust fader
+      M5.Lcd.setCursor(5,5);
+      M5.Lcd.setTextColor(WHITE, RED);
+      M5.Lcd.setTextSize(1);
+      M5.Lcd.fillScreen(RED);
+      M5.Lcd.printf("Move fader to left end stop!");
+      delay(1000);
+      M5.Lcd.setTextColor(WHITE, BLACK);
+      M5.Lcd.fillScreen(BLACK);
+    }
+    if (angleValue < 3500){
+      // flash alert screen to close door
+      M5.Lcd.setCursor(5,5);
+      M5.Lcd.setTextColor(WHITE, RED);
+      M5.Lcd.setTextSize(1);
+      M5.Lcd.fillScreen(RED);
+      M5.Lcd.printf("Close circuit door!");
+      delay(1000);
+      M5.Lcd.setTextColor(WHITE, BLACK);
+      M5.Lcd.fillScreen(BLACK);
+    }
+    if (probeGoalState == BUTTON_ON){
+      // flash alert screen to close door
+      M5.Lcd.setCursor(5,5);
+      M5.Lcd.setTextColor(WHITE, RED);
+      M5.Lcd.setTextSize(1);
+      M5.Lcd.fillScreen(RED);
+      M5.Lcd.printf("Remove probe plug from red port!");
+      delay(1000);
+      M5.Lcd.setTextColor(WHITE, BLACK);
+      M5.Lcd.fillScreen(BLACK);
+    }
+    if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF){
+      // Begin trial counter
       countStart = 1;
       startaccX = accX;
       startaccY = accY;
@@ -703,6 +770,7 @@ void loop()
       trialCounter++; //increment trial counter
       preferences.putUInt("trialCounter", trialCounter);  // Store the counter to the Preferences namespace
       // screenSelector = 1;
+    }
     delay(1);
   }
 
@@ -710,12 +778,13 @@ void loop()
   if (stopBtnState == BUTTON_ON && trialRunning > 0 && buttonPushLatch == 1 && faderLatch == 1 && angleLatch == 1 && cableWrapLatch == 1 && probeGoalLatch == 1)
   {
     delay(1);
-    if (stopBtnState == BUTTON_ON)
+    if (stopBtnState == BUTTON_ON){
       countStart = 0;
       digitalWrite(10, HIGH); //turn off LED
       Serial.printf("Trial Status: Red Button pressed, Trial Stopped! Time(us):%d\n", usecCount);
       // trialRunning = 0; //this seems correct here but isn't compatible with the logic of countStart
-      // screenSelector = 0;
+      // screenSelector = 0;       
+    }
     delay(1);
   }
 
@@ -723,7 +792,7 @@ void loop()
   if (stopBtnState == BUTTON_ON && trialRunning > 0 && M5.BtnA.isPressed() == 1)
   {
     delay(1);
-    if (stopBtnState == BUTTON_ON)
+    if (stopBtnState == BUTTON_ON){
       countStart = 0; //stop the trial time counter
       digitalWrite(10, HIGH); //turn off LED
       Serial.printf("Trial Status: Trial Force Stopped! Time(us):%d\n", usecCount);
@@ -733,6 +802,7 @@ void loop()
       timerAlarmDisable(interruptTimer);
       trialTime = usecCount;
       forceStop = 1;
+      }
     delay(1);
   }
 
@@ -779,7 +849,7 @@ void loop()
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("Trial Status: Button pushed! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
-    // screenSelector = 2;
+    screenSelector = 3;
     // trialRunning++;
   }
 
@@ -788,18 +858,36 @@ void loop()
   {
     probeGoalLatch = 1;
     TS_probeGoal = usecCount;
-    ptsCollected = ptsCollected + PTS_PROBEGOAL;
+    ptsCollected = ptsCollected + PTS_PROBEINSERT;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("Trial Status: Probe Inserted achieved! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
-    screenSelector = 3;
+    // screenSelector = 0;
     // trialRunning++;
   }
 
   //Fader Check
-  if (faderValue > FADERSP - FADERTOLERANCE && faderValue < FADERSP + FADERTOLERANCE && trialRunning == 1 && faderLatch == 0)
+  if (faderValue > FADERSP - FADERTOLERANCE && faderValue < FADERSP + FADERTOLERANCE && trialRunning == 1 && faderLatch2 == 0)
+  {
+    faderLatch2 = 1;
+    // draw 2nd goal arrow
+    // TODO
+    M5.Lcd.fillScreen(YELLOW); //clear screen
+    delay(50);
+    M5.Lcd.fillScreen(BLUE); //clear screen
+    
+    // toss coin
+    coin = random(1,100);
+    if (coin >= 50){
+      faderGoal2 = FADERSP - FADERSP2 * coin / 100;
+    } else {
+      faderGoal2 = FADERSP + FADERSP2 * coin / 100;
+    }
+
+  }
+  if (faderValue > faderGoal2 - FADERTOLERANCE && faderValue < faderGoal2 + FADERTOLERANCE && faderLatch == 0 && faderLatch2 == 1)
   {
     delay(1);
     faderLatch = 1;
@@ -873,6 +961,7 @@ void loop()
     usecCount = 0;
     buttonPushLatch = 0;
     faderLatch = 0;
+    faderLatch2 = 0;
     angleLatch = 0;
     cableWrapLatch = 0;
     probeGoalLatch = 0;
