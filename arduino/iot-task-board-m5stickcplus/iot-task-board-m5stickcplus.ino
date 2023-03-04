@@ -9,7 +9,7 @@
 
 //#include <M5StickC.h> //uncomment if using only a M5Stick version device and comment the next line
 #include <M5StickCPlus.h> // https://github.com/m5stack/M5StickC-Plus
-#include <Preferences.h> 
+#include <Preferences.h>
 #include <Wire.h>
 #include "porthub.h"
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
@@ -26,9 +26,9 @@
 #define LABEL "task-board-dev"
 #define PROTOCOL_ID "ROBOTHON_2023"
 #define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
-#define FADERSP 300 // This value should be updateable via the web commands from Kaa
+#define FADERSP 800 // This value should be updateable via the web commands from Kaa
 #define FADERTOLERANCE 20 // This value should be updateable via the web commands from Kaa
-#define ANGLESP 270 
+#define ANGLESP 2400 
 #define PTS_BUTTON 1
 #define PTS_FADER 1
 #define PTS_CIRCUIT_PROBE 1
@@ -38,8 +38,8 @@
 #define MAC WiFi.macAddress()
 #define BUTTON_ON 0
 #define BUTTON_OFF 1
-#define SCREEN_ROWS 135
-#define SCREEN_COLS 240
+#define SCREEN_ROWS 135 // pixels
+#define SCREEN_COLS 240 // pixels
 
 int verbose = 0; // set to 1 to enable serial output
 
@@ -386,7 +386,7 @@ void develop_screen(){
     M5.Lcd.printf("%d FIND_BTN:%d STOP_BTN:%d TS:%d\n ", buttonPushLatch, buttonPushState, stopBtnState, TS_button); 
     M5.Lcd.printf("%d SP:%d Tol:%d Fader:%d TS:%d\n ", faderLatch, FADERSP, FADERTOLERANCE, faderValue, TS_fader); 
     M5.Lcd.printf("%d SP:%d Angle:%d TS:%d\n ", angleLatch, ANGLESP, angleValue, TS_angle); 
-    M5.Lcd.printf("%d P_Start:%d P_Goal:%d TS:%d\n ", probeGoalLatch, probeStartState, probeGoalState, TS_probeGoal); 
+    M5.Lcd.printf("%d P_TB:%d P_Holder:%d TS:%d\n ", probeGoalLatch, probeStartState, probeGoalState, TS_probeGoal); 
     M5.Lcd.printf("%d Post1:%d Post2:%d TS:%d\n ", cableWrapLatch, OP180_1_State, OP180_2_State, TS_cableWrap); 
     M5.Lcd.printf("Time Left: %d Pts:%d\n ", timeLeft, ptsCollected);
     M5.Lcd.printf("Interaction: %0.2f\n ", cumForce);
@@ -452,7 +452,7 @@ void screen4(){
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]); 
     // M5.Lcd.printf("ST3 Time: %d\n", TS_fader);
     int x_offset = map(faderValue, 0, 700, 10, 210); 
-    int x_goal = map(FADERSP, 0,700,10,210);
+    int x_goal = map(FADERSP, 0,4000,10,210);
     M5.Lcd.fillRect(0, 80, 240, 25, BLACK);
     M5.Lcd.fillTriangle(0+x_offset, 80, 20+x_offset, 80, 10+x_offset, 100, RED);
     M5.Lcd.fillTriangle(0+x_goal, 120, 20+x_goal, 120, 10+x_goal, 100, GREEN);
@@ -537,18 +537,19 @@ void setup()
   if (!M5.BtnA.isPressed() == 1){ 
     //    M5.Lcd.print("ssid: %s\n", *ssid);
     M5.Lcd.print(" Smart Task Board ");
-    M5.Lcd.printf("v %s\n ", FW_VERSION);
+    M5.Lcd.printf("v%s\n ", FW_VERSION);
     //M5.Lcd.printf("TOKEN: %s\n\n ", MAC);
-    M5.Lcd.printf("TOKEN: %s\n\n ", LABEL);
-    M5.Lcd.print(" Connecting to WiFi...\n\n");
+    M5.Lcd.printf("TOKEN:%s\n\n", LABEL);
     M5.Lcd.print(" Configure new WiFi credentials by\n");
     M5.Lcd.print(" with phone or PC then browse to \n");
-    M5.Lcd.print(" \"192.168.4.1\"and select preferred\n");
-    M5.Lcd.print(" WiFi network and enter password\n\n");
-    M5.Lcd.print(" SSID:\n");
-    M5.Lcd.print(" \"AutoConnectAP-task-board\"\n");
-    M5.Lcd.print(" Password:\n");
-    M5.Lcd.print(" \"password\"\n");
+    M5.Lcd.print(" \"192.168.4.1\" and select preferred\n");
+    M5.Lcd.print(" WiFi network and enter password.\n\n");
+    // String = "AutoConnectAP-task-board";
+    M5.Lcd.printf(" Task Board SSID: %s\n", ssid);
+    // M5.Lcd.print(" \"AutoConnectAP-task-board\"\n");
+    M5.Lcd.printf(" Password: %s\n\n", password);
+    // M5.Lcd.print(" %s\n\n", password);
+    M5.Lcd.print(" Connecting to last saved WiFi SSID...");
     wifiEnabled = 1;
     
     //Wifi Manager Config START
@@ -563,7 +564,7 @@ void setup()
     bool res;
     // res = wm.autoConnect(); // auto generated AP name from chipid
     // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-    res = wm.autoConnect("AutoConnectAP-task-board","password"); // password protected ap
+    res = wm.autoConnect("AutoConnectAP-task-board","robothon"); // password protected ap
     
   
     if(!res) {
@@ -625,6 +626,9 @@ void setup()
   //REMOVED
 
   M5.Lcd.fillScreen(BLACK); // clear screen
+
+  // porthub.hub_d_wire_value_A(HUB_ADDR[3],1);
+  // porthub.hub_d_wire_value_B(HUB_ADDR[3],1);
 }
 
 void loop()
@@ -639,6 +643,10 @@ void loop()
   M5.Imu.getTempData(&temp);
   startBtnState = !M5.BtnA.read();
   resetBtnState = !M5.BtnB.read();
+
+  // this is the solution that fixed the floating values from the new STM vs MEGA chips on the PbHub
+  porthub.hub_d_wire_value_A(HUB_ADDR[3], 1); //write value high
+  porthub.hub_d_wire_value_B(HUB_ADDR[3], 1); //write value high
 
   // Read from PbHub Module
   buttonPushState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
@@ -680,7 +688,7 @@ void loop()
   display[0] = (int)((usecCount / 60000000) % 3600);
   
   //Start Trial on M5 Button Press Check
-  if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0 && faderValue < 20 && angleValue > 600 && probeGoalState == BUTTON_OFF) 
+  if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0 && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF) 
   {
     delay(1);
     if (startBtnState == BUTTON_ON)
