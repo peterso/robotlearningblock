@@ -42,6 +42,7 @@
 #define SCREEN_ROWS 135 // pixels
 #define SCREEN_COLS 240 // pixels
 
+// This value should be updateable via the web commands from Kaa
 int verbose = 0; // set to 1 to enable serial output
 
 // String task_board_ssid = string("AutoConnectAP-" + LABEL);
@@ -379,7 +380,7 @@ void home_screen(){
     M5.Lcd.printf("Token: %s\n ", LABEL);
     M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
     M5.Lcd.printf("TrialCount:%d\n ", trialCounter);
-    M5.Lcd.printf("Progress: %d %d %d %d %d\n ", buttonPushLatch, probeGoalLatch, faderLatch, angleLatch, cableWrapLatch); 
+    M5.Lcd.printf("Progress: %d %d %d %d %d\n ", buttonPushLatch, faderLatch, probeGoalLatch, angleLatch, cableWrapLatch); 
     M5.Lcd.printf("Points: %d Interaction:%0.2f\n ", ptsCollected, cumForce);
     M5.Lcd.printf("Trial Time:\n ");
     M5.Lcd.setTextSize(3);
@@ -389,15 +390,15 @@ void develop_screen(){
     M5.Lcd.setCursor(5, 5);
     M5.Lcd.setTextSize(1);
     M5.Lcd.printf("Smart Task Board ");
-    M5.Lcd.printf("v%s\n ", FW_VERSION);
+    M5.Lcd.printf("v%s I/O SCREEN\n ", FW_VERSION);
     M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
     M5.Lcd.printf("Token: %s\n ", LABEL);
     M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
     M5.Lcd.printf("TrialCount:%d\n ", trialCounter);
     M5.Lcd.printf("%d FIND_BTN:%d STOP_BTN:%d TS:%d\n ", buttonPushLatch, buttonPushState, stopBtnState, TS_button); 
     M5.Lcd.printf("%d SP:%d Tol:%d Fader:%d TS:%d\n ", faderLatch, FADERSP, FADERTOLERANCE, faderValue, TS_fader); 
-    M5.Lcd.printf("%d SP:%d Angle:%d TS:%d\n ", angleLatch, ANGLESP, angleValue, TS_angle); 
     M5.Lcd.printf("%d P_TB:%d P_Holder:%d TS:%d\n ", probeGoalLatch, probeStartState, probeGoalState, TS_probeGoal); 
+    M5.Lcd.printf("%d SP:%d Angle:%d TS:%d\n ", angleLatch, ANGLESP, angleValue, TS_angle); 
     M5.Lcd.printf("%d Post1:%d Post2:%d TS:%d\n ", cableWrapLatch, OP180_1_State, OP180_2_State, TS_cableWrap); 
     M5.Lcd.printf("Time Left: %d Pts:%d\n ", timeLeft, ptsCollected);
     M5.Lcd.printf("Interaction: %0.2f\n ", cumForce);
@@ -411,6 +412,7 @@ void develop_screen(){
 void screen2(){
     // M5.Lcd.fillCircle(10, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 9, YELLOW);
+    M5.Lcd.fillCircle(10, 10, 3, YELLOW);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
@@ -426,13 +428,13 @@ void screen2(){
     M5.Lcd.setTextSize(3);
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]); 
     // M5.Lcd.printf("ST1 Time: %d\n", TS_button);
-
 }
 void screen3(){
     // M5.Lcd.fillCircle(40, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
-    M5.Lcd.drawCircle(40, 10, 9, YELLOW);
+    M5.Lcd.drawCircle(70, 10, 9, YELLOW);
+    M5.Lcd.fillCircle(70, 10, 3, YELLOW);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
     M5.Lcd.drawCircle(100, 10, 10, WHITE);
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
@@ -440,7 +442,7 @@ void screen3(){
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
     M5.Lcd.printf("\n");
-    M5.Lcd.printf("Subtask:2/6\n");
+    M5.Lcd.printf("Subtask:3/6\n");
     M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
     M5.Lcd.printf("Insert Probe Cable Plug\n");
     M5.Lcd.setTextSize(3);
@@ -452,14 +454,15 @@ void screen4(){
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
-    M5.Lcd.drawCircle(70, 10, 9, YELLOW);
+    M5.Lcd.drawCircle(40, 10, 9, YELLOW);
+    M5.Lcd.fillCircle(40, 10, 3, YELLOW);
     M5.Lcd.drawCircle(100, 10, 10, WHITE);
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
     M5.Lcd.printf("\n");
-    M5.Lcd.printf("Subtask:3/6\n");
+    M5.Lcd.printf("Subtask:2/6\n");
     M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
     M5.Lcd.printf("Move Slider to Setpoint\n");
     M5.Lcd.setTextSize(3);
@@ -482,8 +485,7 @@ void screen4(){
       // M5.Lcd.setTextColor(WHITE, YELLOW);
       // M5.Lcd.printf("2");
     }
-    M5.Lcd.setTextColor(WHITE, BLUE);
-    
+    // M5.Lcd.setTextColor(WHITE, BLUE);
 }
 void screen5(){
     // M5.Lcd.fillCircle(100, 10, 8, GREEN);
@@ -492,6 +494,7 @@ void screen5(){
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
     M5.Lcd.drawCircle(100, 10, 10, WHITE);
     M5.Lcd.drawCircle(100, 10, 9, YELLOW);
+    M5.Lcd.fillCircle(100, 10, 3, YELLOW);
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.setCursor(5, 15);
@@ -512,15 +515,33 @@ void screen6(){
     M5.Lcd.drawCircle(100, 10, 10, WHITE);
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
     M5.Lcd.drawCircle(130, 10, 9, YELLOW);
+    M5.Lcd.fillCircle(130, 10, 3, YELLOW);
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
     M5.Lcd.printf("\n");
     M5.Lcd.printf("Subtask:5/6\n");
     M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
-    M5.Lcd.printf("Stow probe cable\n");
+    M5.Lcd.printf("Wrap probe cable and plug in probe\n");
     M5.Lcd.setTextSize(3);
-    M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);    
+    M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);  
+    M5.Lcd.setTextSize(1);
+    M5.Lcd.setCursor(50, 120);
+    M5.Lcd.printf("Post Near");  
+    M5.Lcd.drawCircle(70, 100, 10, WHITE);
+    if (OP180_1_State == 1){
+      M5.Lcd.fillCircle(70, 100, 8, GREEN);      
+    } else {
+      M5.Lcd.fillCircle(70, 100, 8, BLACK);      
+    }
+    M5.Lcd.setCursor(140, 120);
+    M5.Lcd.printf("Post Far");  
+    M5.Lcd.drawCircle(160, 100, 10, WHITE);
+    if (OP180_2_State == 1){
+      M5.Lcd.fillCircle(160, 100, 8, GREEN);      
+    } else {
+      M5.Lcd.fillCircle(160, 100, 8, BLACK);
+    }
     // M5.Lcd.printf("ST5 Time: %d\n", TS_cableWrap);
 }
 void screen7(){
@@ -532,6 +553,7 @@ void screen7(){
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.drawCircle(160, 10, 9, YELLOW);
+    M5.Lcd.fillCircle(160, 10, 3, YELLOW);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
     M5.Lcd.printf("\n");
@@ -658,9 +680,6 @@ void setup()
   //REMOVED
 
   M5.Lcd.fillScreen(BLACK); // clear screen
-
-  // porthub.hub_d_wire_value_A(HUB_ADDR[3],1);
-  // porthub.hub_d_wire_value_B(HUB_ADDR[3],1);
 }
 
 void loop()
@@ -849,7 +868,7 @@ void loop()
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("Trial Status: Button pushed! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
-    screenSelector = 3;
+    screenSelector = 2;
     // trialRunning++;
   }
 
@@ -1019,7 +1038,11 @@ void loop()
     if(screenSelector_count>=50){
       M5.Lcd.fillScreen(WHITE);
       delay(50);
-      M5.Lcd.fillScreen(BLACK);
+      if (trialRunning == 1){
+        M5.Lcd.fillScreen(BLUE);  
+      } else {
+        M5.Lcd.fillScreen(BLACK);
+      }
       if (screenSelector < 7){
         screenSelector++;
       } else {
@@ -1035,23 +1058,17 @@ void loop()
     case 0: //Idle
       home_screen();
       break;
-    case 1: //start
-      // M5.Lcd.fillScreen(RED);           
+    case 1:
       screen2();
-      // timer_start();
       break;
-    case 2: //stop
-      screen3();
-      // timer_stop();
-      break;
-    case 3: //reset
+    case 2: 
       screen4();
-      // timer_reset();
       break;
-    case 4: //force stop and reset
+    case 3: 
+      screen3();
+      break;
+    case 4: 
       screen5();
-      // timer_stop();
-      // timer_reset();
       break;
     case 5:
       screen6();
