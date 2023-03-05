@@ -46,15 +46,15 @@
 int verbose = 0; // set to 1 to enable serial output
 
 //////// SYSTEM SETTINGS /////////
-const String TOKEN = "task-board-dev";                // Endpoint token - you get (or specify) it during device provisioning
-const String APP_VERSION = "bvhkhrtbhnjc0btkj7r0-v0";    // Application version - you specify it during device provisioning FOR DEVELOPMENT ONLY
+const String TOKEN = "task_board_dev";                // Endpoint token - you get (or specify) it during device provisioning
+const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";    // Application version - you specify it during device provisioning 
+// const String APP_VERSION = "bvhkhrtbhnjc0btkj7r0-v0";    // Application version - you specify it during device provisioning FOR DEVELOPMENT ONLY
 const String FW_VERSION = "1.0.1"; // Firmware Version for OTA management
 
 // DO NOT CHANGE SETTINGS BELOW //
 const char* mqtt_server = "mqtt.cloud.kaaiot.com";
 //const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
 //const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you specify it during device provisioning
-// const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";    // Application version - you specify it during device provisioning
 
 const unsigned long trialPublishRate = 1 * 0.05 * 1000UL; //500ms
 const unsigned long fiveSeconds = 1 * 5 * 1000UL; //5 seconds
@@ -330,8 +330,8 @@ void publish_telemetry(){
       telemetry[0]["Time_ProbeGoal"] = TS_probeGoal; //INT
       telemetry[0]["cumForce"] = cumForce;//Float
       telemetry[0]["trialPoints"] = ptsCollected; //INT 
-//      telemetry[0]["FW_Version"] = 8; //STR Kaa doesn't seem to accept strings in this way...
-//      telemetry[0]["PROTOCOL"] = PROTOCOL_ID; //STR 
+      telemetry[0]["FW_Version"] = String(FW_VERSION).c_str(); //STR 
+      telemetry[0]["PROTOCOL"] = String(PROTOCOL_ID).c_str(); //STR 
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
@@ -367,6 +367,7 @@ void home_screen(){
     }
     M5.Lcd.setCursor(5, 25);
     M5.Lcd.setTextSize(1);
+    M5.Lcd.printf("Home Screen \n");
     M5.Lcd.printf("Smart Task Board ");
     M5.Lcd.printf("v%s\n ", FW_VERSION);
     M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
@@ -382,28 +383,32 @@ void home_screen(){
 void develop_screen(){
     M5.Lcd.setCursor(5, 5);
     M5.Lcd.setTextSize(1);
+    M5.Lcd.printf("I/O SCREEN\n ");
     M5.Lcd.printf("Smart Task Board ");
-    M5.Lcd.printf("v%s I/O SCREEN\n ", FW_VERSION);
+    M5.Lcd.printf("v%s\n ", FW_VERSION);
     M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
     M5.Lcd.printf("Token: %s\n ", TOKEN.c_str());
     M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
     M5.Lcd.printf("TrialCount:%d\n ", trialCounter);
-    M5.Lcd.printf("%d FIND_BTN:%d STOP_BTN:%d TS:%d\n ", buttonPushLatch, buttonPushState, stopBtnState, TS_button); 
-    M5.Lcd.printf("%d SP:%d Tol:%d Fader:%d TS:%d\n ", faderLatch, FADERSP, FADERTOLERANCE, faderValue, TS_fader); 
-    M5.Lcd.printf("%d P_TB:%d P_Holder:%d TS:%d\n ", probeGoalLatch, probeStartState, probeGoalState, TS_probeGoal); 
-    M5.Lcd.printf("%d SP:%d Angle:%d TS:%d\n ", angleLatch, ANGLESP, angleValue, TS_angle); 
-    M5.Lcd.printf("%d Post1:%d Post2:%d TS:%d\n ", cableWrapLatch, OP180_1_State, OP180_2_State, TS_cableWrap); 
-    M5.Lcd.printf("Time Left: %d Pts:%d\n ", timeLeft, ptsCollected);
-    M5.Lcd.printf("Interaction: %0.2f\n ", cumForce);
-    M5.Lcd.printf("Trial Time:\n ");
-    M5.Lcd.setTextSize(3);
-    M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);    
-//    M5.Lcd.printf("acX:%0.2f acY:%0.2f acZ:%0.2f\n  ", accX*1000, accY*1000, accZ*1000);
+    M5.Lcd.printf("%d BLU_BTN:%d RED_BTN:%d\n ", buttonPushLatch, buttonPushState, stopBtnState); 
+    M5.Lcd.printf("%d SP:%d Tol:%d Fader:%d\n ", faderLatch, FADERSP, FADERTOLERANCE, faderValue); 
+    M5.Lcd.printf("%d P_TB:%d P_Holder:%d\n ", probeGoalLatch, probeStartState, probeGoalState); 
+    M5.Lcd.printf("%d SP:%d Angle:%d\n ", angleLatch, ANGLESP, angleValue); 
+    M5.Lcd.printf("%d Post1:%d Post2:%d\n ", cableWrapLatch, OP180_1_State, OP180_2_State); 
+    M5.Lcd.printf("Time Left:%d Pts:%d Action:%0.2f\n ", timeLeft, ptsCollected, cumForce);
+    M5.Lcd.printf("ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n ", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
+    M5.Lcd.printf("ST4:%0.2f, ST5:%0.2f\n ", (float)TS_angle/1000000.0, (float)TS_cableWrap/1000000.0);
+    M5.Lcd.printf("Trial Time (sec):%0.2f\n ", (float)trialTime/1000000.0);
+    
+    // M5.Lcd.printf("Interaction: %0.2f\n ", cumForce);
+    // M5.Lcd.printf("Trial Time:\n ");
+    // M5.Lcd.setTextSize(3);
+    // M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);    
+    // M5.Lcd.printf("acX:%0.2f acY:%0.2f acZ:%0.2f\n  ", accX*1000, accY*1000, accZ*1000);
 //    M5.Lcd.printf("gyX:%0.2f gyY:%0.2f gyZ:%0.2f\n  ", gyroX, gyroY, gyroZ);
 }
 
 void screen2(){
-    // M5.Lcd.fillCircle(10, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 9, YELLOW);
     M5.Lcd.fillCircle(10, 10, 3, YELLOW);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
@@ -414,16 +419,15 @@ void screen2(){
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
-    M5.Lcd.printf("\n");
-    M5.Lcd.printf("Subtask:1/6\n");
-    M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
-    M5.Lcd.printf("Find Board, Press Button\n");
+    M5.Lcd.printf("\n ");
+    M5.Lcd.printf("Subtask:1/6\n ");
+    M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
+    M5.Lcd.printf("Find Board, Press Button\n ");
     M5.Lcd.setTextSize(3);
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]); 
     // M5.Lcd.printf("ST1 Time: %d\n", TS_button);
 }
 void screen3(){
-    // M5.Lcd.fillCircle(40, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 9, YELLOW);
@@ -434,16 +438,15 @@ void screen3(){
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
-    M5.Lcd.printf("\n");
-    M5.Lcd.printf("Subtask:3/6\n");
-    M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
-    M5.Lcd.printf("Insert Probe Cable Plug\n");
+    M5.Lcd.printf("\n ");
+    M5.Lcd.printf("Subtask:3/6\n ");
+    M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
+    M5.Lcd.printf("Insert Probe Cable Plug\n ");
     M5.Lcd.setTextSize(3);
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);    
     // M5.Lcd.printf("ST2 Time: %d\n", TS_probeGoal);
 }
 void screen4(){
-    // M5.Lcd.fillCircle(70, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
@@ -454,10 +457,10 @@ void screen4(){
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
-    M5.Lcd.printf("\n");
-    M5.Lcd.printf("Subtask:2/6\n");
-    M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
-    M5.Lcd.printf("Move Slider to Setpoint\n");
+    M5.Lcd.printf("\n ");
+    M5.Lcd.printf("Subtask:2/6\n ");
+    M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
+    M5.Lcd.printf("Move Slider to Setpoint\n ");
     M5.Lcd.setTextSize(3);
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]); 
     M5.Lcd.setTextSize(1);
@@ -481,7 +484,6 @@ void screen4(){
     // M5.Lcd.setTextColor(WHITE, BLUE);
 }
 void screen5(){
-    // M5.Lcd.fillCircle(100, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
@@ -492,16 +494,15 @@ void screen5(){
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
-    M5.Lcd.printf("\n");
-    M5.Lcd.printf("Subtask:4/6\n");
-    M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
-    M5.Lcd.printf("Open door, probe circuit\n");
+    M5.Lcd.printf("\n ");
+    M5.Lcd.printf("Subtask:4/6\n ");
+    M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
+    M5.Lcd.printf("Open door, probe circuit\n ");
     M5.Lcd.setTextSize(3);
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);    
     // M5.Lcd.printf("ST4 Time: %d\n", TS_angle);
 }
 void screen6(){
-    // M5.Lcd.fillCircle(130, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
@@ -512,10 +513,10 @@ void screen6(){
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
-    M5.Lcd.printf("\n");
-    M5.Lcd.printf("Subtask:5/6\n");
-    M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
-    M5.Lcd.printf("Wrap probe cable and plug in probe\n");
+    M5.Lcd.printf("\n ");
+    M5.Lcd.printf("Subtask:5/6\n ");
+    M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
+    M5.Lcd.printf("Wrap probe cable and plug in probe\n ");
     M5.Lcd.setTextSize(3);
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);  
     M5.Lcd.setTextSize(1);
@@ -538,7 +539,6 @@ void screen6(){
     // M5.Lcd.printf("ST5 Time: %d\n", TS_cableWrap);
 }
 void screen7(){
-    // M5.Lcd.fillCircle(160, 10, 8, GREEN);
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
@@ -549,10 +549,10 @@ void screen7(){
     M5.Lcd.fillCircle(160, 10, 3, YELLOW);
     M5.Lcd.setCursor(5, 15);
     M5.Lcd.setTextSize(1);
-    M5.Lcd.printf("\n");
-    M5.Lcd.printf("Subtask:6/6\n");
-    M5.Lcd.printf("PROTOCOL: %s\n", PROTOCOL_ID);
-    M5.Lcd.printf("Press trial stop button\n");
+    M5.Lcd.printf("\n ");
+    M5.Lcd.printf("Subtask:6/6\n ");
+    M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
+    M5.Lcd.printf("Press trial stop button\n ");
     M5.Lcd.setTextSize(3);
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);   
     // M5.Lcd.printf("ST6 Time: %d\n", trialTime - TS_cableWrap); 
@@ -591,12 +591,13 @@ void setup()
     M5.Lcd.printf("v%s\n ", FW_VERSION);
     //M5.Lcd.printf("TOKEN: %s\n\n ", MAC);
     M5.Lcd.printf("TOKEN:%s\n\n", TOKEN.c_str());
-    M5.Lcd.print(" Set default WiFi by connecting to board \n");
+    M5.Lcd.print(" Set default WiFi by connecting to board\n");
     M5.Lcd.print(" SSID with a PC then browse to \n");
     M5.Lcd.print(" \"192.168.4.1\" and select preferred\n");
-    M5.Lcd.print(" WiFi network and enter password.\n\n");
-    M5.Lcd.printf(" Task Board SSID: \n%s\n", unique_ssid.c_str());
-    M5.Lcd.printf(" Password: \n%s\n\n", TASK_BOARD_PW);
+    M5.Lcd.print(" WiFi network and enter password.\n");
+    M5.Lcd.print(" Board will then attempt to autoconnect.\n\n");
+    M5.Lcd.printf(" Task Board SSID: \n %s\n", unique_ssid.c_str());
+    M5.Lcd.printf(" Password: %s\n\n", TASK_BOARD_PW);
     M5.Lcd.print(" Connecting to last saved WiFi SSID...");
     wifiEnabled = 1;
     
@@ -628,12 +629,11 @@ void setup()
     // Setup wireless connection
     client.setServer(mqtt_server, 1883);
     client.setCallback(callback);
-    // Increase limit, this line fixed problem for my device
-    client.setBufferSize(8192);
+    client.setBufferSize(8192); // Increase limit, this line fixed problem for my device
     setup_wifi();
 
-    digitalWrite(10, LOW); //turn on LED
     //Check for new firmware
+    digitalWrite(10, LOW); //turn on LED
     client.setServer(mqtt_server, 1883);
     client.setCallback(handleOtaUpdate);
     initServerConnection();
@@ -733,7 +733,6 @@ void loop()
   display[0] = (int)((usecCount / 60000000) % 3600);
   
   //Start Trial on M5 Button Press Check
-  // if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0 && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF) 
   if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0) 
   {
     delay(1);
@@ -809,7 +808,7 @@ void loop()
       countStart = 0; //stop the trial time counter
       digitalWrite(10, HIGH); //turn off LED
       Serial.printf("Trial Status: Trial Force Stopped! Time(us):%d\n", usecCount);
-      trialRunning = 0; //this seems correct here but isn't compatible with the logic of countStart
+      trialRunning = 0; 
       M5.Lcd.fillScreen(BLACK); //clear screen
       M5.Lcd.setTextColor(WHITE, BLACK);
       timerAlarmDisable(interruptTimer);
@@ -820,7 +819,7 @@ void loop()
   }
 
   // Reset the trial counter
-  if (stopBtnState == BUTTON_ON && trialRunning == 0 && M5.BtnA.isPressed() == 1 && buttonPushState == BUTTON_ON)
+  if (stopBtnState == BUTTON_ON && trialRunning == 0 && M5.BtnA.isPressed() == 1 && M5.BtnB.isPressed() ==1 && buttonPushState == BUTTON_ON)
   {
     resetCounter();
     M5.Lcd.fillScreen(BLACK); //clear screen
@@ -886,7 +885,7 @@ void loop()
   {
     faderLatch2 = 1;
     // draw 2nd goal arrow
-    // TODO
+    // flash screen
     M5.Lcd.fillScreen(YELLOW); //clear screen
     delay(50);
     M5.Lcd.fillScreen(BLUE); //clear screen
@@ -910,6 +909,8 @@ void loop()
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("Trial Status: Fader Matched! Time(us):%d\n", usecCount);
+    M5.Lcd.fillScreen(YELLOW); //clear screen
+    delay(50);
     M5.Lcd.fillScreen(BLUE); //clear screen
     // screenSelector = 4;
     screenSelector = 0;
