@@ -1,6 +1,6 @@
 # robotlearningblock
 
-![CompetitonTaskBoardwithProtocol.png](/assets/images/CompetitonTaskBoardwithProtocol.png)
+![CompetitionConcept.png](/assets/images/CompetitionConcept.png)
 
 Repo for smart busy block for developing and evaluating robot manipulation skills in the real-world.
 
@@ -10,8 +10,22 @@ An example demonstration of the internet-connected task board can be viewed on [
 
 The internet-connected task board was first featured during the internationl robot manipulation competition, [Robothon Grand Challenge](https://www.robothon-grand-challenge.com) at automatica in 2021. The design of the task board has been expanded and reimplemented for the competition again in 2022 and has also been picked up by the pan-European robotics excellence collaboration project, [euROBIN](https://www.eurobin-project.eu/).
 
+Here is an example setup of a exemplary robot testing setup with the task board.
 
 ![RobotSetupExample.png](/assets/images/RobotSetupExample.png)
+
+The electronic task board allows for the direct comparison between a human and a robot performance to quantitatively measure the gap.
+
+![TrialProtocolHumanRobot](/assets/images/TrialProtocolIllustration-2Rows2-v2.png)
+
+Here is the task board trial protocol used in the Robothon Grand Challenge in 2021 and 2022.
+
+![TaskBoardProtocol2022.png](/assets/images/TaskBoardProtocol2022-paperVersion.png)
+
+A new task board design has been built to match the needs of the euROBIN newtwork and was used in the Robothon Grand Challenge in 2023.
+
+![RobothonTaskBoard2023.png](/assets/images/RobothonTaskBoard2023-bg-removed.png)
+
 
 ### Quick Start
 
@@ -34,6 +48,9 @@ The task board is designed to capture manipulation performance for use in the [R
 View the task board web dashboard at this URL: https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/ 
 
 A publicly viewable version of the dashboard is available to view any of the released task boards here: https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad
+
+Link to a web simulator with Replit here: https://replit.com/@peterso/TaskBoardSimulator?v=1 
+
 
 ![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
 ![ManualTrialRun](/assets/gifs/manual_trial_run.gif)
@@ -87,7 +104,7 @@ The core design features of the task board microcontroller are:
 
 - [Done!] Over-The-Air Updates to deploy new trial protocols to task boards in the field
 - [Done!] Make the task board surface more stiff/rigid -> removed load cell and mount top plate to housing directly
-- [TODO] Add a testing procedure for a factory to execute prior to shipping task board
+- [TODO] Add a automated testing procedure for a factory to execute prior to shipping task board
 - [TODO] Look into Device Management with BalenaOS for multiple OTA updates 
 
 
@@ -127,3 +144,17 @@ Each task board is equipped with a microcontroller to monitor its state. Task bo
 - [M5Stack Community Forum](https://community.m5stack.com/category/17/m5-stick-stickc)
 - [KaaIoT Arduino SDK](https://github.com/kaaproject/kaa-arduino-sdk)
 - [Robothon Website](https://www.robothon-grand-challenge.com)
+
+### Citation
+Please cite this work as Towards Remote Robotic Competitions: An Internet-Connected Task Board and Dashboard [https://arxiv.org/abs/2201.09565](https://arxiv.org/abs/2201.09565)
+
+Bibtex:
+
+@misc{so2022remote,
+      title={Towards Remote Robotic Competitions: An Internet-Connected Task Board and Dashboard}, 
+      author={Peter So and Jonas Wittmann and Patrick Ruhkamp and Andriy Sarabakha and Sami Haddadin},
+      year={2022},
+      eprint={2201.09565},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO}
+}
