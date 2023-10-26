@@ -46,7 +46,7 @@
 int verbose = 0; // set to 1 to enable serial output
 
 //////// SYSTEM SETTINGS /////////
-const String TOKEN = "task_board_dev";                // Endpoint token - you get (or specify) it during device provisioning
+const String TOKEN = "task_board_183";                // Endpoint token - you get (or specify) it during device provisioning
 const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";    // Application version - you specify it during device provisioning 
 // const String APP_VERSION = "bvhkhrtbhnjc0btkj7r0-v0";    // Application version - you specify it during device provisioning FOR DEVELOPMENT ONLY
 const String FW_VERSION = "1.0.1"; // Firmware Version for OTA management
@@ -56,7 +56,7 @@ const char* mqtt_server = "mqtt.cloud.kaaiot.com";
 //const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
 //const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you specify it during device provisioning
 
-const unsigned long trialPublishRate = 1 * 0.05 * 1000UL; //500ms
+const unsigned long trialPublishRate = 1 * 0.50 * 1000UL; //500ms
 const unsigned long fiveSeconds = 1 * 5 * 1000UL; //5 seconds
 static unsigned long lastPublish = 0 - fiveSeconds;
 
@@ -367,7 +367,7 @@ void home_screen(){
     }
     M5.Lcd.setCursor(5, 25);
     M5.Lcd.setTextSize(1);
-    M5.Lcd.printf("Home Screen \n");
+    M5.Lcd.printf("Home Screen \n ");
     M5.Lcd.printf("Smart Task Board ");
     M5.Lcd.printf("v%s\n ", FW_VERSION);
     M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
@@ -727,11 +727,19 @@ void loop()
   }
 
   //time calculation
-  display[3] = (int)(usecCount % 1000);
-  display[2] = (int)((usecCount % 1000000) / 1000);
-  display[1] = (int)((usecCount / 1000000) % 60);
-  display[0] = (int)((usecCount / 60000000) % 3600);
-  
+  if (trialRunning == 1){
+    display[3] = (int)(usecCount % 1000);
+    display[2] = (int)((usecCount % 1000000) / 1000);
+    display[1] = (int)((usecCount / 1000000) % 60);
+    display[0] = (int)((usecCount / 60000000) % 3600);
+  } 
+  else {
+    display[3] = (int)(trialTime % 1000);
+    display[2] = (int)((trialTime % 1000000) / 1000);
+    display[1] = (int)((trialTime / 1000000) % 60);
+    display[0] = (int)((trialTime / 60000000) % 3600);
+  }
+    
   //Start Trial on M5 Button Press Check
   if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0) 
   {
@@ -794,9 +802,23 @@ void loop()
       countStart = 0;
       digitalWrite(10, HIGH); //turn off LED
       Serial.printf("Trial Status: Red Button pressed, Trial Stopped! Time(us):%d\n", usecCount);
-      // trialRunning = 0; //this seems correct here but isn't compatible with the logic of countStart
+      trialRunning = 0; //this seems correct here but isn't compatible with the logic of countStart
+      trialTime = usecCount;
+      timerAlarmDisable(interruptTimer);
+       M5.Lcd.fillScreen(BLACK); //clear screen
+      M5.Lcd.setTextColor(WHITE, BLACK);
       // screenSelector = 0;       
     }
+  //     //Time Count Stop
+  // if (countStart == 0 && trialRunning > 0)
+  // // if (countStart == 0)
+  // {
+  //   timerAlarmDisable(interruptTimer);
+  //   trialRunning = 0;
+  //   trialTime = usecCount;
+  //   M5.Lcd.fillScreen(BLACK); //clear screen
+  //   M5.Lcd.setTextColor(WHITE, BLACK);
+  // }
     delay(1);
   }
 
@@ -954,17 +976,6 @@ void loop()
   {
     timerAlarmEnable(interruptTimer);
     trialRunning = 1;
-  }
-
-  //Time Count Stop
-  if (countStart == 0 && trialRunning > 0)
-  // if (countStart == 0)
-  {
-    timerAlarmDisable(interruptTimer);
-    trialRunning = 0;
-    trialTime = usecCount;
-    M5.Lcd.fillScreen(BLACK); //clear screen
-    M5.Lcd.setTextColor(WHITE, BLACK);
   }
 
   //Count Reset Check
