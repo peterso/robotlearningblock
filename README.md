@@ -1,17 +1,21 @@
 # robotlearningblock
 
-![CompetitionConcept.png](/assets/images/CompetitionConcept.png)
+![DRJConcept.png](/assets/images/DRJ-Figure1_RealWorld-LaboratoryDR-J.png)
 
-Repo for smart busy block for developing and evaluating robot manipulation skills in the real-world.
+
+Repo for the smart busy block for developing and evaluating robot manipulation skills in the real-world with electronic task boards. This project is also known as the Digital Robotic Judge or DR.J Manipulation Skill Development Pipeline.
 
 The goal of the project is to provide an objective tool for measuring manipulation performance for both humans and robots. A microcontroller on the task box monitors the state of the mounted manipulation elements and reports state change events to a [cloud-hosted dashboard](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad) to aggregate performance data. Device telemetry, including accelerometer data, is regularly logged to provide insight into the device's usage. Manipulation tasks are designed with objects that can be electronically verified to be in their designated start and goal positions. Trial protocols define sequences of actions on the task board and allow designers to create test scenarios. The execution time of subtasks within a protocol are recorded and automatically published on a web dashboard for consistent and convenient comparison with previous trial attempts. A modular framework for adding new task board objects was selected to encourage community members to design and build their own trial protocols.
 
-Web Dashboard Links:
+An example demonstration of the internet-connected task board can be viewed on [YouTube](https://www.youtube.com/watch?v=1jdvIbDURSA). Here is the very first test run with a Franka Emika Panda robot in the lab [YouTube](https://youtu.be/LJFTypNZrFs).
+
+### Web Dashboard Links:
 - [TBv2023: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/0d2f0e4c-6a80-4cf4-a48d-5b25fcb35ac0/50cdf30f-955e-4ccf-b13a-8e1d0281f68a?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
 - [TBv2023: Subtask Completion Times](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/a8b5be5f-cc23-4724-8f06-3f67f8fef104?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
 - [TBv2022: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/dashboard2/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
 
-An example demonstration of the internet-connected task board can be viewed on [YouTube](https://youtu.be/LJFTypNZrFs).
+Screenshot of a web dashboard from the 2021 Robothon Grand Challenge competition.
+![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
 
 The internet-connected task board was first featured during the internationl robot manipulation competition, [Robothon Grand Challenge](https://www.robothon-grand-challenge.com) at automatica in 2021. The design of the task board has been expanded and reimplemented for the competition again in 2022 and has also been picked up by the pan-European robotics excellence collaboration project, [euROBIN](https://www.eurobin-project.eu/).
 
@@ -25,14 +29,14 @@ The electronic task board allows for the direct comparison between a human and a
 
 Here is the task board trial protocol used in the Robothon Grand Challenge in 2021 and 2022.
 
-![TaskBoardProtocol2022.png](/assets/images/TaskBoardProtocol2022-paperVersion.png)
+![TaskBoardProtocol2022.png](/assets/images/TrialProtocol2021.jpg)
 
 A new task board design has been built to match the needs of the euROBIN newtwork and was used in the Robothon Grand Challenge in 2023.
 
-![RobothonTaskBoard2023.png](/assets/images/RobothonTaskBoard2023-bg-removed.png)
+![RobothonTaskBoard2023.png](/assets/images/TrialProtocol2023.jpg)
 
 
-### Quick Start
+### Quick Start to connect a Task Board to the Web Dashboard
 
 1. Power on task board by plugging in USB to charge the device. "Picture of person plugging in task board USB"
 
@@ -44,22 +48,18 @@ A new task board design has been built to match the needs of the euROBIN newtwor
 
 Trial protocols have a programmed time out of 10 minutes. While a trial is active, a red LED is illuminated on the controller. During active trials the agent under test should follow the trial protocol and complete all 5 subtasks on the task board as fast as possible. The results are recorded locally on the device and displayed on the controller's LED screen. The microcontroller publishes the latest available device data to the web server every 5 seconds when the device is connected to the internet over WiFi. 
 
-![TrialProtocol2022.png](/assets/images/TrialProtocol2022.png)
-
 ### Detailed User Instructions 
 
 The task board is designed to capture manipulation performance for use in the [Robothon Grand Challenge](https://www.robothon-grand-challenge.com). The microcontroller tracks users overall trial completion time, intermediate subtask completion times, earned trial points, and cumulative interaction force. Performance trials are initiated by the user after restoring the components to their start configuration and then pressing the M5 button. A countdown timer ends trial attempts after 10 minutes. When the task board is connected to the internet, the microcontroller publishes the latest and ongoing trial data every 5 seconds to a remote cloud server. An interactive web dashboard renders the trial data from the task board to provide transparent, remote observability into performance trials. Trials end when the countdown timer expires or when all sub-tasks are completed and the user presses the red stop button. Final trial results are displayed on the task board LED display and on the web dashbaord.
 
-View the task board web dashboard at this URL: https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/ 
+Link to a [web simulator](https://replit.com/@peterso/TaskBoardSimulator?v=1) with Replit for testing new task board designs and trial protocols. NOTE: you will need to generate a new device token on the KaaIoT platform. 
 
-A publicly viewable version of the dashboard is available to view any of the released task boards here: https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad
-
-Link to a web simulator with Replit here: https://replit.com/@peterso/TaskBoardSimulator?v=1 
-
-
-![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
-![ManualTrialRun](/assets/gifs/manual_trial_run.gif)
+Prior to running a new trial attempt, the trial protocol specifies the user must pick up and randomly place the task board in a new location in front of the user. 
 ![InitializeTaskBoard](/assets/gifs/pickup_and_place_tb.gif)
+
+After the task board location has been initialized, the user then presses the Trial Start button (M5 button) to begin a logged trial attempt. Here is a .GIF of a human actor solving the 2021 trial protocol focused on developing manipulation skills for e-waste handling and disassembly.
+![ManualTrialRun](/assets/gifs/manual_trial_run.gif)
+
 
 #### Task Board Controller Button Operations
 
@@ -71,17 +71,17 @@ Link to a web simulator with Replit here: https://replit.com/@peterso/TaskBoardS
 
 #### Connecting the Task Board Controller to the Internet
 
-1. Connect to Task Board SSID: “AutoConnectAP-task-board”, password is "password"
+1. Connect to Task Board SSID: “AutoConnectAP-task-board-###” where ### is the number on the sticker on the side of the task board. The SSID password is "robothon".
 
-2. Open web browser and go to URL: “192.168.4.1”
+2. The configuration page should automatically open in our web browser. If not, open web browser and go to URL: “192.168.4.1”.
 
-3. Click ”Configure” button
+3. Click the ”Configure” button to setup a new WiFi network connection. 
 
-4. Select Desired WiFi from scanned list
+4. Select Desired WiFi from scanned list.
 
-5. Enter your SSID's WiFi password
+5. Enter your SSID's WiFi password.
 
-6. Click “Save” Button. Board will attempt to connect to new WiFi and present Trial Start Screen after successful connection. 
+6. Click the “Save” Button. The new credentials will be saved to the microcontrollers EEPROM memory for future connections. The Task Board will attempt to connect to new WiFi. After it has successfully connected to the Internet over the new network the Home Screen will be displayed on the screen. 
 
 #### Reading Task Board State over USB
 
@@ -90,15 +90,18 @@ When working with the task board, developers may want to read the task board sta
 
 ### Core Design Features
 
+![CompetitionConcept.png](/assets/images/CompetitionConcept.png)
 The core design features of the task board microcontroller are:
-[Status] Feature Description
-- [Done!] task board monitors a digital state of all mounted manipulation elements
-- [Done!] user can start a trial using the device without internet connection
-- [Done!] task board reports the timestamps for each successful task interaction trial over USB
-- [Done!] report the stae of the task box over wifi to the [Kaa internet dashboard](https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/) 
-- [Done!] setup wifi greeter to allow user to supply own wifi ssid and password
-- [Done!] report the state of the task box over USB
-- [Done!] task board reports are integrated into a Microsoft Azure IoT dashboard
+
+- [Status] Feature Description
+
+- [:white_check_mark:] task board monitors a digital state of all mounted manipulation elements
+- [:white_check_mark:] user can start a trial using the device without internet connection
+- [:white_check_mark:] task board reports the timestamps for each successful task interaction trial over USB
+- [:white_check_mark:] report the stae of the task box over WiFi to the [Kaa internet dashboard](https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/) 
+- [:white_check_mark:] setup wifi greeter to allow user to supply own wifi ssid and password
+- [:white_check_mark:] report the state of the task box over USB
+- [:white_check_mark:] task board reports are integrated into a Microsoft Azure IoT dashboard
 - [TODO] report the load cell readings on the task box surface
 - [TODO] device has a digital twin that can be represented in a robot simulator i.e. Gazebo
 - [TODO] integrate bluetooth power meter into task board telemetry
@@ -107,55 +110,69 @@ The core design features of the task board microcontroller are:
 
 ### NEW Feature Requests
 
-- [Done!] Over-The-Air Updates to deploy new trial protocols to task boards in the field
-- [Done!] Make the task board surface more stiff/rigid -> removed load cell and mount top plate to housing directly
-- [TODO] Add a automated testing procedure for a factory to execute prior to shipping task board
-- [TODO] Look into Device Management with BalenaOS for multiple OTA updates 
+- [:white_check_mark:] Over-The-Air Updates to deploy new trial protocols to task boards in the field
+- [:white_check_mark:] Make the task board surface more stiff/rigid -> removed load cell and mount top plate to housing directly
+- [TODO] Add a automated testing procedure for a contract manufacturer to execute prior to shipping task boards
+- [TODO] Look into Device Management with BalenaOS for multiple OTA updates as an alternative to Kaa OTA
+- [TODO] Add ROS messages to the task board microcontroller to broadcast task results to robots
 
 
 ### Design Goals & System Architecture
 
-Each task board is equipped with a microcontroller to monitor its state. Task boards are designed with the following features in mind:
-- Affordable. Task boards should ideally not exceed $200 to incentive others to use the platform instead of making their own. The design is intended to be open sourced. 
-- Portable. Task boards will have the capability to record trials untethered on battery power.
-- Extensible. Task board IO is extendable over I2C. 
-- Networked. Each task board will have the ability to report recorded trials to an online database.
-
 ![SystemArchitecture.png](/assets/images/SystemArchitecture.png)
+Each task board is equipped with a microcontroller to remotely monitor its state and track usage statistics. Task boards are designed with the following features in mind:
+- ***Affordable.*** Task boards should ideally not exceed $200 to incentive others to use the platform instead of making their own. The design is intended to be open sourced. 
+- ***Portable.*** Task boards will have the capability to record trials untethered on battery power.
+- ***Shippable.*** Task boards should be about the size of a laptop and weigh less than 1kg.
+- ***Extensible.*** Task board IO is extendable over an I2C bus. 
+- ***Networked.*** Each task board will have the ability to report recorded trials to an online database.
 
 
 ### Relevant Documents
-- Bill of Materials (BOM) [Google Sheet](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit?usp=sharing)
+- Bill of Materials (BOM) [TBv2021](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit?usp=sharing)
 - CAD Design [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)
 - Assembly Drawing [PDF](https://drive.google.com/file/d/1hJSEHZe9U0Q7VRQKNKOsz96tIN9Y0mhF/view?usp=sharing)
 - Wiring Diagram [Link](/assets/images/TaskBoard-5Level-Wiring.png)
 - Task Board Assembly Instructions [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)
 - Task Board Inventory Tracking [Google Sheet](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit#gid=701724046)
 
+| Design Document       | TBv2021 | TBv2023 |
+|-----------------------|---------|---------|
+| Design BOM            | [TBv2021](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit?usp=sharing)        | TODO        |
+| Assembly Drawing      | [PDF](https://drive.google.com/file/d/1hJSEHZe9U0Q7VRQKNKOsz96tIN9Y0mhF/view?usp=sharing)        | TODO        |
+| CAD Files             | [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)        | TODO        |
+| Assembly Instructions | [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)        | TODO        |
+| Wiring Diagram | [PNG](/assets/images/TaskBoard-5Level-Wiring.png)        | TODO        |
+| 3D Print Files        | /assets        | TODO        |
+| CNC Files             | /assets        | TODO        |
+
 
 ### Deployment
 - An initial 15 task boards were fabricated for the Robothon 2021 competition at automatica.
 - 20 task boards were built for the Robothon 2022 competition.
+- A new design was released for Robothon 2023. 20 task boards were made for the competition.
+- 15 more task boards (TBv2023) were made for the [euROBIN project](https://www.eurobin-project.eu/).
 
 
 ### Battery Recycling Articles for Manipulation Task Selection
 - WEF Report on battery recycling [Link](https://www3.weforum.org/docs/WEF_A_New_Circular_Vision_for_Electronics.pdf)
 - German Battery Collection with GRS Batterien [Link](https://www.en.grs-batterien.de/grs-batterien/)
-- Fun, kids video Curiousity Quest showing many of the processes [YouTube](https://www.youtube.com/watch?v=lMn-sDvgj4Q&ab_channel=curiosityquest)
+- Fun video from Curiousity Quest showing many e-waste handling processes [YouTube](https://www.youtube.com/watch?v=lMn-sDvgj4Q&ab_channel=curiosityquest)
 
 
 ### References
 - [M5Stack Docs](https://docs.m5stack.com/)
 - [M5Stack Community Forum](https://community.m5stack.com/category/17/m5-stick-stickc)
 - [KaaIoT Arduino SDK](https://github.com/kaaproject/kaa-arduino-sdk)
-- [Robothon Website](https://www.robothon-grand-challenge.com)
+- [Robothon Website](https://www.robothon-grand-challenge.com) at automatica/munich_i
 
 ### Citation
-Please cite this work as Towards Remote Robotic Competitions: An Internet-Connected Task Board and Dashboard [https://arxiv.org/abs/2201.09565](https://arxiv.org/abs/2201.09565)
+Please cite this work as ***Towards Remote Robotic Competitions: An Internet-Connected Task Board and Dashboard*** [https://arxiv.org/abs/2201.09565](https://arxiv.org/abs/2201.09565).
 
 Bibtex:
 
-@misc{so2022remote,
+```
+@misc{so2022remoteCompetitions,
       title={Towards Remote Robotic Competitions: An Internet-Connected Task Board and Dashboard}, 
       author={Peter So and Jonas Wittmann and Patrick Ruhkamp and Andriy Sarabakha and Sami Haddadin},
       year={2022},
@@ -163,3 +180,4 @@ Bibtex:
       archivePrefix={arXiv},
       primaryClass={cs.RO}
 }
+```
