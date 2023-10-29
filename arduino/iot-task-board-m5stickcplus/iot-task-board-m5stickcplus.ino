@@ -330,12 +330,15 @@ void publish_telemetry(){
       telemetry[0]["Time_ProbeGoal"] = TS_probeGoal; //INT
       telemetry[0]["cumForce"] = cumForce;//Float
       telemetry[0]["trialPoints"] = ptsCollected; //INT 
-      telemetry[0]["FW_Version"] = String(FW_VERSION).c_str(); //STR 
-      telemetry[0]["PROTOCOL"] = String(PROTOCOL_ID).c_str(); //STR 
+      // telemetry[0]["FW_Version"] = FW_VERSION; //STR // NEED TO FIGURE OUT HOW TO SEND STRINGS TO KAA
+      // telemetry[0]["PROTOCOL"] = PROTOCOL_ID; //STR 
+      // telemetry[0]["FW_Version"] = String(FW_VERSION).c_str(); //STR 
+      // telemetry[0]["PROTOCOL"] = String(PROTOCOL_ID).c_str(); //STR 
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
       Serial.println("Published on topic: " + topic);
+      Serial.println("Telemetry: " + telemetry.as<String>()); //debug only
 }
 
 // SCREEN DEFINITIONS
@@ -841,7 +844,7 @@ void loop()
   }
 
   // Reset the trial counter
-  if (stopBtnState == BUTTON_ON && trialRunning == 0 && M5.BtnA.isPressed() == 1 && M5.BtnB.isPressed() ==1 && buttonPushState == BUTTON_ON)
+  if (stopBtnState == BUTTON_ON && trialRunning == 0 && M5.BtnA.isPressed() == 1 && M5.BtnB.isPressed() == 1 && buttonPushState == BUTTON_ON)
   {
     resetCounter();
     M5.Lcd.fillScreen(BLACK); //clear screen
