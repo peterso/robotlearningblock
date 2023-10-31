@@ -46,26 +46,32 @@ As part of the competition, teams were challenged to demonstrate the manipulatio
 The uController (orange component) Interface has 3 Buttons and a USB-C charge/programming port:
 ***Power Button*** (side closest to USB-C), ***Button A*** (next to screen, labeled M5), ***Button B*** (side furthest from USB-C).
 
-Plug in board to USB to charge the built-in battery:
+#### Turning on the Task Board ####
 
 1. Toggle Power Manually = Hold Power Button for 2 seconds to turn on and 6 seconds to turn off.
 2. Plugging in the uController will automatically turn on the device.
 
-Connect board to your preferred WiFi Network using your laptop or smartphone:
+#### Connect board to your preferred WiFi Network using your laptop or smartphone ####
 
 1. Connect to Task Board SSID: “AutoConnectAP-task-board-###” where ### refers to the number on the sticker on the side of the box (Password: “robothon”)
 2. A configuration screen should automatically open in a browser on your device. Otherwise, open web browser and go to URL: “192.168.4.1”.
-3. Click ”Configure” button
-4. Select Desired WiFi from scanned list
-5. Enter WiFi password
-6. Click “Save” Button. Board will attempt to connect to new WiFi and present Trial Start Screen after successful connection.
 
-Begin using the task board with human subjects or your robot platform!
+3. Click the ”Configure” button to setup a new WiFi network connection. 
+
+4. Select Desired WiFi from the scanned list.
+
+5. Enter your SSID's WiFi password.
+
+6. Click the “Save” Button. The new credentials will be saved to the microcontrollers EEPROM memory for future connections. The Task Board will attempt to connect to new WiFi. After it has successfully connected to the Internet over the new network the Home Screen will be displayed on the screen. 
+
+#### Begin using the task board with human subjects or your robot platform ####
+
 1. Ensure the task board components are on their starting position prior to starting. The uController will display an alert on the screen if it detects an incorrect starting configuration.
 2. Press Button A to start recording a trial run! Trial runs will be automatically recorded to the web dashboard. Scan the QR code on the sticker for more information.
 3. Reset Trial Clock after a trialèPress Button B to reset the clock to zero.
 
-#### Tips:
+#### Some Helpful Tips:
+
 • Offline/Local Mode: Use your task board without the internet by holding Button A down when powering on the device.
 
 • Abort an Active Trial: Stop a trial early by holding down the Red Push Button and pressing Button A.
@@ -79,9 +85,11 @@ Trial protocols have a programmed time out of 10 minutes. While a trial is activ
 Link to a [web simulator](https://replit.com/@peterso/TaskBoardSimulator?v=1) with Replit for testing new task board designs and trial protocols. NOTE: you will need to generate a new device token on the KaaIoT platform. 
 
 Prior to running a new trial attempt, the trial protocol specifies the user must pick up and randomly place the task board in a new location in front of the user. An example of the location initialization is shown in the .gif below.
+
 ![InitializeTaskBoard](/assets/gifs/pickup_and_place_tb.gif)
 
 After the task board location has been initialized, the user then presses the Trial Start button (M5 button) to begin a logged trial attempt. This .gif shows a human actor solving the 2021 trial protocol.
+
 ![ManualTrialRun](/assets/gifs/manual_trial_run.gif)
 
 #### Task Board Controller Button Operations
@@ -92,19 +100,7 @@ After the task board location has been initialized, the user then presses the Tr
 
 - Abort an active trial: Press Trial Start Button AND Trial Stop Button at the same time.
 
-#### Connecting the Task Board Controller to the Internet
 
-1. Connect to Task Board SSID: “AutoConnectAP-task-board-###” where ### is the number on the sticker on the side of the task board. The SSID password is "robothon".
-
-2. The configuration page should automatically open in our web browser. If not, open web browser and go to URL: “192.168.4.1”.
-
-3. Click the ”Configure” button to setup a new WiFi network connection. 
-
-4. Select Desired WiFi from scanned list.
-
-5. Enter your SSID's WiFi password.
-
-6. Click the “Save” Button. The new credentials will be saved to the microcontrollers EEPROM memory for future connections. The Task Board will attempt to connect to new WiFi. After it has successfully connected to the Internet over the new network the Home Screen will be displayed on the screen. 
 
 #### Reading Task Board State over USB
 
