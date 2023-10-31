@@ -5,18 +5,19 @@
 
 Repo for the smart busy block for developing and evaluating robot manipulation skills in the real-world with electronic task boards. This project is also known as the Digital Robotic Judge or DR.J Manipulation Skill Development Pipeline.
 
-The goal of the project is to provide an objective tool for measuring manipulation performance for both humans and robots. A microcontroller on the task box monitors the state of the mounted manipulation elements and reports state change events to a [cloud-hosted dashboard](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad) to aggregate performance data. Device telemetry, including accelerometer data, is regularly logged to provide insight into the device's usage. Manipulation tasks are designed with objects that can be electronically verified to be in their designated start and goal positions. Trial protocols define sequences of actions on the task board and allow designers to create test scenarios. The execution time of subtasks within a protocol are recorded and automatically published on a web dashboard for consistent and convenient comparison with previous trial attempts. A modular framework for adding new task board objects was selected to encourage community members to design and build their own trial protocols.
+The goal of the project is to provide an objective tool for measuring manipulation performance for both humans and robots. A microcontroller on the task box monitors the state of the mounted manipulation elements and reports state change events to a cloud-hosted dashboard to aggregate performance data. Device telemetry, including accelerometer data, is regularly logged to provide insight into the device's usage. Manipulation tasks are designed with objects that can be electronically verified to be in their designated start and goal positions. Trial protocols define sequences of actions on the task board and allow designers to create test scenarios. The execution time of subtasks within a protocol are recorded and automatically published on a web dashboard for consistent and convenient comparison with previous trial attempts. A modular framework for adding new task board objects was selected to encourage community members to design and build their own trial protocols.
 
 An example demonstration of the internet-connected task board can be viewed on [YouTube](https://www.youtube.com/watch?v=1jdvIbDURSA). Here is the very first test run with a Franka Emika Panda robot in the lab [YouTube](https://youtu.be/LJFTypNZrFs).
 
-### Web Dashboard Links:
+### Web Links to Web Dashboards for Deployed Task Boards:
 - [TBv2023: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/0d2f0e4c-6a80-4cf4-a48d-5b25fcb35ac0/50cdf30f-955e-4ccf-b13a-8e1d0281f68a?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
 - [TBv2023: Subtask Completion Times](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/a8b5be5f-cc23-4724-8f06-3f67f8fef104?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
 - [TBv2022: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/dashboard2/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
 
-Screenshot of a web dashboard from the 2021 Robothon Grand Challenge competition.
+A screenshot of a web dashboard from the 2021 Robothon Grand Challenge competition.
 ![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
 
+#### A little history on the smart task board development...
 The internet-connected task board was first featured during the internationl robot manipulation competition, [Robothon Grand Challenge](https://www.robothon-grand-challenge.com) at automatica in 2021. The design of the task board has been expanded and reimplemented for the competition again in 2022 and has also been picked up by the pan-European robotics excellence collaboration project, [euROBIN](https://www.eurobin-project.eu/).
 
 Here is an example setup of a exemplary robot testing setup with the task board.
@@ -27,39 +28,61 @@ The electronic task board allows for the direct comparison between a human and a
 
 ![TrialProtocolHumanRobot](/assets/images/TrialProtocolIllustration-2Rows2-v2.png)
 
-Here is the task board trial protocol used in the Robothon Grand Challenge in 2021 and 2022.
+Here is the trial protocol for the task board version TBv2021 used in the Robothon Grand Challenge in 2021 and 2022 to guide roboticists to develop reusable manipulation skills for e-waste sorting and disassembly.
 
 ![TaskBoardProtocol2022.png](/assets/images/TrialProtocol2021.jpg)
 
-A new task board design has been built to match the needs of the euROBIN newtwork and was used in the Robothon Grand Challenge in 2023.
+A new task board design (TBv2023) was designed and built to develop manipulation skills in performing electronic device assessments with a multimeter. The design was also adapted to meed the needs of the euROBIN network and was used in the Robothon Grand Challenge in 2023.
 
 ![RobothonTaskBoard2023.png](/assets/images/TrialProtocol2023.jpg)
+
+As part of the competition, teams were challenged to demonstrate the manipulation skills of their robot platform on an e-waste object of their choice in the "Bring-Your-Won-Device (BYOD) Challenge". Below are some examples of the successful demonstrations. 
+
+![Robothon-BYOD-Demos.png](/assets/images/Robothon-BYOD-Demos.png)
 
 
 ### Quick Start to connect a Task Board to the Web Dashboard
 
-1. Power on task board by plugging in USB to charge the device. "Picture of person plugging in task board USB"
+The uController (orange component) Interface has 3 Buttons and a USB-C charge/programming port:
+***Power Button*** (side closest to USB-C), ***Button A*** (next to screen, labeled M5), ***Button B*** (side furthest from USB-C).
 
-2. Connect the task board to WiFi. "Picture of task board with PC displaying web dashboard"
+Plug in board to USB to charge the built-in battery:
 
-3. Move task board components to match the starting configuration in the Trial Protocol and then press the Trial Start Button ("M5" Button on top of the controller). "Picture of task board in start configuration with finger on the Trial Start Button"
+1. Toggle Power Manually = Hold Power Button for 2 seconds to turn on and 6 seconds to turn off.
+2. Plugging in the uController will automatically turn on the device.
 
-4. Begin using task board for your manipulation experiments! Your trial results will be automatically recorded on the web dashboard "Picture of user with robot and task board"
+Connect board to your preferred WiFi Network using your laptop or smartphone:
 
-Trial protocols have a programmed time out of 10 minutes. While a trial is active, a red LED is illuminated on the controller. During active trials the agent under test should follow the trial protocol and complete all 5 subtasks on the task board as fast as possible. The results are recorded locally on the device and displayed on the controller's LED screen. The microcontroller publishes the latest available device data to the web server every 5 seconds when the device is connected to the internet over WiFi. 
+1. Connect to Task Board SSID: “AutoConnectAP-task-board-###” where ### refers to the number on the sticker on the side of the box (Password: “robothon”)
+2. A configuration screen should automatically open in a browser on your device. Otherwise, open web browser and go to URL: “192.168.4.1”.
+3. Click ”Configure” button
+4. Select Desired WiFi from scanned list
+5. Enter WiFi password
+6. Click “Save” Button. Board will attempt to connect to new WiFi and present Trial Start Screen after successful connection.
+
+Begin using the task board with human subjects or your robot platform!
+1. Ensure the task board components are on their starting position prior to starting. The uController will display an alert on the screen if it detects an incorrect starting configuration.
+2. Press Button A to start recording a trial run! Trial runs will be automatically recorded to the web dashboard. Scan the QR code on the sticker for more information.
+3. Reset Trial Clock after a trialèPress Button B to reset the clock to zero.
+
+#### Tips:
+• Offline/Local Mode: Use your task board without the internet by holding Button A down when powering on the device.
+
+• Abort an Active Trial: Stop a trial early by holding down the Red Push Button and pressing Button A.
 
 ### Detailed User Instructions 
 
-The task board is designed to capture manipulation performance for use in the [Robothon Grand Challenge](https://www.robothon-grand-challenge.com). The microcontroller tracks users overall trial completion time, intermediate subtask completion times, earned trial points, and cumulative interaction force. Performance trials are initiated by the user after restoring the components to their start configuration and then pressing the M5 button. A countdown timer ends trial attempts after 10 minutes. When the task board is connected to the internet, the microcontroller publishes the latest and ongoing trial data every 5 seconds to a remote cloud server. An interactive web dashboard renders the trial data from the task board to provide transparent, remote observability into performance trials. Trials end when the countdown timer expires or when all sub-tasks are completed and the user presses the red stop button. Final trial results are displayed on the task board LED display and on the web dashbaord.
+The task board is designed to capture manipulation performance for use in the [Robothon Grand Challenge](https://www.robothon-grand-challenge.com). The microcontroller tracks users overall trial completion time, intermediate subtask completion times, earned trial points, and cumulative interaction force. Performance trials are initiated by the user after restoring the components to their start configuration and then pressing the M5 button. A countdown timer ends trial attempts after 10 minutes. When the task board is connected to the internet, the microcontroller publishes telemetry, during an active trial at 20Hz and 0.2Hz when idle, to a remote cloud server. An interactive web dashboard renders the trial data from the task board to provide transparent, remote observability into performance trials. Trials end when the countdown timer expires or when all sub-tasks are completed and the user presses the red stop button. Final trial results are displayed on the task board LED display and on the web dashbaord.
+
+Trial protocols have a programmed time out of 10 minutes. While a trial is active, a red LED is illuminated on the controller. During active trials the agent under test should follow the trial protocol and complete all 5 subtasks on the task board as fast as possible. The results are recorded locally on the device and displayed on the controller's LED screen. 
 
 Link to a [web simulator](https://replit.com/@peterso/TaskBoardSimulator?v=1) with Replit for testing new task board designs and trial protocols. NOTE: you will need to generate a new device token on the KaaIoT platform. 
 
-Prior to running a new trial attempt, the trial protocol specifies the user must pick up and randomly place the task board in a new location in front of the user. 
+Prior to running a new trial attempt, the trial protocol specifies the user must pick up and randomly place the task board in a new location in front of the user. An example of the location initialization is shown in the .gif below.
 ![InitializeTaskBoard](/assets/gifs/pickup_and_place_tb.gif)
 
-After the task board location has been initialized, the user then presses the Trial Start button (M5 button) to begin a logged trial attempt. Here is a .GIF of a human actor solving the 2021 trial protocol focused on developing manipulation skills for e-waste handling and disassembly.
+After the task board location has been initialized, the user then presses the Trial Start button (M5 button) to begin a logged trial attempt. This .gif shows a human actor solving the 2021 trial protocol.
 ![ManualTrialRun](/assets/gifs/manual_trial_run.gif)
-
 
 #### Task Board Controller Button Operations
 
