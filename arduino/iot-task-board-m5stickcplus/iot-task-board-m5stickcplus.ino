@@ -1,6 +1,6 @@
 // This is a program to measure manipulation performance with the MSRM Task Board. 
 // Written by Peter So. December 2020.
-// Last updated March 2023
+// Last updated October 2023
 //
 // Program will not run on board without being connected to the PbHub unit. 
 // Default behavior is board will attempt to WiFi network. Hold M5 button during power up to use without WiFi.
@@ -330,8 +330,8 @@ void publish_telemetry(){
       telemetry[0]["Time_ProbeGoal"] = TS_probeGoal; //INT
       telemetry[0]["cumForce"] = cumForce;//Float
       telemetry[0]["trialPoints"] = ptsCollected; //INT 
-      telemetry[0]["FW_Version"] = String(FW_VERSION).c_str(); //STR 
-      telemetry[0]["PROTOCOL"] = String(PROTOCOL_ID).c_str(); //STR 
+      // telemetry[0]["FW_Version"] = String(FW_VERSION).c_str(); //STR 
+      // telemetry[0]["PROTOCOL"] = String(PROTOCOL_ID).c_str(); //STR 
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
@@ -361,9 +361,8 @@ void home_screen(){
       M5.Lcd.fillCircle(130, 10, 8, GREEN);
     }
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
-    if (stopBtnState == BUTTON_ON && trialCompletedLatch == 0){
+    if (trialCompletedLatch){
       M5.Lcd.fillCircle(160, 10, 8, GREEN);
-      trialCompletedLatch = 1;
     }
     M5.Lcd.setCursor(5, 25);
     M5.Lcd.setTextSize(1);
@@ -726,12 +725,18 @@ void loop()
     }
   }
 
-  //time calculation
-  display[3] = (int)(usecCount % 1000);
-  display[2] = (int)((usecCount % 1000000) / 1000);
-  display[1] = (int)((usecCount / 1000000) % 60);
-  display[0] = (int)((usecCount / 60000000) % 3600);
-  
+  if (trialRunning == 1)
+  {
+    //time calculation
+    display[3] = (int)(usecCount % 1000);
+    display[2] = (int)((usecCount % 1000000) / 1000);
+    display[1] = (int)((usecCount / 1000000) % 60);
+    display[0] = (int)((usecCount / 60000000) % 3600);
+    
+    // update trialTime variable in telemetry while trial is running
+    trialTime = usecCount;
+  }
+
   //Start Trial on M5 Button Press Check
   if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0) 
   {
@@ -796,6 +801,7 @@ void loop()
       Serial.printf("Trial Status: Red Button pressed, Trial Stopped! Time(us):%d\n", usecCount);
       // trialRunning = 0; //this seems correct here but isn't compatible with the logic of countStart
       // screenSelector = 0;       
+      trialCompletedLatch = 1;
     }
     delay(1);
   }
@@ -985,6 +991,10 @@ void loop()
     TS_cableWrap = 0;
     TS_probeGoal = 0;
     trialTime = 0;
+    display[0] = 0;
+    display[1] = 0;
+    display[2] = 0;
+    display[3] = 0;
     ptsCollected = 0;
     cumForce = 0;
     digitalWrite(10, HIGH); //turn off LED
