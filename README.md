@@ -140,20 +140,16 @@ The core design features of the task board microcontroller are:
 
 ![SystemArchitecture.png](/assets/images/SystemArchitecture.png)
 Each task board is equipped with a microcontroller to remotely monitor its state and track usage statistics. Task boards are designed with the following features in mind:
-- ***Affordable.*** Task boards should ideally not exceed $200 to incentive others to use the platform instead of making their own. The design is intended to be open sourced. 
+- ***Affordable.*** Task board components should not exceed $200 to allow community members to build their own. The design is intended to be open sourced and remixed. 
 - ***Portable.*** Task boards will have the capability to record trials untethered on battery power.
-- ***Shippable.*** Task boards should be about the size of a laptop and weigh less than 1kg.
-- ***Extensible.*** Task board IO is extendable over an I2C bus. 
-- ***Networked.*** Each task board will have the ability to report recorded trials to an online database.
+- ***Shippable.*** Task boards should be about the size of a laptop and weigh less than 1kg. For competition events, task boards can be shipped to participants to ensure everyone receives the same physical demonstrator setup.
+- ***Traceability.*** Experiments performed on the task board can be automatically logged to a central web server for community members to share their development journey as well as easily download their experimental results.
+- ***Extensible.*** Task board IO is extendable over an I2C bus to incorporate new task elements in future designs. 
+- ***Networked.*** Each task board has the ability to report recorded trials to an online database.
 
 
 ### Relevant Documents
-- Bill of Materials (BOM) [TBv2021](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit?usp=sharing)
-- CAD Design [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)
-- Assembly Drawing [PDF](https://drive.google.com/file/d/1hJSEHZe9U0Q7VRQKNKOsz96tIN9Y0mhF/view?usp=sharing)
-- Wiring Diagram [Link](/assets/images/TaskBoard-5Level-Wiring.png)
-- Task Board Assembly Instructions [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)
-- Task Board Inventory Tracking [Google Sheet](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit#gid=701724046)
+
 
 | Design Document       | TBv2021 | TBv2023 |
 |-----------------------|---------|---------|
@@ -162,8 +158,8 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 | CAD Files             | [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)        | TODO        |
 | Assembly Instructions | [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)        | TODO        |
 | Wiring Diagram | [PNG](/assets/images/TaskBoard-5Level-Wiring.png)        | TODO        |
-| 3D Print Files        | /assets        | TODO        |
-| CNC Files             | /assets        | TODO        |
+| 3D Print Files        | ./assets        | TODO        |
+| CNC Files             | ./assets        | TODO        |
 
 
 ### Deployment
