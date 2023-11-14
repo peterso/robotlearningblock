@@ -184,7 +184,6 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 ### Citation
 Please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. A preprint can be found [here](https://www.researchgate.net/publication/375329709_Digital_Robot_Judge_DRJ_Building_a_Task-Centric_Performance_Database_of_Real-World_Manipulation_with_Electronic_Task_Boards#fullTextFileContent).
 
-~~Please cite this work as ***Towards Remote Robotic Competitions: An Internet-Connected Task Board and Dashboard*** [https://arxiv.org/abs/2201.09565](https://arxiv.org/abs/2201.09565).~~
 
 Bibtex:
 ```
@@ -197,13 +196,3 @@ Bibtex:
 
 ```
 
-```
-@misc{so2022remoteCompetitions,
-      title={Towards Remote Robotic Competitions: An Internet-Connected Task Board and Dashboard}, 
-      author={Peter So and Jonas Wittmann and Patrick Ruhkamp and Andriy Sarabakha and Sami Haddadin},
-      year={2022},
-      eprint={2201.09565},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO}
-}
-```
