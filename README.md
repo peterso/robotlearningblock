@@ -121,10 +121,12 @@ The core design features of the task board microcontroller are:
 - [:white_check_mark:] setup wifi greeter to allow user to supply own wifi ssid and password
 - [:white_check_mark:] report the state of the task box over USB
 - [:white_check_mark:] task board reports are integrated into a Microsoft Azure IoT dashboard
+- [In Progress] device has a digital twin that can be represented in a robot simulator i.e. Gazebo, Mujoco. 
 - [TODO] report the load cell readings on the task box surface
-- [TODO] device has a digital twin that can be represented in a robot simulator i.e. Gazebo
 - [TODO] integrate bluetooth power meter into task board telemetry
-- [TODO] enable network support for "Eduroam"
+- [TODO] enable internet connection network support for "Eduroam"
+
+
  
 
 ### NEW Feature Requests
@@ -162,11 +164,12 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 | CNC Files             | ./assets        | TODO        |
 
 
-### Deployment
+### Task Board Deployment
 - An initial 15 task boards were fabricated for the Robothon 2021 competition at automatica.
 - 20 task boards were built for the Robothon 2022 competition.
 - A new design was released for Robothon 2023. 20 task boards were made for the competition.
 - 15 more task boards (TBv2023) were made for the [euROBIN project](https://www.eurobin-project.eu/).
+- ***Order your own task board*** If you are interested in getting a pre-assembled task board to demonstrate your robot platform's capabilities or to follow along in the robot benchmark, please write an e-mail request with the model year [TBv2021, TBv2023] and the number of boards to peter@modularmotions.com.
 
 
 ### Battery Recycling Articles for Manipulation Task Selection
@@ -184,26 +187,14 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 ### Citation
 Please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. A preprint can be found [here](https://www.researchgate.net/publication/375329709_Digital_Robot_Judge_DRJ_Building_a_Task-Centric_Performance_Database_of_Real-World_Manipulation_with_Electronic_Task_Boards#fullTextFileContent).
 
-~~Please cite this work as ***Towards Remote Robotic Competitions: An Internet-Connected Task Board and Dashboard*** [https://arxiv.org/abs/2201.09565](https://arxiv.org/abs/2201.09565).~~
 
 Bibtex:
 ```
-@article{So2023Digital,
+@article{So2023DRJ,
  author = {So, Peter and Sarabakha, Andriy and Wu, Fan and Culha, Utku and {Abu-Dakka}, Fares J and Haddadin, Sami},
  journal = {Accepted for publication in IEEE Robotics and Automation Magazine},
  title = {Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards},
- year = {2023}
-}
-
-```
-
-```
-@misc{so2022remoteCompetitions,
-      title={Towards Remote Robotic Competitions: An Internet-Connected Task Board and Dashboard}, 
-      author={Peter So and Jonas Wittmann and Patrick Ruhkamp and Andriy Sarabakha and Sami Haddadin},
-      year={2022},
-      eprint={2201.09565},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO}
+ year = {2023},
+ URL = {https://www.researchgate.net/publication/375329709_Digital_Robot_Judge_DRJ_Building_a_Task-Centric_Performance_Database_of_Real-World_Manipulation_with_Electronic_Task_Board}
 }
 ```
