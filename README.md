@@ -182,7 +182,7 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 - [M5Stack Docs](https://docs.m5stack.com/)
 - [M5Stack Community Forum](https://community.m5stack.com/category/17/m5-stick-stickc)
 - [KaaIoT Arduino SDK](https://github.com/kaaproject/kaa-arduino-sdk)
-- [Robothon Website](https://www.robothon-grand-challenge.com) at automatica/munich_i
+- Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), Digital Kickoff Meeting [Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
 
 ### Citation
 Please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. A preprint can be found [here](https://www.researchgate.net/publication/375329709_Digital_Robot_Judge_DRJ_Building_a_Task-Centric_Performance_Database_of_Real-World_Manipulation_with_Electronic_Task_Boards).
