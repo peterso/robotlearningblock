@@ -185,16 +185,19 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 - Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), Digital Kickoff Meeting [Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
 
 ### Citation
-Please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. A preprint can be found [here](https://www.researchgate.net/publication/375329709_Digital_Robot_Judge_DRJ_Building_a_Task-Centric_Performance_Database_of_Real-World_Manipulation_with_Electronic_Task_Boards).
+Please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. An early release is available on IEEE [here](https://ieeexplore.ieee.org/document/10378967).
 
 
 Bibtex:
 ```
-@article{So2023DRJ,
- author = {So, Peter and Sarabakha, Andriy and Wu, Fan and Culha, Utku and {Abu-Dakka}, Fares J and Haddadin, Sami},
- journal = {Accepted for publication in IEEE Robotics and Automation Magazine},
- title = {Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards},
- year = {2023},
- URL = {https://www.researchgate.net/publication/375329709_Digital_Robot_Judge_DRJ_Building_a_Task-Centric_Performance_Database_of_Real-World_Manipulation_with_Electronic_Task_Board}
-}
+@ARTICLE{10378967,
+  author={So, Peter and Sarabakha, Andriy and Wu, Fan and Culha, Utku and Abu-Dakka, Fares J. and Haddadin, Sami},
+  journal={IEEE Robotics & Automation Magazine}, 
+  title={Digital Robot Judge: Building a Task-centric Performance Database of Real-World Manipulation With Electronic Task Boards}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={2-14},
+  doi={10.1109/MRA.2023.3336473}}
 ```
+
