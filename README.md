@@ -1,20 +1,29 @@
 # robotlearningblock
 
+Welcome to the project repository for the internet-connected task board for evaluating real-world robot manipulation skills. This project is also known as the Digital Robotic Judge, or DR.J, as an unrelated homage to legendary basketball star [Julius "DR.J" Irving](https://www.youtube.com/watch?v=bWLXcg-V8FI). Industrial use cases for robot skill development are boiled down into a portable electronic task board to be solved by the community of robot developers to find best known solutions following the DR.J Pipeline as illustrated below.
+
 ![DRJConcept.png](/assets/images/DRJ-Figure1_RealWorld-LaboratoryDR-J.png)
 
+## Quick Links
 
-Repo for the smart busy block for developing and evaluating robot manipulation skills in the real-world with electronic task boards. This project is also known as the Digital Robotic Judge or DR.J Manipulation Skill Development Pipeline.
+- IEEE-RAM Paper: [10.1109/MRA.2023.3336473](https://doi.org/10.1109/MRA.2023.3336473)
+- 1-min Paper [Highlight Video](https://drive.google.com/file/d/1jVCkPBq7-JO2KUGaQfxDcgK1_qGyWVMT/view) 
+- Robothon Grand Challenge Competition [automatica website](https://automatica-munich.com/en/munich-i/robothon/)
+- Links to Web Dashboards for Deployed Task Boards:
+  - [TBv2023: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/0d2f0e4c-6a80-4cf4-a48d-5b25fcb35ac0/50cdf30f-955e-4ccf-b13a-8e1d0281f68a?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
+  - [TBv2023: Subtask Completion Times](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/a8b5be5f-cc23-4724-8f06-3f67f8fef104?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
+  - [TBv2022: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/dashboard2/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
+
+## Project Description
 
 The goal of the project is to provide an objective tool for measuring manipulation performance for both humans and robots. A microcontroller on the task box monitors the state of the mounted manipulation elements and reports state change events to a cloud-hosted dashboard to aggregate performance data. Device telemetry, including accelerometer data, is regularly logged to provide insight into the device's usage. Manipulation tasks are designed with objects that can be electronically verified to be in their designated start and goal positions. Trial protocols define sequences of actions on the task board and allow designers to create test scenarios. The execution time of subtasks within a protocol are recorded and automatically published on a web dashboard for consistent and convenient comparison with previous trial attempts. A modular framework for adding new task board objects was selected to encourage community members to design and build their own trial protocols.
 
 An example demonstration of the internet-connected task board can be viewed on [YouTube](https://www.youtube.com/watch?v=1jdvIbDURSA). Here is the very first test run with a Franka Emika Panda robot in the lab [YouTube](https://youtu.be/LJFTypNZrFs).
 
-### Web Links to Web Dashboards for Deployed Task Boards:
-- [TBv2023: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/0d2f0e4c-6a80-4cf4-a48d-5b25fcb35ac0/50cdf30f-955e-4ccf-b13a-8e1d0281f68a?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
-- [TBv2023: Subtask Completion Times](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/a8b5be5f-cc23-4724-8f06-3f67f8fef104?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
-- [TBv2022: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/dashboard2/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
+
 
 A screenshot of a web dashboard from the 2021 Robothon Grand Challenge competition.
+
 ![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
 
 #### A little history on the smart task board development...
@@ -43,15 +52,17 @@ As part of the competition, teams were challenged to demonstrate the manipulatio
 
 ### Quick Start to connect a Task Board to the Web Dashboard
 
-The uController (orange component) Interface has 3 Buttons and a USB-C charge/programming port:
-***Power Button*** (side closest to USB-C), ***Button A*** (next to screen, labeled M5), ***Button B*** (side furthest from USB-C).
+The microcontroller (orange component) has 3 Buttons and a USB-C charge/programming port:
+- ***Power Button*** (side closest to USB-C), 
+- ***Button A*** (next to screen, labeled M5), 
+- ***Button B*** (side furthest from USB-C).
 
 #### Turning on the Task Board ####
 
 1. Toggle Power Manually = Hold Power Button for 2 seconds to turn on and 6 seconds to turn off.
 2. Plugging in the uController will automatically turn on the device.
 
-#### Connect board to your preferred WiFi Network using your laptop or smartphone ####
+#### Connect board to the web dashboard over the internet with your preferred WiFi Network using your laptop or smartphone
 
 1. Connect to Task Board SSID: “AutoConnectAP-task-board-###” where ### refers to the number on the sticker on the side of the box (Password: “robothon”)
 2. A configuration screen should automatically open in a browser on your device. Otherwise, open web browser and go to URL: “192.168.4.1”.
@@ -64,17 +75,17 @@ The uController (orange component) Interface has 3 Buttons and a USB-C charge/pr
 
 6. Click the “Save” Button. The new credentials will be saved to the microcontrollers EEPROM memory for future connections. The Task Board will attempt to connect to new WiFi. After it has successfully connected to the Internet over the new network the Home Screen will be displayed on the screen. 
 
-#### Begin using the task board with human subjects or your robot platform ####
+#### Begin running experiments with the task board
 
 1. Ensure the task board components are on their starting position prior to starting. The uController will display an alert on the screen if it detects an incorrect starting configuration.
 2. Press Button A to start recording a trial run! Trial runs will be automatically recorded to the web dashboard. Scan the QR code on the sticker for more information.
 3. Reset Trial Clock after a trialèPress Button B to reset the clock to zero.
 
-#### Some Helpful Tips:
+#### Some Other Helpful Tips:
 
-• Offline/Local Mode: Use your task board without the internet by holding Button A down when powering on the device.
+• ***Offline/Local Mode:*** Use your task board without the internet by holding Button A down when powering on the device.
 
-• Abort an Active Trial: Stop a trial early by holding down the Red Push Button and pressing Button A.
+• ***Abort an Active Trial:*** Stop a trial early by holding down the Red Push Button and pressing Button A.
 
 ### Detailed User Instructions 
 
@@ -92,16 +103,6 @@ After the task board location has been initialized, the user then presses the Tr
 
 ![ManualTrialRun](/assets/gifs/manual_trial_run.gif)
 
-#### Task Board Controller Button Operations
-
-- Power On Controller: Hold Power button (Left of M5 Logo) for 2 seconds; Power Off Controller = Hold Power button for 6 seconds.
-
-- Reset Trial: Press User button (Right of M5 Logo). The controller will automatically reset the trial results after 30 seconds from the end of the trial.
-
-- Abort an active trial: Press Trial Start Button AND Trial Stop Button at the same time.
-
-
-
 #### Reading Task Board State over USB
 
 When working with the task board, developers may want to read the task board state directly from the task board controller instead of referring to the web dashboard. To do this, use the python utility file to record the output to a local CSV file. See `/python/scripts/read-serial.py`.
@@ -110,6 +111,7 @@ When working with the task board, developers may want to read the task board sta
 ### Core Design Features
 
 ![CompetitionConcept.png](/assets/images/CompetitionConcept.png)
+
 The core design features of the task board microcontroller are:
 
 - [Status] Feature Description
@@ -150,7 +152,7 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 - ***Networked.*** Each task board has the ability to report recorded trials to an online database.
 
 
-### Relevant Documents
+### Relevant Design Documents
 
 
 | Design Document       | TBv2021 | TBv2023 |
@@ -169,7 +171,7 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 - 20 task boards were built for the Robothon 2022 competition.
 - A new design was released for Robothon 2023. 20 task boards were made for the competition.
 - 15 more task boards (TBv2023) were made for the [euROBIN project](https://www.eurobin-project.eu/).
-- ***Order your own task board*** If you are interested in getting a pre-assembled task board to demonstrate your robot platform's capabilities or to follow along in the robot benchmark, please write an e-mail request with the model year [TBv2021, TBv2023] and the number of boards to peter@modularmotions.com.
+- ***Order your own task board*** If you are interested in getting a pre-assembled task board to demonstrate your robot platform's capabilities or to follow along in the robot benchmark, please write an e-mail request with the model year [TBv2021 or TBv2023] and the number of boards to peter@modularmotions.com.
 
 
 ### Battery Recycling Articles for Manipulation Task Selection
@@ -185,12 +187,12 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 - Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), Digital Kickoff Meeting [Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
 
 ### Citation
-Please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. An early release is available on IEEE [here](https://ieeexplore.ieee.org/document/10378967).
+If you find this work insightful to your research or you reference data from our Robothon Grand Challenge competitions please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. An early release is available on IEEE [here](https://ieeexplore.ieee.org/document/10378967).
 
 
 Bibtex:
 ```
-@ARTICLE{10378967,
+@ARTICLE{So2024DRJ,
   author={So, Peter and Sarabakha, Andriy and Wu, Fan and Culha, Utku and Abu-Dakka, Fares J. and Haddadin, Sami},
   journal={IEEE Robotics & Automation Magazine}, 
   title={Digital Robot Judge: Building a Task-centric Performance Database of Real-World Manipulation With Electronic Task Boards}, 
