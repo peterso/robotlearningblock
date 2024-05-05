@@ -1,18 +1,24 @@
 # robotlearningblock
 
-Welcome to the project repository for the internet-connected task board for evaluating real-world robot manipulation skills. This project is also known as the Digital Robotic Judge, or DR.J, as an unrelated homage to legendary basketball star [Julius "DR.J" Irving](https://www.youtube.com/watch?v=bWLXcg-V8FI). Industrial use cases for robot skill development are boiled down into a portable electronic task board to be solved by the community of robot developers to find best known solutions following the DR.J Pipeline as illustrated below.
+Welcome to the project repository for the internet-connected task board for evaluating real-world robot manipulation skills. This project, known as the Digital Robotic Judge, or DR.J, benchmarks asynchronous manipulation performances across the electronic task board network. Side note, the name is borrowed from the legendary basketball star [Julius "DR.J" Irving](https://www.youtube.com/watch?v=bWLXcg-V8FI). Industrial use cases collected through a survey are modelled and incorporated into portable electronic task boards to be solved by the community of robot developers. The best solutions across the network are ranked on a leaderboard and developers are encouraged to share and reproduce solutions of others in the network. If you find this work helpful, please cite our [IEEE-RAM paper](https://ieeexplore.ieee.org/document/10378967). 
+
+See the illustration of DR.J crowdsourced robot solution for real-world use cases pipeline below.
 
 ![DRJConcept.png](/assets/images/DRJ-Figure1_RealWorld-LaboratoryDR-J.png)
 
 ## Quick Links
 
-- IEEE-RAM Paper: [10.1109/MRA.2023.3336473](https://doi.org/10.1109/MRA.2023.3336473)
+- IEEE-RAM Paper: [DOI: 10.1109/MRA.2023.3336473](https://doi.org/10.1109/MRA.2023.3336473)
 - 1-min Paper [Highlight Video](https://drive.google.com/file/d/1jVCkPBq7-JO2KUGaQfxDcgK1_qGyWVMT/view) 
 - Robothon Grand Challenge Competition [automatica website](https://automatica-munich.com/en/munich-i/robothon/)
 - Links to Web Dashboards for Deployed Task Boards:
   - [TBv2023: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/0d2f0e4c-6a80-4cf4-a48d-5b25fcb35ac0/50cdf30f-955e-4ccf-b13a-8e1d0281f68a?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
   - [TBv2023: Subtask Completion Times](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/a8b5be5f-cc23-4724-8f06-3f67f8fef104?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
-  - [TBv2022: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/dashboard2/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
+  - [TBv2021: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/dashboard2/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
+- Fake Task Board Emulator (Python browser-based) [Replit](https://replit.com/@peterso/TaskBoardSimulator?v=1)
+- Simulated Task Board on Mujoco for Offline Skill Development [Multiverse Github Project](https://github.com/Multiverse-Framework/Multiverse-Objects/tree/main/task_board)
+- Request a physical task board [Task Board Request Google Form](https://forms.gle/EJiNF4A1qsrMpy8i6)
+- Propose new tasks for future board designs [Use Case Survey Google Form](https://forms.gle/XueGB4yPwioggSN97)
 
 ## Project Description
 
@@ -45,7 +51,7 @@ A new task board design (TBv2023) was designed and built to develop manipulation
 
 ![RobothonTaskBoard2023.png](/assets/images/TrialProtocol2023.jpg)
 
-As part of the competition, teams were challenged to demonstrate the manipulation skills of their robot platform on an e-waste object of their choice in the "Bring-Your-Won-Device (BYOD) Challenge". Below are some examples of the successful demonstrations. 
+As part of the competition, teams were challenged to demonstrate the manipulation skills of their robot platform on an e-waste object of their choice in the "Bring-Your-Own-Device (BYOD) Challenge". Below are some examples of the successful demonstrations. 
 
 ![Robothon-BYOD-Demos.png](/assets/images/Robothon-BYOD-Demos.png)
 
@@ -83,9 +89,9 @@ The microcontroller (orange component) has 3 Buttons and a USB-C charge/programm
 
 #### Some Other Helpful Tips:
 
-• ***Offline/Local Mode:*** Use your task board without the internet by holding Button A down when powering on the device.
+  • ***Offline/Local Mode:*** Use your task board without the internet by holding Button A down when powering on the device.
 
-• ***Abort an Active Trial:*** Stop a trial early by holding down the Red Push Button and pressing Button A.
+  • ***Abort an Active Trial:*** Stop a trial early by holding down the Red Push Button and pressing Button A.
 
 ### Detailed User Instructions 
 
@@ -186,7 +192,7 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 - [KaaIoT Arduino SDK](https://github.com/kaaproject/kaa-arduino-sdk)
 - Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), Digital Kickoff Meeting [Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
 
-### Citation
+### Citation 
 If you find this work insightful to your research or you reference data from our Robothon Grand Challenge competitions please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. An early release is available on IEEE [here](https://ieeexplore.ieee.org/document/10378967).
 
 
