@@ -120,30 +120,30 @@ When working with the task board, developers may want to read the task board sta
 
 The core design features of the task board microcontroller are:
 
-- [Status] Feature Description
+[Status] Feature Description
 
-- [:white_check_mark:] task board monitors a digital state of all mounted manipulation elements
-- [:white_check_mark:] user can start a trial using the device without internet connection
-- [:white_check_mark:] task board reports the timestamps for each successful task interaction trial over USB
-- [:white_check_mark:] report the stae of the task box over WiFi to the [Kaa internet dashboard](https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/) 
-- [:white_check_mark:] setup wifi greeter to allow user to supply own wifi ssid and password
-- [:white_check_mark:] report the state of the task box over USB
-- [:white_check_mark:] task board reports are integrated into a Microsoft Azure IoT dashboard
-- [In Progress] device has a digital twin that can be represented in a robot simulator i.e. Gazebo, Mujoco. 
-- [TODO] report the load cell readings on the task box surface
-- [TODO] integrate bluetooth power meter into task board telemetry
-- [TODO] enable internet connection network support for "Eduroam"
+- [x] task board monitors a digital state of all mounted manipulation elements
+- [x] user can start a trial using the device without internet connection
+- [x] task board reports the timestamps for each successful task interaction trial over USB
+- [x] report the stae of the task box over WiFi to the [Kaa internet dashboard](https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/) 
+- [x] setup wifi greeter to allow user to supply own wifi ssid and password
+- [x] report the state of the task box over USB
+- [x] task board reports are integrated into a Microsoft Azure IoT dashboard
+- [x] device has a digital twin that can be represented in a robot simulator i.e. Gazebo, Mujoco. 
+- [ ] report the load cell readings on the task box surface
+- [ ] integrate bluetooth power meter into task board telemetry
+- [ ] enable internet connection network support for "Eduroam"
 
 
  
 
 ### NEW Feature Requests
 
-- [:white_check_mark:] Over-The-Air Updates to deploy new trial protocols to task boards in the field
-- [:white_check_mark:] Make the task board surface more stiff/rigid -> removed load cell and mount top plate to housing directly
-- [TODO] Add a automated testing procedure for a contract manufacturer to execute prior to shipping task boards
-- [TODO] Look into Device Management with BalenaOS for multiple OTA updates as an alternative to Kaa OTA
-- [TODO] Add ROS messages to the task board microcontroller to broadcast task results to robots
+- [x] Over-The-Air Updates to deploy new trial protocols to task boards in the field
+- [x] Make the task board surface more stiff/rigid -> removed load cell and mount top plate to housing directly
+- [ ] Add a automated testing procedure for a contract manufacturer to execute prior to shipping task boards
+- [ ] Look into Device Management with BalenaOS for multiple OTA updates as an alternative to Kaa OTA
+- [ ] Add ROS messages to the task board microcontroller to broadcast task results to robots
 
 
 ### Design Goals & System Architecture
@@ -181,16 +181,16 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 
 
 ### Battery Recycling Articles for Manipulation Task Selection
-- WEF Report on battery recycling [Link](https://www3.weforum.org/docs/WEF_A_New_Circular_Vision_for_Electronics.pdf)
-- German Battery Collection with GRS Batterien [Link](https://www.en.grs-batterien.de/grs-batterien/)
-- Fun video from Curiousity Quest showing many e-waste handling processes [YouTube](https://www.youtube.com/watch?v=lMn-sDvgj4Q&ab_channel=curiosityquest)
+- WEF Report on battery recycling [Link to Article](https://www3.weforum.org/docs/WEF_A_New_Circular_Vision_for_Electronics.pdf)
+- German Battery Collection with GRS Batterien [Link to Article](https://www.en.grs-batterien.de/grs-batterien/)
+- Fun video from Curiousity Quest showing many e-waste handling processes [YouTube Video](https://www.youtube.com/watch?v=lMn-sDvgj4Q&ab_channel=curiosityquest)
 
 
 ### References
 - [M5Stack Docs](https://docs.m5stack.com/)
 - [M5Stack Community Forum](https://community.m5stack.com/category/17/m5-stick-stickc)
 - [KaaIoT Arduino SDK](https://github.com/kaaproject/kaa-arduino-sdk)
-- Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), Digital Kickoff Meeting [Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
+- Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2022](https://drive.google.com/file/d/1OdqM9bOmNVIISuL4vuRz019WOS697p_8/view?usp=sharing)- Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
 
 ### Citation 
 If you find this work insightful to your research or you reference data from our Robothon Grand Challenge competitions please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. An early release is available on IEEE [here](https://ieeexplore.ieee.org/document/10378967).

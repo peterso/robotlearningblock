@@ -1,0 +1,7 @@
+{
+    "configuration": "PartitionScheme=default,UploadSpeed=1500000,DebugLevel=none,EraseFlash=none",
+    "board": "esp32:esp32:m5stick-c",
+    "programmer": "esptool",
+    "port": "/dev/tty.usbserial-654EC5AA8E",
+    "sketch": "iot-task-board-m5stickcplus.ino"
+}

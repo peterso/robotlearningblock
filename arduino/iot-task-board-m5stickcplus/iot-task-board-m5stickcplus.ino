@@ -46,7 +46,7 @@
 int verbose = 0; // set to 1 to enable serial output
 
 //////// SYSTEM SETTINGS /////////
-const String TOKEN = "task_board_dev";                // Endpoint token - you get (or specify) it during device provisioning
+const String TOKEN = "task_board_2000";                // Endpoint token - you get (or specify) it during device provisioning
 const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";    // Application version - you specify it during device provisioning 
 // const String APP_VERSION = "bvhkhrtbhnjc0btkj7r0-v0";    // Application version - you specify it during device provisioning FOR DEVELOPMENT ONLY
 const String FW_VERSION = "1.0.1"; // Firmware Version for OTA management
@@ -562,7 +562,8 @@ void setup()
   // initialize the M5Stack object
   M5.begin(true, true, true); //screen, batt, serial
   preferences.begin("task-board",false); // second parameter must be false
-  trialCounter = preferences.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
+  resetCounter();
+  // trialCounter = preferences.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
   porthub.begin();
   
   // GPIO setting  
@@ -777,6 +778,7 @@ void loop()
     if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF){
       // Begin trial counter
       countStart = 1;
+      resetCounter();
       startaccX = accX;
       startaccY = accY;
       startaccZ = accZ;
@@ -991,6 +993,7 @@ void loop()
     TS_cableWrap = 0;
     TS_probeGoal = 0;
     trialTime = 0;
+    resetCounter();
     display[0] = 0;
     display[1] = 0;
     display[2] = 0;
