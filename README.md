@@ -190,7 +190,8 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 - [M5Stack Docs](https://docs.m5stack.com/)
 - [M5Stack Community Forum](https://community.m5stack.com/category/17/m5-stick-stickc)
 - [KaaIoT Arduino SDK](https://github.com/kaaproject/kaa-arduino-sdk)
-- Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2022](https://drive.google.com/file/d/1OdqM9bOmNVIISuL4vuRz019WOS697p_8/view?usp=sharing)- Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
+- Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2022](https://drive.google.com/file/d/1OdqM9bOmNVIISuL4vuRz019WOS697p_8/view?usp=sharing)
+- Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
 
 ### Citation 
 If you find this work insightful to your research or you reference data from our Robothon Grand Challenge competitions please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. An early release is available on IEEE [here](https://ieeexplore.ieee.org/document/10378967).
