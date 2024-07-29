@@ -782,8 +782,7 @@ void loop()
       StickCP2.Display.setTextColor(WHITE, BLACK);
       StickCP2.Display.fillScreen(BLACK);
     }
-    // if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF){
-    if (startBtnState == BUTTON_ON && faderValue < 20 && probeGoalState == BUTTON_OFF){
+    if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF){
       // Begin trial counter
       countStart = 1;
       usecCount = 0; // reset trial timer
@@ -853,8 +852,6 @@ void loop()
       countStart = 0;
       timerAlarmDisable(interruptTimer);
       Serial.printf("%d us Trial_Event: Trial Time Limit reached! Time's Up! \n", usecCount);
-      // Serial.println("Trial_Event: Trial Time Limit reached! Time's Up!");
-      // Serial.println(TIMELIMIT);
       digitalWrite(10, HIGH); //turn off LED
       for (int i = 0; i < 3; i++){
         StickCP2.Display.fillScreen(RED);
@@ -881,7 +878,6 @@ void loop()
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("%d us Trial_Event: Button pushed!\n", usecCount);
-    // Serial.println("Trial_Event: Button pushed!");
     StickCP2.Display.fillScreen(BLUE); //clear screen
     screenSelector = 2;
     // trialRunning++;
@@ -897,7 +893,6 @@ void loop()
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("%d us Trial_Event: Probe Plug inserted!\n", usecCount);
-    // Serial.println("Trial_Event: Probe Plug inserted!");
     StickCP2.Display.fillScreen(BLUE); //clear screen
     // screenSelector = 0;
     // trialRunning++;
@@ -934,7 +929,6 @@ void loop()
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("%d us Trial_Event: Fader SP2 Matched! %d \n", usecCount, faderGoal2);
-    // Serial.println("Trial_Event: Fader Matched!");
     StickCP2.Display.fillScreen(YELLOW); //clear screen
     delay(50);
     StickCP2.Display.fillScreen(BLUE); //clear screen
@@ -955,7 +949,6 @@ void loop()
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("%d us Trial_Event: Door Angle achieved AND Terminal Block Circuit Probed!\n", trialTime);
-    // Serial.println("Trial_Event: Door Angle achieved AND Terminal Block Circuit Probed!");
     StickCP2.Display.fillScreen(BLUE); //clear screen
     // screenSelector = 5;
     // trialRunning++;
@@ -972,7 +965,6 @@ void loop()
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
     Serial.printf("%d us Trial_Event: Cable successfully wrapped AND Probe Tip Stowed!\n", trialTime);
-    // Serial.println("Trial_Event: Cable successfully wrapped AND Probe Stowed!");
     StickCP2.Display.fillScreen(BLUE); //clear screen
     // screenSelector = 6;
     // trialRunning++;
@@ -1006,7 +998,6 @@ void loop()
     TS_button = 0; TS_fader = 0; TS_angle = 0; TS_cableWrap = 0; TS_probeGoal = 0;
     trialTime = 0;
     display[0] = 0; display[1] = 0; display[2] = 0;
-    // resetCounter();
     ptsCollected = 0;
     cumForce = 0;
     digitalWrite(10, HIGH); //turn off LED
