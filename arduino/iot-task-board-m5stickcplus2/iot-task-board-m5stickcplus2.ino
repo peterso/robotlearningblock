@@ -102,7 +102,7 @@ unsigned long trialTime = 0;
 int wifiEnabled = 0;
 int countStart = 0;
 int trialRunning = 0,  timeLeft = 0,  ptsCollected = 0;
-int buttonPushLatch = 0,  faderLatch = 0,  angleLatch = 0,  cableWrapLatch = 0,  probeGoalLatch = 0,  OP180_1_Latch = 0,  OP180_2_Latch = 0, trialCompletedLatch = 0;
+int buttonPushLatch = 0,  faderLatch = 0,  angleLatch = 0,  angleDoorLatch = 0,  cableWrapProbeStowLatch = 0, cableWrapLatch = 0,  probeGoalLatch = 0,  OP180_1_Latch = 0,  OP180_2_Latch = 0, trialCompletedLatch = 0;
 int faderLatch2 = 0;
 int faderGoal2 = 0;
 int battVoltage = -1;
@@ -113,7 +113,7 @@ int probeStartState = -1,  probeGoalState = -1,  OP180_1_State = -1,  OP180_2_St
 int stopBtnState_old = -1,  faderValue_old = -1,  angleValue_old = -1,  probeStartState_old = -1,  probeGoalState_old = -1;
 int OP180_1_State_old = -1, OP180_2_State_old = -1;
 
-int TS_button = 0,  TS_fader_mid = 0,  TS_fader = 0,  TS_angle = 0,  TS_cableWrap = 0,  TS_probeGoal = 0,  TS_OP180_1 = 0,  TS_OP180_2 = 0;
+int TS_button = 0,  TS_fader_mid = 0,  TS_fader = 0,  TS_angle = 0,  TS_angle_door =0,  TS_cableWrap = 0, TS_cableWrapProbeStow = 0,  TS_probeGoal = 0,  TS_OP180_1 = 0,  TS_OP180_2 = 0;
 
 float force = 0.0F, cumForce = 0.0F;
 float startaccX = 0.0F, startaccY = 0.0F, startaccZ = 0.0F;
@@ -323,7 +323,9 @@ void publish_telemetry(){
       telemetry[0]["Time_Fader_Mid"] = TS_fader_mid; //INT
       telemetry[0]["Time_Fader"] = TS_fader; //INT
       telemetry[0]["Time_Angle"] = TS_angle; //INT
+      telemetry[0]["Time_Door_Opened"] = TS_angle_door; //INT
       telemetry[0]["Time_CableWrap"] = TS_cableWrap; //INT
+      telemetry[0]["Time_CableWrap"] = TS_cableWrapProbeStow; //INT
       telemetry[0]["Time_ProbeGoal"] = TS_probeGoal; //INT
       telemetry[0]["cumForce"] = cumForce;//Float
       telemetry[0]["trialPoints"] = ptsCollected; //INT 
@@ -355,7 +357,7 @@ void home_screen(){
       StickCP2.Display.fillCircle(100, 10, 8, GREEN);
     }
     StickCP2.Display.drawCircle(130, 10, 10, WHITE);
-    if (cableWrapLatch){
+    if (cableWrapProbeStowLatch){
       StickCP2.Display.fillCircle(130, 10, 8, GREEN);
     }
     StickCP2.Display.drawCircle(160, 10, 10, WHITE);
@@ -374,6 +376,8 @@ void home_screen(){
     // StickCP2.Display.printf("Progress: %d %d %d %d %d\n ", buttonPushLatch, faderLatch, probeGoalLatch, angleLatch, cableWrapLatch); 
     // StickCP2.Display.printf("Progress: %d %d %d %d %d\n ", TS_button/1e6, TS_fader/1e6, TS_probeGoal/1e6, TS_angle/1e6, TS_cableWrap/1e6); // need to debug still
     StickCP2.Display.printf(" Points:%d Interaction:%0.2f\n", ptsCollected, cumForce);
+    StickCP2.Display.printf(" ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
+    StickCP2.Display.printf(" ST4:%0.2f, ST5:%0.2f\n", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
     StickCP2.Display.printf(" Trial Time:\n ");
     StickCP2.Display.setTextSize(3);
     StickCP2.Display.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);    
@@ -395,7 +399,7 @@ void develop_screen(){
     StickCP2.Display.printf("%d Post1:%d Post2:%d\n ", cableWrapLatch, OP180_1_State, OP180_2_State); 
     StickCP2.Display.printf("Time Left:%d Pts:%d Action:%0.2f\n ", timeLeft, ptsCollected, cumForce);
     StickCP2.Display.printf("ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n ", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
-    StickCP2.Display.printf("ST4:%0.2f, ST5:%0.2f\n ", (float)TS_angle/1000000.0, (float)TS_cableWrap/1000000.0);
+    StickCP2.Display.printf("ST4:%0.2f, ST5:%0.2f\n ", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
     StickCP2.Display.printf("Trial Time (sec):%0.2f\n ", (float)trialTime/1000000.0);
     
     // StickCP2.Display.printf("Interaction: %0.2f\n ", cumForce);
@@ -777,7 +781,7 @@ void loop()
       StickCP2.Display.setTextColor(WHITE, RED);
       StickCP2.Display.setTextSize(2);
       StickCP2.Display.fillScreen(RED);
-      StickCP2.Display.printf("Remove probe plug from red port!");
+      StickCP2.Display.printf("Move probe plug to black port!");
       delay(1000);
       StickCP2.Display.setTextColor(WHITE, BLACK);
       StickCP2.Display.fillScreen(BLACK);
@@ -786,7 +790,7 @@ void loop()
       // Begin trial counter
       countStart = 1;
       usecCount = 0; // reset trial timer
-      TS_button = 0; TS_fader_mid = 0; TS_fader = 0; TS_probeGoal = 0; TS_angle = 0; TS_cableWrap = 0;
+      TS_button = 0; TS_fader_mid = 0; TS_fader = 0; TS_probeGoal = 0; TS_angle = 0; TS_cableWrap = 0; TS_cableWrapProbeStow = 0;
       startaccX = accX;
       startaccY = accY;
       startaccZ = accZ;
@@ -803,7 +807,7 @@ void loop()
   }
 
   // Stop Trial on RED Button Press Check
-  if (stopBtnState == BUTTON_ON && trialRunning > 0 && buttonPushLatch == 1 && faderLatch == 1 && angleLatch == 1 && cableWrapLatch == 1 && probeGoalLatch == 1)
+  if (stopBtnState == BUTTON_ON && trialRunning > 0 && buttonPushLatch == 1 && faderLatch == 1 && angleLatch == 1 && cableWrapProbeStowLatch == 1 && probeGoalLatch == 1)
   {
     delay(1);
     if (stopBtnState == BUTTON_ON){
@@ -938,33 +942,48 @@ void loop()
   }
 
   // Angle & Circuit Probed Check
+  if (angleValue < ANGLESP && trialRunning == 1 && angleDoorLatch == 0){
+    delay(1);
+    angleDoorLatch = 1;
+    TS_angle_door = usecCount;
+    Serial.printf("%d us Task_Board_Event: Door Angle achieved!\n", usecCount);
+
+  }
   if (angleValue < ANGLESP && trialRunning == 1 && angleLatch == 0 && probeStartState == BUTTON_ON) // disabled since wrong sensor is installed, replace sensor with unit_angle_sensor
   // if (trialRunning == 1 && probeStartState == BUTTON_ON)
   {
     delay(1);
     angleLatch = 1;
     TS_angle = usecCount;
+    Serial.printf("%d us Trial_Event: Terminal Block Circuit Probed!\n", usecCount);
     ptsCollected = ptsCollected + PTS_CIRCUIT_PROBE;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.printf("%d us Trial_Event: Door Angle achieved AND Terminal Block Circuit Probed!\n", trialTime);
     StickCP2.Display.fillScreen(BLUE); //clear screen
     // screenSelector = 5;
     // trialRunning++;
   }
 
   // Cable Wrapping and Probe Stowed Check
-  if (OP180_1_State == BUTTON_OFF && OP180_2_State == BUTTON_OFF && trialRunning == 1 && cableWrapLatch == 0 && angleLatch == 1 && probeGoalState == BUTTON_ON)
+  if (OP180_1_State == BUTTON_OFF && OP180_2_State == BUTTON_OFF && trialRunning == 1 && cableWrapLatch == 0)
   {
     delay(1);
     cableWrapLatch = 1;
     TS_cableWrap = usecCount;
+    Serial.printf("%d us Trial_Event: Cable successfully wrapped!\n", usecCount);
+  }
+  if (OP180_1_State == BUTTON_OFF && OP180_2_State == BUTTON_OFF && trialRunning == 1 && cableWrapProbeStowLatch == 0 && angleLatch == 1 && probeGoalState == BUTTON_ON)
+  {
+    delay(1);
+    cableWrapProbeStowLatch = 1;
+    TS_cableWrapProbeStow = usecCount;
+    Serial.printf("%d us Trial_Event: Cable successfully wrapped AND Probe Tip Stowed!\n", usecCount);
     ptsCollected = ptsCollected + PTS_CABLEWRAP;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.printf("%d us Trial_Event: Cable successfully wrapped AND Probe Tip Stowed!\n", trialTime);
+    ;
     StickCP2.Display.fillScreen(BLUE); //clear screen
     // screenSelector = 6;
     // trialRunning++;
@@ -994,8 +1013,8 @@ void loop()
     Serial.println("Trial Reset Button pressed");
     forceStop = 0;
     usecCount = 0;
-    buttonPushLatch = 0; faderLatch = 0; faderLatch2 = 0; angleLatch = 0; cableWrapLatch = 0; probeGoalLatch = 0;
-    TS_button = 0; TS_fader = 0; TS_angle = 0; TS_cableWrap = 0; TS_probeGoal = 0;
+    buttonPushLatch = 0; faderLatch = 0; faderLatch2 = 0; angleLatch = 0; cableWrapProbeStowLatch = 0; probeGoalLatch = 0;
+    TS_button = 0; TS_fader_mid = 0; TS_fader = 0; TS_angle = 0; TS_angle_door = 0; TS_cableWrap = 0; TS_cableWrapProbeStow = 0; TS_probeGoal = 0;
     trialTime = 0;
     display[0] = 0; display[1] = 0; display[2] = 0;
     ptsCollected = 0;
