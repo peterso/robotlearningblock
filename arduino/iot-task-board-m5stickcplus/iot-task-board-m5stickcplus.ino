@@ -802,16 +802,15 @@ void loop()
       M5.Lcd.fillScreen(BLACK);
     }
     if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF && OP180_1_State == 0 && OP180_2_State == 0){
-      // Begin trial counter
+      // Begin trial timer
       countStart = 1;
       usecCount = 0;
       TS_button = 0; TS_fader_mid = 0; TS_fader = 0; TS_probeGoal = 0; TS_angle = 0; TS_cableWrap = 0; TS_cableWrapProbeStow = 0;
-      resetCounter();
       startaccX = accX;
       startaccY = accY;
       startaccZ = accZ;
       digitalWrite(10, LOW); //turn on LED
-      Serial.printf("%d us Trial_Event: M5 Button pressed, Trial Started!\n", trialTime);
+      Serial.printf("%d us Trial_Event: M5 Button pressed, Trial %d Started!\n", trialTime, trialCounter);
       M5.Lcd.fillScreen(BLUE);
       M5.Lcd.setTextColor(BLACK, BLUE);
       trialCounter++; //increment trial counter
@@ -928,7 +927,7 @@ void loop()
     M5.Lcd.fillScreen(BLUE); //clear screen
     
     // toss coin
-    coin = random(1,100);
+    coin = random(5,100);
     if (coin >= 50){
       faderGoal2 = FADERSP - FADERSP2 * coin / 100;
     } else {
