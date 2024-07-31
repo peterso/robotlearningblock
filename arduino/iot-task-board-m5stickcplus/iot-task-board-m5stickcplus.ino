@@ -28,7 +28,7 @@
 #define TIMELIMIT 600  // Trial Time Limit in seconds (600 is 10min)
 #define FADERSP 2000 // This value should be updateable via the web commands from Kaa
 #define FADERSP2 1500 // This value should be updateable via the web commands from Kaa
-#define FADERTOLERANCE 50 // This value should be updateable via the web commands from Kaa
+#define FADERTOLERANCE 60 // This value should be updateable via the web commands from Kaa
 #define ANGLESP 2400 // Make sure this works for all task boards with the installed set screw
 #define PTS_BUTTON 1
 #define PTS_FADER 1
@@ -43,18 +43,16 @@
 #define SCREEN_COLS 240 // pixels
 
 // This value should be updateable via the web commands from Kaa
-int verbose = 0; // set to 1 to enable serial output
+int verbose = 0; // set to 1 to enable serial output, default 0
 
 //////// SYSTEM SETTINGS /////////
-const String TOKEN = "task_board_2000";                // Endpoint token - you get (or specify) it during device provisioning
+const String TOKEN = "task_board_200";                // Endpoint token - you get (or specify) it during device provisioning
 const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";    // Application version - you specify it during device provisioning 
 // const String APP_VERSION = "bvhkhrtbhnjc0btkj7r0-v0";    // Application version - you specify it during device provisioning FOR DEVELOPMENT ONLY
-const String FW_VERSION = "1.0.1"; // Firmware Version for OTA management
+const String FW_VERSION = "1.0.2"; // Firmware Version for OTA management
 
 // DO NOT CHANGE SETTINGS BELOW //
 const char* mqtt_server = "mqtt.cloud.kaaiot.com";
-//const String TOKEN = SECRET_TOKEN;                // Endpoint token - you get (or specify) it during device provisioning
-//const String APP_VERSION = SECRET_APP_VERSION;    // Application version - you specify it during device provisioning
 
 const unsigned long trialPublishRate = 1 * 0.05 * 1000UL; //500ms
 const unsigned long fiveSeconds = 1 * 5 * 1000UL; //5 seconds
@@ -107,9 +105,10 @@ unsigned long trialTime = 0;
 int wifiEnabled = 0;
 int countStart = 0;
 int trialRunning = 0,  timeLeft = 0,  ptsCollected = 0;
-int buttonPushLatch = 0,  faderLatch = 0,  angleLatch = 0,  cableWrapLatch = 0,  probeGoalLatch = 0,  OP180_1_Latch = 0,  OP180_2_Latch = 0, trialCompletedLatch = 0;
+int buttonPushLatch = 0,  faderLatch = 0,  angleLatch = 0,  angleDoorLatch = 0,  cableWrapProbeStowLatch = 0, cableWrapLatch = 0,  probeGoalLatch = 0,  OP180_1_Latch = 0,  OP180_2_Latch = 0, trialCompletedLatch = 0;
 int faderLatch2 = 0;
 int faderGoal2 = 0;
+int battVoltage = -1;
 
 int startBtnState = -1,  stopBtnState = -1,  resetBtnState = -1,  buttonPushState = -1,  faderValue = -1;
 int keyswitchRState = -1,  keyswitchLState = -1,  angleValue = -1,  portRState = -1,  portLState = -1;
@@ -117,7 +116,7 @@ int probeStartState = -1,  probeGoalState = -1,  OP180_1_State = -1,  OP180_2_St
 int stopBtnState_old = -1,  faderValue_old = -1,  angleValue_old = -1,  probeStartState_old = -1,  probeGoalState_old = -1;
 int OP180_1_State_old = -1, OP180_2_State_old = -1;
 
-int TS_button = 0,  TS_fader = 0,  TS_angle = 0,  TS_cableWrap = 0,  TS_probeGoal = 0,  TS_OP180_1 = 0,  TS_OP180_2 = 0;
+int TS_button = 0,  TS_fader_mid = 0,  TS_fader = 0,  TS_angle = 0,  TS_angle_door =0,  TS_cableWrap = 0, TS_cableWrapProbeStow = 0,  TS_probeGoal = 0,  TS_OP180_1 = 0,  TS_OP180_2 = 0;
 
 float force = 0.0F, cumForce = 0.0F;
 float startaccX = 0.0F, startaccY = 0.0F, startaccZ = 0.0F;
@@ -321,17 +320,26 @@ void publish_telemetry(){
       telemetry[0]["stopButtonState"] = stopBtnState; // BOOL
       telemetry[0]["probeStartState"] = probeStartState; //BOOL
       telemetry[0]["probeGoalState"] = probeGoalState; //BOOL
+      telemetry[0]["WrapPostLeftState"] = OP180_1_State; //BOOL
+      telemetry[0]["WrapPostRightState"] = OP180_2_State; //BOOL
       telemetry[0]["trialStarted"] = trialRunning; //BOOL
       telemetry[0]["trialTime"] = trialTime; //Float
       telemetry[0]["Time_Button"] = TS_button; //INT
+      telemetry[0]["Time_Fader_Mid"] = TS_fader_mid; //INT
       telemetry[0]["Time_Fader"] = TS_fader; //INT
       telemetry[0]["Time_Angle"] = TS_angle; //INT
+      telemetry[0]["Time_Door_Opened"] = TS_angle_door; //INT
       telemetry[0]["Time_CableWrap"] = TS_cableWrap; //INT
+      telemetry[0]["Time_CableWrap"] = TS_cableWrapProbeStow; //INT
       telemetry[0]["Time_ProbeGoal"] = TS_probeGoal; //INT
       telemetry[0]["cumForce"] = cumForce;//Float
       telemetry[0]["trialPoints"] = ptsCollected; //INT 
       // telemetry[0]["FW_Version"] = String(FW_VERSION).c_str(); //STR 
       // telemetry[0]["PROTOCOL"] = String(PROTOCOL_ID).c_str(); //STR 
+      telemetry[0]["battVoltage"] = M5.Axp.GetBatVoltage(); //FLOAT 
+      telemetry[0]["battCurrent(mA)"] = M5.Axp.GetBatCurrent(); //FLOAT 
+      telemetry[0]["M5BusVoltage"] = M5.Axp.GetVBusVoltage(); //FLOAT
+      telemetry[0]["M5AXPTemp"] = M5.Axp.GetTempInAXP192(); //FLOAT
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
@@ -357,7 +365,7 @@ void home_screen(){
       M5.Lcd.fillCircle(100, 10, 8, GREEN);
     }
     M5.Lcd.drawCircle(130, 10, 10, WHITE);
-    if (cableWrapLatch){
+    if (cableWrapProbeStowLatch){
       M5.Lcd.fillCircle(130, 10, 8, GREEN);
     }
     M5.Lcd.drawCircle(160, 10, 10, WHITE);
@@ -367,15 +375,16 @@ void home_screen(){
     M5.Lcd.setCursor(5, 25);
     M5.Lcd.setTextSize(1);
     M5.Lcd.printf("Home Screen \n");
-    M5.Lcd.printf("Smart Task Board ");
-    M5.Lcd.printf("v%s\n ", FW_VERSION);
-    M5.Lcd.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
-    M5.Lcd.printf("Token: %s\n ", TOKEN.c_str());
-    M5.Lcd.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
-    M5.Lcd.printf("TrialCount:%d\n ", trialCounter);
-    M5.Lcd.printf("Progress: %d %d %d %d %d\n ", buttonPushLatch, faderLatch, probeGoalLatch, angleLatch, cableWrapLatch); 
-    M5.Lcd.printf("Points: %d Interaction:%0.2f\n ", ptsCollected, cumForce);
-    M5.Lcd.printf("Trial Time:\n ");
+    M5.Lcd.printf(" Smart Task Board");
+    M5.Lcd.printf(" v%s\n", FW_VERSION);
+    M5.Lcd.printf(" Wifi On:%d Status:%d batt:%.3fV %.1fmA\n", wifiEnabled, WiFi.status(), battVoltage, M5.Axp.GetBatCurrent());
+    M5.Lcd.printf(" Token: %s\n", TOKEN.c_str());
+    M5.Lcd.printf(" PROTOCOL: %s\n", PROTOCOL_ID);
+    M5.Lcd.printf(" Trial Counter:%d\n", trialCounter);
+    M5.Lcd.printf(" Points:%d Interaction:%0.2f\n", ptsCollected, cumForce);
+    M5.Lcd.printf(" ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
+    M5.Lcd.printf(" ST4:%0.2f, ST5:%0.2f\n", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
+    M5.Lcd.printf(" Trial Time:\n ");
     M5.Lcd.setTextSize(3);
     M5.Lcd.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);    
 }
@@ -396,7 +405,7 @@ void develop_screen(){
     M5.Lcd.printf("%d Post1:%d Post2:%d\n ", cableWrapLatch, OP180_1_State, OP180_2_State); 
     M5.Lcd.printf("Time Left:%d Pts:%d Action:%0.2f\n ", timeLeft, ptsCollected, cumForce);
     M5.Lcd.printf("ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n ", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
-    M5.Lcd.printf("ST4:%0.2f, ST5:%0.2f\n ", (float)TS_angle/1000000.0, (float)TS_cableWrap/1000000.0);
+    M5.Lcd.printf("ST4:%0.2f, ST5:%0.2f\n ", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
     M5.Lcd.printf("Trial Time (sec):%0.2f\n ", (float)trialTime/1000000.0);
     
     // M5.Lcd.printf("Interaction: %0.2f\n ", cumForce);
@@ -447,6 +456,7 @@ void screen3(){
 }
 void screen4(){
     M5.Lcd.drawCircle(10, 10, 10, WHITE);
+    M5.Lcd.fillCircle(10, 10, 9, GREEN);
     M5.Lcd.drawCircle(40, 10, 10, WHITE);
     M5.Lcd.drawCircle(70, 10, 10, WHITE);
     M5.Lcd.drawCircle(40, 10, 9, YELLOW);
@@ -693,6 +703,8 @@ void loop()
   porthub.hub_d_wire_value_A(HUB_ADDR[3], 1); //write value high
   porthub.hub_d_wire_value_B(HUB_ADDR[3], 1); //write value high
 
+  battVoltage = M5.Axp.GetBatVoltage();
+
   // Read from PbHub Module
   buttonPushState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
   stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);
@@ -728,25 +740,34 @@ void loop()
 
   if (trialRunning == 1)
   {
-    //time calculation
-    display[3] = (int)(usecCount % 1000);
-    display[2] = (int)((usecCount % 1000000) / 1000);
-    display[1] = (int)((usecCount / 1000000) % 60);
-    display[0] = (int)((usecCount / 60000000) % 3600);
-    
     // update trialTime variable in telemetry while trial is running
     trialTime = usecCount;
+    //time calculation
+    display[2] = (int)((trialTime % 1000000) / 1000);   // milliseconds
+    display[1] = (int)((trialTime / 1000000) % 60);     // seconds
+    display[0] = (int)((trialTime / 60000000) % 3600);  // minutes
   }
 
   //Start Trial on M5 Button Press Check
   if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0) 
   {
     delay(1);
+    if (OP180_1_State == 1 || OP180_2_State == 1){
+      // flash alert screen to unwind cable
+      M5.Lcd.setCursor(5,5);
+      M5.Lcd.setTextColor(WHITE, RED);
+      M5.Lcd.setTextSize(2);
+      M5.Lcd.fillScreen(RED);
+      M5.Lcd.printf("Unwind the cable from the wrap posts!");
+      delay(1000);
+      M5.Lcd.setTextColor(WHITE, BLACK);
+      M5.Lcd.fillScreen(BLACK);
+    }
     if (faderValue > 20){
       // flash alert screen to adjust fader
       M5.Lcd.setCursor(5,5);
       M5.Lcd.setTextColor(WHITE, RED);
-      M5.Lcd.setTextSize(1);
+      M5.Lcd.setTextSize(2);
       M5.Lcd.fillScreen(RED);
       M5.Lcd.printf("Move fader to left end stop!");
       delay(1000);
@@ -757,7 +778,7 @@ void loop()
       // flash alert screen to close door
       M5.Lcd.setCursor(5,5);
       M5.Lcd.setTextColor(WHITE, RED);
-      M5.Lcd.setTextSize(1);
+      M5.Lcd.setTextSize(2);
       M5.Lcd.fillScreen(RED);
       M5.Lcd.printf("Close circuit door!");
       delay(1000);
@@ -768,22 +789,24 @@ void loop()
       // flash alert screen to close door
       M5.Lcd.setCursor(5,5);
       M5.Lcd.setTextColor(WHITE, RED);
-      M5.Lcd.setTextSize(1);
+      M5.Lcd.setTextSize(2);
       M5.Lcd.fillScreen(RED);
-      M5.Lcd.printf("Remove probe plug from red port!");
+      M5.Lcd.printf("Move probe plug to black port!");
       delay(1000);
       M5.Lcd.setTextColor(WHITE, BLACK);
       M5.Lcd.fillScreen(BLACK);
     }
-    if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF){
+    if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF && OP180_1_State == 0 && OP180_2_State == 0){
       // Begin trial counter
       countStart = 1;
+      usecCount = 0;
+      TS_button = 0; TS_fader_mid = 0; TS_fader = 0; TS_probeGoal = 0; TS_angle = 0; TS_cableWrap = 0; TS_cableWrapProbeStow = 0;
       resetCounter();
       startaccX = accX;
       startaccY = accY;
       startaccZ = accZ;
       digitalWrite(10, LOW); //turn on LED
-      Serial.println("Trial Status: M5.BtnA pressed, Trial Started!");
+      Serial.printf("%d us Trial_Event: M5 Button pressed, Trial Started!\n", trialTime);
       M5.Lcd.fillScreen(BLUE);
       M5.Lcd.setTextColor(BLACK, BLUE);
       trialCounter++; //increment trial counter
@@ -794,13 +817,13 @@ void loop()
   }
 
   //Stop Trial on RED Button Press Check
-  if (stopBtnState == BUTTON_ON && trialRunning > 0 && buttonPushLatch == 1 && faderLatch == 1 && angleLatch == 1 && cableWrapLatch == 1 && probeGoalLatch == 1)
+  if (stopBtnState == BUTTON_ON && trialRunning > 0 && buttonPushLatch == 1 && faderLatch == 1 && angleLatch == 1 && cableWrapProbeStowLatch == 1 && probeGoalLatch == 1)
   {
     delay(1);
     if (stopBtnState == BUTTON_ON){
       countStart = 0;
       digitalWrite(10, HIGH); //turn off LED
-      Serial.printf("Trial Status: Red Button pressed, Trial Stopped! Time(us):%d\n", usecCount);
+      Serial.printf("%d us Trial_Event: Red Button pressed, End of Successful Trial! Congrats!\n", usecCount);
       // trialRunning = 0; //this seems correct here but isn't compatible with the logic of countStart
       // screenSelector = 0;       
       trialCompletedLatch = 1;
@@ -815,7 +838,7 @@ void loop()
     if (stopBtnState == BUTTON_ON){
       countStart = 0; //stop the trial time counter
       digitalWrite(10, HIGH); //turn off LED
-      Serial.printf("Trial Status: Trial Force Stopped! Time(us):%d\n", usecCount);
+      Serial.printf("%d us Trial_Event: Trial Aborted!\n", usecCount);
       trialRunning = 0; 
       M5.Lcd.fillScreen(BLACK); //clear screen
       M5.Lcd.setTextColor(WHITE, BLACK);
@@ -840,8 +863,7 @@ void loop()
     delay(1);
       countStart = 0;
       timerAlarmDisable(interruptTimer);
-      Serial.print("Trial Status: Time's Up! Trial Time Limit: ");
-      Serial.println(TIMELIMIT);
+      Serial.printf("%d us Trial_Event: Trial Time Limit %d reached! Time's Up! \n", usecCount, TIMELIMIT);
       digitalWrite(10, HIGH); //turn off LED
       for (int i = 0; i < 3; i++){
         M5.Lcd.fillScreen(RED);
@@ -867,7 +889,7 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.printf("Trial Status: Button pushed! Time(us):%d\n", usecCount);
+    Serial.printf("%d us Trial_Event: Button pushed!\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
     screenSelector = 2;
     // trialRunning++;
@@ -882,16 +904,18 @@ void loop()
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.printf("Trial Status: Probe Inserted achieved! Time(us):%d\n", usecCount);
+    Serial.printf("%d us Trial_Event: Probe Plug inserted!\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
     // screenSelector = 0;
     // trialRunning++;
   }
 
   //Fader Check
-  if (faderValue > FADERSP - FADERTOLERANCE && faderValue < FADERSP + FADERTOLERANCE && trialRunning == 1 && faderLatch2 == 0)
+  if (faderValue > FADERSP - FADERTOLERANCE && faderValue < FADERSP + FADERTOLERANCE && trialRunning == 1 && faderLatch2 == 0 && buttonPushLatch == 1)
   {
     faderLatch2 = 1;
+    TS_fader_mid = usecCount;
+    Serial.printf("%d us Trial_Event: Fader SP1 Matched! %d\n", usecCount, FADERSP);
     // draw 2nd goal arrow
     // flash screen
     M5.Lcd.fillScreen(YELLOW); //clear screen
@@ -912,11 +936,11 @@ void loop()
     delay(1);
     faderLatch = 1;
     TS_fader = usecCount;
+    Serial.printf("%d us Trial_Event: Fader SP2 Matched! %d \n", usecCount, faderGoal2);
     ptsCollected = ptsCollected + PTS_FADER;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.printf("Trial Status: Fader Matched! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(YELLOW); //clear screen
     delay(50);
     M5.Lcd.fillScreen(BLUE); //clear screen
@@ -926,32 +950,46 @@ void loop()
   }
 
   //Angle & Circuit Probed Check
-  if (angleValue < ANGLESP && trialRunning == 1 && angleLatch == 0 && probeStartState == BUTTON_ON)
+  if (angleValue < ANGLESP && trialRunning == 1 && angleDoorLatch == 0){
+    delay(1);
+    angleDoorLatch = 1;
+    TS_angle_door = usecCount;
+    Serial.printf("%d us Task_Board_Event: Door Angle achieved!\n", usecCount);
+
+  }
+  if (angleValue < ANGLESP && trialRunning == 1 && angleLatch == 0 && probeStartState == BUTTON_ON) // disabled since wrong sensor is installed, replace sensor with unit_angle_sensor
   {
     delay(1);
     angleLatch = 1;
     TS_angle = usecCount;
+    Serial.printf("%d us Trial_Event: Terminal Block Circuit Probed!\n", usecCount);
     ptsCollected = ptsCollected + PTS_CIRCUIT_PROBE;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.printf("Trial Status: Door Angle achieved AND Circuit Probed! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
     // screenSelector = 5;
     // trialRunning++;
   }
 
   //Cable Wrapping and Probe Stowed Check
-  if (OP180_1_State == BUTTON_OFF && OP180_2_State == BUTTON_OFF && trialRunning == 1 && cableWrapLatch == 0 && angleLatch == 1 && probeGoalState == BUTTON_ON)
+  if (OP180_1_State == BUTTON_OFF && OP180_2_State == BUTTON_OFF && trialRunning == 1 && cableWrapLatch == 0)
   {
     delay(1);
     cableWrapLatch = 1;
     TS_cableWrap = usecCount;
+    Serial.printf("%d us Trial_Event: Cable successfully wrapped!\n", usecCount);
+  }
+  if (OP180_1_State == BUTTON_OFF && OP180_2_State == BUTTON_OFF && trialRunning == 1 && cableWrapProbeStowLatch == 0 && angleLatch == 1 && probeGoalState == BUTTON_ON)
+  {
+    delay(1);
+    cableWrapProbeStowLatch = 1;
+    TS_cableWrapProbeStow = usecCount;
+    Serial.printf("%d us Trial_Event: Cable successfully wrapped AND Probe Tip Stowed!\n", usecCount);
     ptsCollected = ptsCollected + PTS_CABLEWRAP;
     digitalWrite(10, HIGH); //turn off LED when red button is pressed
     delay(50);
     digitalWrite(10, LOW); //turn on LED when red button is pressed
-    Serial.printf("Trial Status: Cable successfully wrapped AND Probe Stowed! Time(us):%d\n", usecCount);
     M5.Lcd.fillScreen(BLUE); //clear screen
     // screenSelector = 6;
     // trialRunning++;
@@ -978,26 +1016,13 @@ void loop()
   //Count Reset Check
   if (resetBtnState == BUTTON_ON && trialRunning == 0 && trialTime != 0)
   {
-    Serial.println("Trial Status: Trial Reset pressed");
+    Serial.println("Trial Reset Button pressed");
     forceStop = 0;
     usecCount = 0;
-    buttonPushLatch = 0;
-    faderLatch = 0;
-    faderLatch2 = 0;
-    angleLatch = 0;
-    cableWrapLatch = 0;
-    probeGoalLatch = 0;
-    TS_button = 0;
-    TS_fader = 0;
-    TS_angle = 0;
-    TS_cableWrap = 0;
-    TS_probeGoal = 0;
+    buttonPushLatch = 0; faderLatch = 0; faderLatch2 = 0; angleLatch = 0; cableWrapProbeStowLatch = 0; probeGoalLatch = 0;
+    TS_button = 0; TS_fader_mid = 0; TS_fader = 0; TS_angle = 0; TS_angle_door = 0; TS_cableWrap = 0; TS_cableWrapProbeStow = 0; TS_probeGoal = 0;
     trialTime = 0;
-    resetCounter();
-    display[0] = 0;
-    display[1] = 0;
-    display[2] = 0;
-    display[3] = 0;
+    display[0] = 0; display[1] = 0; display[2] = 0;
     ptsCollected = 0;
     cumForce = 0;
     digitalWrite(10, HIGH); //turn off LED
@@ -1014,11 +1039,11 @@ void loop()
   }
 
   // Report task board changes to Serial
-  if (buttonPushState == 0 && buttonPushState != buttonPushState_old){Serial.println("Blue Push Button Pressed");};
-  if (buttonPushState == 1 && buttonPushState != buttonPushState_old){Serial.println("Blue Push Button Released");};
+  if (buttonPushState == 0 && buttonPushState != buttonPushState_old){Serial.printf("%d us Task_Board_Event: Blue Push Button Pressed\n", usecCount);};
+  if (buttonPushState == 1 && buttonPushState != buttonPushState_old){Serial.printf("%d us Task_Board_Event: Blue Push Button Released\n", usecCount);};
   buttonPushState_old = buttonPushState; // store current value
-  if (stopBtnState == 0 && stopBtnState != stopBtnState_old){Serial.println("Red Push Button Pressed");};
-  if (stopBtnState == 1 && stopBtnState != stopBtnState_old){Serial.println("Red Push Button Released");};
+  if (stopBtnState == 0 && stopBtnState != stopBtnState_old){Serial.printf("%d us Task_Board_Event: Red Push Button Pressed\n", usecCount);};
+  if (stopBtnState == 1 && stopBtnState != stopBtnState_old){Serial.printf("%d us Task_Board_Event: Red Push Button Released\n", usecCount);};
   stopBtnState_old = stopBtnState; // store current value
   // if (faderValue == 0 && faderValue != faderValue_old){Serial.println("Fader Matched");};
   // if (faderValue == 1 && faderValue != faderValue_old){Serial.println("Fader not Matched");};
@@ -1026,11 +1051,11 @@ void loop()
   // if (angleValue < ANGLESP && angleValue != angleValue_old){Serial.println("Door Angle Target Achieved");};
   // if (angleValue >= ANGLESP && angleValue != angleValue_old){Serial.println("Door Angle Target not Achieved");};
   angleValue_old = angleValue; // store current value
-  if (probeStartState == 0 && probeStartState != probeStartState_old){Serial.println("Probe is touching goal circuit");};
-  if (probeStartState == 1 && probeStartState != probeStartState_old){Serial.println("Probe is not touching goal circuit");};
+  if (probeStartState == 0 && probeStartState != probeStartState_old){Serial.printf("%d us Task_Board_Event: Probe is touching goal circuit\n", usecCount);};
+  if (probeStartState == 1 && probeStartState != probeStartState_old){Serial.printf("%d us Task_Board_Event: Probe is not touching goal circuit\n", usecCount);};
   probeStartState_old = probeStartState; // store current value
-  if (probeGoalState == 0 && probeGoalState != probeGoalState_old){Serial.println("Probe is plugged in and in holder");};
-  if (probeGoalState == 1 && probeGoalState != probeGoalState_old){Serial.println("Probe is not plugged in");};
+  if (probeGoalState == 0 && probeGoalState != probeGoalState_old){Serial.printf("%d us Task_Board_Event: Probe plug is plugged in and Probe Tip is in holder\n", usecCount);};
+  if (probeGoalState == 1 && probeGoalState != probeGoalState_old){Serial.printf("%d us Task_Board_Event: Probe plug is not plugged in\n", usecCount);};
   probeGoalState_old = probeGoalState; // store current value
 
 // TODO: Enable the task board to connect to the eduroam network https://github.com/martinius96/ESP32-eduroam 
@@ -1040,7 +1065,7 @@ void loop()
   // Screen switching logic
   if(M5.BtnB.isPressed()){
     screenSelector_count++;
-    if(screenSelector_count>=50){
+    if(screenSelector_count >= 50){
       M5.Lcd.fillScreen(WHITE);
       delay(50);
       if (trialRunning == 1){
@@ -1091,6 +1116,6 @@ void loop()
   
    //print out seconds to the serial monitor
    if (verbose == 1){
-     Serial.printf("DeviceToken:%s, State:Btn:%d,Fader:%d,Angle:%d,ProbeInserted:%d,CircuitProbed:%d,Post1:%d,Post2:%d, Protocol:%s, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Time_us:%d\n", TOKEN.c_str(), buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, trialRunning, timeLeft, ptsCollected, cumForce, usecCount);
+     Serial.printf("DeviceToken:%s, State:Btn:%d,Fader:%d,Angle:%d,ProbeInserted:%d,CircuitProbed:%d,Post1:%d,Post2:%d, Protocol:%s, Batt:%d, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Time_us:%d\n", TOKEN.c_str(), buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, battVoltage, trialRunning, timeLeft, ptsCollected, cumForce, usecCount);
    }
 }
