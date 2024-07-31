@@ -108,7 +108,6 @@ int trialRunning = 0,  timeLeft = 0,  ptsCollected = 0;
 int buttonPushLatch = 0,  faderLatch = 0,  angleLatch = 0,  angleDoorLatch = 0,  cableWrapProbeStowLatch = 0, cableWrapLatch = 0,  probeGoalLatch = 0,  OP180_1_Latch = 0,  OP180_2_Latch = 0, trialCompletedLatch = 0;
 int faderLatch2 = 0;
 int faderGoal2 = 0;
-int battVoltage = -1;
 int humanStart = 0;
 
 int startBtnState = -1,  stopBtnState = -1,  resetBtnState = -1,  buttonPushState = -1,  faderValue = -1;
@@ -384,7 +383,7 @@ void home_screen(){
     M5.Lcd.printf("Home Screen \n");
     M5.Lcd.printf(" Smart Task Board");
     M5.Lcd.printf(" v%s\n", FW_VERSION);
-    M5.Lcd.printf(" Wifi On:%d Status:%d batt:%.3fV %.1fmA\n", wifiEnabled, WiFi.status(), battVoltage, M5.Axp.GetBatCurrent());
+    M5.Lcd.printf(" Wifi On:%d Status:%d batt:%.3fV %.1fmA\n", wifiEnabled, WiFi.status(), M5.Axp.GetBatVoltage(), M5.Axp.GetBatCurrent());
     M5.Lcd.printf(" Token: %s\n", TOKEN.c_str());
     M5.Lcd.printf(" PROTOCOL: %s\n", PROTOCOL_ID);
     M5.Lcd.printf(" Trial Counter:%d\n", trialCounter);
@@ -709,8 +708,6 @@ void loop()
   // this is the solution that fixed the floating values from the new STM vs MEGA chips on the PbHub
   porthub.hub_d_wire_value_A(HUB_ADDR[3], 1); //write value high
   porthub.hub_d_wire_value_B(HUB_ADDR[3], 1); //write value high
-
-  battVoltage = M5.Axp.GetBatVoltage();
 
   // Read from PbHub Module
   buttonPushState = porthub.hub_d_read_value_A(HUB_ADDR[0]);
@@ -1127,6 +1124,6 @@ void loop()
   
    //print out seconds to the serial monitor
    if (verbose == 1){
-     Serial.printf("DeviceToken:%s, State:Btn:%d,Fader:%d,Angle:%d,ProbeInserted:%d,CircuitProbed:%d,Post1:%d,Post2:%d, Protocol:%s, Batt:%d, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Time_us:%d\n", TOKEN.c_str(), buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, battVoltage, trialRunning, timeLeft, ptsCollected, cumForce, usecCount);
+     Serial.printf("DeviceToken:%s, State:Btn:%d,Fader:%d,Angle:%d,ProbeInserted:%d,CircuitProbed:%d,Post1:%d,Post2:%d, Protocol:%s, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Time_us:%d\n", TOKEN.c_str(), buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, trialRunning, timeLeft, ptsCollected, cumForce, usecCount);
    }
 }
