@@ -109,6 +109,7 @@ int buttonPushLatch = 0,  faderLatch = 0,  angleLatch = 0,  angleDoorLatch = 0, 
 int faderLatch2 = 0;
 int faderGoal2 = 0;
 int battVoltage = -1;
+int humanStart = 0;
 
 int startBtnState = -1,  stopBtnState = -1,  resetBtnState = -1,  buttonPushState = -1,  faderValue = -1;
 int keyswitchRState = -1,  keyswitchLState = -1,  angleValue = -1,  portRState = -1,  portLState = -1;
@@ -345,6 +346,7 @@ void publish_telemetry(){
       telemetry[0]["battCurrent(mA)"] = M5.Axp.GetBatCurrent(); //FLOAT 
       telemetry[0]["M5BusVoltage"] = M5.Axp.GetVBusVoltage(); //FLOAT
       telemetry[0]["M5AXPTemp"] = M5.Axp.GetTempInAXP192(); //FLOAT
+      telemetry[0]["HumanStartFlag"] = humanStart; //BOOL
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
@@ -386,7 +388,7 @@ void home_screen(){
     M5.Lcd.printf(" Token: %s\n", TOKEN.c_str());
     M5.Lcd.printf(" PROTOCOL: %s\n", PROTOCOL_ID);
     M5.Lcd.printf(" Trial Counter:%d\n", trialCounter);
-    M5.Lcd.printf(" Points:%d Interaction:%0.2f\n", ptsCollected, cumForce);
+    M5.Lcd.printf(" Points:%d Interaction:%0.2f, Human:%d\n", ptsCollected, cumForce, humanStart);
     M5.Lcd.printf(" ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
     M5.Lcd.printf(" ST4:%0.2f, ST5:%0.2f\n", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
     M5.Lcd.printf(" Trial Time:\n ");
@@ -763,7 +765,7 @@ void loop()
       M5.Lcd.setTextColor(WHITE, RED);
       M5.Lcd.setTextSize(2);
       M5.Lcd.fillScreen(RED);
-      M5.Lcd.printf("Unwind the cable from the wrap posts!");
+      M5.Lcd.printf("Unwind the cable \n from the wrap \n posts!");
       delay(1000);
       M5.Lcd.setTextColor(WHITE, BLACK);
       M5.Lcd.fillScreen(BLACK);
@@ -774,7 +776,7 @@ void loop()
       M5.Lcd.setTextColor(WHITE, RED);
       M5.Lcd.setTextSize(2);
       M5.Lcd.fillScreen(RED);
-      M5.Lcd.printf("Move fader to left end stop!");
+      M5.Lcd.printf("Move fader to left\n end stop!");
       delay(1000);
       M5.Lcd.setTextColor(WHITE, BLACK);
       M5.Lcd.fillScreen(BLACK);
@@ -796,13 +798,17 @@ void loop()
       M5.Lcd.setTextColor(WHITE, RED);
       M5.Lcd.setTextSize(2);
       M5.Lcd.fillScreen(RED);
-      M5.Lcd.printf("Move probe plug to black port!");
+      M5.Lcd.printf("Move probe plug to\n black port!");
       delay(1000);
       M5.Lcd.setTextColor(WHITE, BLACK);
       M5.Lcd.fillScreen(BLACK);
     }
     if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF && OP180_1_State == 0 && OP180_2_State == 0){
       // Begin trial timer
+      if (resetBtnState == BUTTON_ON){
+        // human start option press and hold the reset button then pressing the trial start M5 button
+        humanStart = 1;
+      }
       countStart = 1;
       usecCount = 0;
       TS_button = 0; TS_fader_mid = 0; TS_fader = 0; TS_probeGoal = 0; TS_angle = 0; TS_cableWrap = 0; TS_cableWrapProbeStow = 0;
@@ -1033,6 +1039,7 @@ void loop()
     M5.Lcd.fillScreen(BLACK); //clear screen
     M5.Lcd.setTextColor(WHITE, BLACK);
     trialCompletedLatch = 0;
+    humanStart = 0;
   }
 
   // collect "force" during trial
