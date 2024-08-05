@@ -38,9 +38,6 @@ class PortHub {
     void hub_wire_fill_color(uint8_t reg,uint16_t first, uint16_t count, uint8_t r,int8_t g,uint8_t b);
   
     void hub_wire_setBrightness(uint8_t reg,uint8_t brightness);
-  public:
-
-  private:
     
   private:
 

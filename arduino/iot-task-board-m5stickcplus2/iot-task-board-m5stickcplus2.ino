@@ -40,7 +40,7 @@
 #define SCREEN_COLS 240 // pixels
 
 // This value should be updateable via the web commands from Kaa
-int verbose = 1; // set to 1 to enable serial output, default 0
+int verbose = 0; // set to 1 to enable serial output, default 0
 
 //////// SYSTEM SETTINGS /////////
 const String TOKEN = "task_board_2000";                // Endpoint token - you get (or specify) it during device provisioning
@@ -65,7 +65,6 @@ uint8_t HUB_ADDR[6]={HUB1_ADDR,HUB2_ADDR,HUB3_ADDR,HUB4_ADDR,HUB5_ADDR,HUB6_ADDR
 // Setup WiFi and PubSub client
 WiFiClient espClient;
 PubSubClient client(espClient);
-//Kaa kaa(&client, SECRET_TOKEN, SECRET_APP_VERSION);
 
 // Setup stopwatch interrupt specific settings
 // timer interrupt variable.
@@ -85,7 +84,6 @@ void IRAM_ATTR usecTimer()
 ///////////////////////////////
 
 // Initialize program variables before running the setu and main loops
-
 String task_board_ssid, unique_ssid;
 
 //min,sec,msec,usec display.
@@ -107,7 +105,7 @@ int trialRunning = 0,  timeLeft = 0,  ptsCollected = 0;
 int buttonPushLatch = 0,  faderLatch = 0,  angleLatch = 0,  angleDoorLatch = 0,  cableWrapProbeStowLatch = 0, cableWrapLatch = 0,  probeGoalLatch = 0,  OP180_1_Latch = 0,  OP180_2_Latch = 0, trialCompletedLatch = 0;
 int faderLatch2 = 0;
 int faderGoal2 = 0;
-int battVoltage = -1;
+int humanStart = 0;
 
 int startBtnState = -1,  stopBtnState = -1,  resetBtnState = -1,  buttonPushState = -1,  faderValue = -1;
 int keyswitchRState = -1,  keyswitchLState = -1,  angleValue = -1,  portRState = -1,  portLState = -1;
@@ -319,21 +317,32 @@ void publish_telemetry(){
       telemetry[0]["stopButtonState"] = stopBtnState; // BOOL
       telemetry[0]["probeStartState"] = probeStartState; //BOOL
       telemetry[0]["probeGoalState"] = probeGoalState; //BOOL
+      telemetry[0]["WrapPostLeftState"] = OP180_1_State; //BOOL
+      telemetry[0]["WrapPostRightState"] = OP180_2_State; //BOOL
       telemetry[0]["trialStarted"] = trialRunning; //BOOL
       telemetry[0]["trialTime"] = trialTime; //Float
-      telemetry[0]["Time_Button"] = TS_button; //INT
-      telemetry[0]["Time_Fader_Mid"] = TS_fader_mid; //INT
-      telemetry[0]["Time_Fader"] = TS_fader; //INT
-      telemetry[0]["Time_Angle"] = TS_angle; //INT
+      telemetry[0]["Time_ButtonPressed"] = TS_button; //INT
+      telemetry[0]["Time_Button"] = TS_button; //INT legacy
+      telemetry[0]["Time_Fader"] = TS_fader; //INT legacy
+      telemetry[0]["Time_FaderSP1Achieved"] = TS_fader_mid; //INT
+      telemetry[0]["Time_FaderSP2Achieved"] = TS_fader; //INT
+      telemetry[0]["Time_TerminalBlockProbed"] = TS_angle; //INT
+      telemetry[0]["Time_Angle"] = TS_angle; //INT legacy
       telemetry[0]["Time_Door_Opened"] = TS_angle_door; //INT
-      telemetry[0]["Time_CableWrap"] = TS_cableWrap; //INT
-      telemetry[0]["Time_CableWrap"] = TS_cableWrapProbeStow; //INT
-      telemetry[0]["Time_ProbeGoal"] = TS_probeGoal; //INT
+      telemetry[0]["Time_CableWrap"] = TS_cableWrap; //INT legacy
+      telemetry[0]["Time_CableWrapped"] = TS_cableWrap; //INT
+      telemetry[0]["Time_CableWrappedProbeTipReplaced"] = TS_cableWrapProbeStow; //INT
+      telemetry[0]["Time_ProbePlugInserted"] = TS_probeGoal; //INT
+      telemetry[0]["Time_ProbeGoal"] = TS_probeGoal; //INT legacy
       telemetry[0]["cumForce"] = cumForce; //Float
       telemetry[0]["trialPoints"] = ptsCollected; //INT 
       // telemetry[0]["FW_Version"] = String(FW_VERSION).c_str(); //STR 
       // telemetry[0]["PROTOCOL"] = String(PROTOCOL_ID).c_str(); //STR 
-      telemetry[0]["battVoltage"] = battVoltage; //INT 
+      telemetry[0]["battVoltage"] = StickCP2.Power.getBatteryVoltage(); //FLOAT 
+      telemetry[0]["battCurrent(mA)"] = StickCP2.Power.getBatteryCurrent(); //FLOAT 
+      telemetry[0]["M5BattLevel"] = StickCP2.Power.getBatteryLevel(); //FLOAT
+      telemetry[0]["M5IsCharging"] = StickCP2.Power.isCharging(); //FLOAT
+      telemetry[0]["HumanStartFlag"] = humanStart; //BOOL
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
@@ -371,11 +380,11 @@ void home_screen(){
     StickCP2.Display.printf("Home Screen \n");
     StickCP2.Display.printf(" Smart Task Board");
     StickCP2.Display.printf(" v%s \n", FW_VERSION);
-    StickCP2.Display.printf(" Wifi On:%d Status:%d batt:%0.3fV %0.1fmA\n", wifiEnabled, WiFi.status(), StickCP2.Power.getBatteryVoltage(),StickCP2.Power.getBatteryCurrent());
+    StickCP2.Display.printf(" Wifi On:%d Status:%d batt:%0.1fV %0.1fmA\n", wifiEnabled, WiFi.status(), StickCP2.Power.getBatteryVoltage(),StickCP2.Power.getBatteryCurrent());
     StickCP2.Display.printf(" Token: %s\n", TOKEN.c_str());
     StickCP2.Display.printf(" PROTOCOL: %s\n", PROTOCOL_ID);
     StickCP2.Display.printf(" Trial Counter:%d\n", trialCounter);
-    StickCP2.Display.printf(" Points:%d Interaction:%0.2f\n", ptsCollected, cumForce);
+    StickCP2.Display.printf(" Points:%d Interaction:%0.2f, Human:%d\n", ptsCollected, cumForce, humanStart);
     StickCP2.Display.printf(" ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
     StickCP2.Display.printf(" ST4:%0.2f, ST5:%0.2f\n", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
     StickCP2.Display.printf(" Trial Time:\n ");
@@ -397,7 +406,7 @@ void develop_screen(){
     StickCP2.Display.printf("%d P_TB:%d P_Holder:%d\n ", probeGoalLatch, probeStartState, probeGoalState); 
     StickCP2.Display.printf("%d SP:%d Angle:%d\n ", angleLatch, ANGLESP, angleValue); 
     StickCP2.Display.printf("%d Post1:%d Post2:%d\n ", cableWrapLatch, OP180_1_State, OP180_2_State); 
-    StickCP2.Display.printf("Time Left:%d Pts:%d Action:%0.2f\n ", timeLeft, ptsCollected, cumForce);
+    StickCP2.Display.printf(" Points:%d Interaction:%0.2f, Human:%d\n", ptsCollected, cumForce, humanStart);
     StickCP2.Display.printf("ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n ", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
     StickCP2.Display.printf("ST4:%0.2f, ST5:%0.2f\n ", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
     StickCP2.Display.printf("Trial Time (sec):%0.2f\n ", (float)trialTime/1000000.0);
@@ -602,9 +611,7 @@ bool check_blue_button(){
     buttonPushLatch = 1;
     TS_button = usecCount;
     ptsCollected = ptsCollected + PTS_BUTTON;
-    digitalWrite(19, HIGH); //turn off LED when red button is pressed
-    delay(50);
-    digitalWrite(19, LOW); //turn on LED when red button is pressed
+    blink_LED(); //turn off LED when red button is pressed
     Serial.printf("%d us Trial_Event: Button pushed!\n", usecCount);
     StickCP2.Display.fillScreen(BLUE); //clear screen
     screenSelector = 2;
@@ -630,7 +637,7 @@ bool check_slider(){
     StickCP2.Display.fillScreen(BLUE); //clear screen
     
     // toss coin
-    coin = random(1,100);
+    coin = random(5,100);
     if (coin >= 50){
       faderGoal2 = FADERSP - FADERSP2 * coin / 100;
     } else {
@@ -644,9 +651,7 @@ bool check_slider(){
     faderLatch = 1;
     TS_fader = usecCount;
     ptsCollected = ptsCollected + PTS_FADER;
-    digitalWrite(19, HIGH); //turn off LED when red button is pressed
-    delay(50);
-    digitalWrite(19, LOW); //turn on LED when red button is pressed
+    blink_LED(); //turn off LED when red button is pressed
     Serial.printf("%d us Trial_Event: Fader SP2 Matched! %d \n", usecCount, faderGoal2);
     StickCP2.Display.fillScreen(YELLOW); //clear screen
     delay(50);
@@ -671,9 +676,7 @@ bool check_probe_plug(){
     probeGoalLatch = 1;
     TS_probeGoal = usecCount;
     ptsCollected = ptsCollected + PTS_PROBEINSERT;
-    digitalWrite(19, HIGH); //turn off LED when red button is pressed
-    delay(50);
-    digitalWrite(19, LOW); //turn on LED when red button is pressed
+    blink_LED(); //turn off LED when red button is pressed
     Serial.printf("%d us Trial_Event: Probe Plug inserted!\n", usecCount);
     StickCP2.Display.fillScreen(BLUE); //clear screen
     // screenSelector = 0;
@@ -694,17 +697,14 @@ bool check_door(){
     Serial.printf("%d us Task_Board_Event: Door Angle achieved!\n", usecCount);
 
   }
-  if (angleValue < ANGLESP && trialRunning == 1 && angleLatch == 0 && probeStartState == BUTTON_ON) // disabled since wrong sensor is installed, replace sensor with unit_angle_sensor
-  // if (trialRunning == 1 && probeStartState == BUTTON_ON)
+  if (angleValue < ANGLESP && trialRunning == 1 && angleLatch == 0 && probeStartState == BUTTON_ON)
   {
     delay(1);
     angleLatch = 1;
     TS_angle = usecCount;
     Serial.printf("%d us Trial_Event: Terminal Block Circuit Probed!\n", usecCount);
     ptsCollected = ptsCollected + PTS_CIRCUIT_PROBE;
-    digitalWrite(19, HIGH); //turn off LED when red button is pressed
-    delay(50);
-    digitalWrite(19, LOW); //turn on LED when red button is pressed
+    blink_LED(); //turn off LED when red button is pressed
     StickCP2.Display.fillScreen(BLUE); //clear screen
     // screenSelector = 5;
     // trialRunning++;
@@ -738,10 +738,7 @@ bool check_probe_tip_holder(){
     TS_cableWrapProbeStow = usecCount;
     Serial.printf("%d us Trial_Event: Cable successfully wrapped AND Probe Tip Stowed!\n", usecCount);
     ptsCollected = ptsCollected + PTS_CABLEWRAP;
-    digitalWrite(19, HIGH); //turn off LED when red button is pressed
-    delay(50);
-    digitalWrite(19, LOW); //turn on LED when red button is pressed
-    ;
+    blink_LED(); //turn off LED when red button is pressed
     StickCP2.Display.fillScreen(BLUE); //clear screen
     // screenSelector = 6;
     // trialRunning++;
@@ -754,13 +751,24 @@ void check_trialStartStopLogic(){
   if (startBtnState == BUTTON_ON && trialRunning == 0 && stopBtnState == BUTTON_OFF && forceStop == 0) 
   {
     delay(1);
+    if (OP180_1_State == 1 || OP180_2_State == 1){
+      // flash alert screen to unwind cable
+      StickCP2.Display.setCursor(5,5);
+      StickCP2.Display.setTextColor(WHITE, RED);
+      StickCP2.Display.setTextSize(2);
+      StickCP2.Display.fillScreen(RED);
+      StickCP2.Display.printf("Unwind the cable \n from the wrap \n posts!");
+      delay(1000);
+      StickCP2.Display.setTextColor(WHITE, BLACK);
+      StickCP2.Display.fillScreen(BLACK);
+    }
     if (faderValue > 20){
       // WARNING flash alert screen to adjust fader
       StickCP2.Display.setCursor(5,5);
       StickCP2.Display.setTextColor(WHITE, RED);
       StickCP2.Display.setTextSize(2);
       StickCP2.Display.fillScreen(RED);
-      StickCP2.Display.printf("Move fader to left end stop!");
+      StickCP2.Display.printf("Move fader to left\n end stop!");
       delay(1000);
       StickCP2.Display.setTextColor(WHITE, BLACK);
       StickCP2.Display.fillScreen(BLACK);
@@ -782,26 +790,28 @@ void check_trialStartStopLogic(){
       StickCP2.Display.setTextColor(WHITE, RED);
       StickCP2.Display.setTextSize(2);
       StickCP2.Display.fillScreen(RED);
-      StickCP2.Display.printf("Move probe plug to black port!");
+      StickCP2.Display.printf("Move probe plug to\n black port!");
       delay(1000);
       StickCP2.Display.setTextColor(WHITE, BLACK);
       StickCP2.Display.fillScreen(BLACK);
     }
-    if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF){
-      // Begin trial counter
+    if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF && OP180_1_State == 0 && OP180_2_State == 0){
+      // Begin trial timer
+      if (resetBtnState == BUTTON_ON){
+        // human start option press and hold the reset button then pressing the trial start M5 button
+        humanStart = 1;
+      }
       countStart = 1;
       usecCount = 0; // reset trial timer
       TS_button = 0; TS_fader_mid = 0; TS_fader = 0; TS_probeGoal = 0; TS_angle = 0; TS_cableWrap = 0; TS_cableWrapProbeStow = 0;
       startaccX = accX;
       startaccY = accY;
       startaccZ = accZ;
-      digitalWrite(19, LOW); //turn on LED
-      Serial.printf("%d us Trial_Event: M5 Button pressed, Trial Started!\n", trialTime);
-      // Serial.println("Trial_Event: M5 Button pressed, Trial Started!");
-      StickCP2.Display.fillScreen(BLUE);
-      StickCP2.Display.setTextColor(BLACK, BLUE);
       trialCounter++; //increment trial counter
       preferences.putUInt("trialCounter", trialCounter);  // Store the counter to the Preferences namespace
+      Serial.printf("%d us Trial_Event: M5 Button pressed, Trial %d Started!\n", trialTime, trialCounter);
+      StickCP2.Display.fillScreen(BLUE);
+      StickCP2.Display.setTextColor(BLACK, BLUE);
       // screenSelector = 1;
     }
     delay(1);
@@ -813,12 +823,14 @@ void check_trialStartStopLogic(){
     delay(1);
     if (stopBtnState == BUTTON_ON){
       countStart = 0;
-      digitalWrite(19, HIGH); //turn off LED
-      Serial.printf("%d us Trial_Event: Red Button pressed, End of Successful Trial! Congrats!\n", usecCount);
+      turn_LED_off(); //turn off LED
+      Serial.printf("%d us Trial_Event: Red Button pressed, End of Successful Trial %d! Congrats!\n", usecCount, trialCounter);
       // Serial.println("Trial_Event: Red Button pressed, End of Successful Trial! Congrats!");
       // trialRunning = 0; //this seems correct here but isn't compatible with the logic of countStart
       // screenSelector = 0;       
       trialCompletedLatch = 1;
+      humanStart = 0;
+
     }
     delay(1);
   }
@@ -833,9 +845,9 @@ void check_trialStartStopLogic(){
     delay(1);
     if (stopBtnState == BUTTON_ON){
       countStart = 0; //stop the trial time counter
-      digitalWrite(19, HIGH); //turn off LED
+      turn_LED_off(); //turn off LED
       // Serial.printf("%d us Trial_Event: Trial Aborted!\n", trialTime);
-      Serial.println("Trial_Event: Trial Aborted!");
+      Serial.printf("Trial_Event: Trial %d Aborted!\n", trialCounter);
       trialRunning = 0; 
       StickCP2.Display.fillScreen(BLACK); //clear screen
       StickCP2.Display.setTextColor(WHITE, BLACK);
@@ -860,8 +872,8 @@ void check_trialStartStopLogic(){
     delay(1);
       countStart = 0;
       timerAlarmDisable(interruptTimer);
-      Serial.printf("%d us Trial_Event: Trial Time Limit reached! Time's Up! \n", usecCount);
-      digitalWrite(19, HIGH); //turn off LED
+      Serial.printf("%d us Trial_Event: Trial Time Limit %d reached! Time's Up! \n", usecCount, TIMELIMIT);
+      turn_LED_off(); //turn off LED
       for (int i = 0; i < 3; i++){
         StickCP2.Display.fillScreen(RED);
         StickCP2.Display.setCursor(5,5);
@@ -916,7 +928,7 @@ void check_trialStartStopLogic(){
     display[0] = 0; display[1] = 0; display[2] = 0;
     ptsCollected = 0;
     cumForce = 0;
-    digitalWrite(19, HIGH); //turn off LED
+    turn_LED_off(); //turn off LED
     StickCP2.Display.fillScreen(BLACK); //clear screen
     StickCP2.Display.setTextColor(WHITE, BLACK);
     trialCompletedLatch = 0;
@@ -1009,6 +1021,20 @@ void send_telemetry(){
   }
 }
 
+void turn_LED_on(){
+    digitalWrite(19, HIGH); //turn on LED
+}
+
+void turn_LED_off(){
+    digitalWrite(19, LOW); //turn off LED
+}
+
+void blink_LED(){
+    digitalWrite(19, HIGH); //turn on LED
+    delay(100);
+    digitalWrite(19, LOW); //turn off LED
+}
+
 void setup()
 {
   // initialize the M5Stack object
@@ -1016,21 +1042,13 @@ void setup()
   StickCP2.begin(cfg);
   porthub.begin();
   Serial.begin(115200);
-  Serial.println("I'm at the beginning of the setup block!");
-
   
   // // GPIO setting  
-  // pinMode(10, OUTPUT);  //GPIO10 the builtin LED <<THIS IS THE PROBLEM! TRY PIN 19
-  pinMode(19, OUTPUT);  //GPIO10 the builtin LED <<THIS IS THE PROBLEM!
+  pinMode(19, OUTPUT);  //GPIO19 for M5StickCPlus2 the builtin LED <<THIS WAS THE PROBLEM!
 
   // // Print out the device's unique MAC address
   Serial.print("ESP Board MAC Address: ");
   Serial.println(WiFi.macAddress());
-  
-  // START DEBUG COMMENTING
-  /////////////////////////
-  // working without the screen enabled...working with screen enabled...SETTING PINMODE 10 TO OUTPUT IS THE PROBLEM!
-  Serial.printf("Start of debug section...\n");
 
   // Build string for SSID
   task_board_ssid = String("AutoConnect_");
@@ -1062,7 +1080,7 @@ void setup()
     wifiEnabled = 1; //replace this with res variable
     
     //Wifi Manager Config START
-    // WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
+    WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
   
     Serial.printf("Starting wifimanager...\n");
     //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
@@ -1071,15 +1089,8 @@ void setup()
     //reset settings - wipe credentials for testing
     // wm.resetSettings(); //leave commented
   
-
-
-
-
     bool res; // connection status of the wifimanager
     res = wm.autoConnect(unique_ssid.c_str(), TASK_BOARD_PW); // password protected ap
-    // res = wm.autoConnect("AutoConnectAP-tb","password"); // password protected ap
-
-
 
     if(!res) {
         Serial.println("Failed to connect");
@@ -1095,14 +1106,11 @@ void setup()
 
     // Setup wireless connection
     client.setServer(mqtt_server, 1883);
-    // client.setCallback(callback); // Is this needed?
     client.setBufferSize(8192); // Increase limit, this line fixed problem for my device
     // setup_wifi(); // <<== this is suspicious, what does this function do? No definition found. Delete!
 
     //Check for new firmware
-    digitalWrite(19, LOW); //turn on LED
-
-  
+    turn_LED_on();
 
     client.setCallback(handleOtaUpdate);
     initServerConnection();
@@ -1110,22 +1118,17 @@ void setup()
     reportCurrentFirmwareVersion();
     requestNewFirmware(); 
 
-
-    digitalWrite(19, HIGH); //turn off LED
+    turn_LED_off(); //turn off LED
   } else 
   { // Press and hold M5 Button during power up to enter LOCAL Mode
       StickCP2.Display.setCursor(5,5);
       StickCP2.Display.setTextSize(2);
       StickCP2.Display.print("Booting Local Mode, no WiFi!");
       Serial.printf("Booting Local Mode, no WiFi!\n");
-      digitalWrite(19, HIGH); //turn off LED
+      turn_LED_off(); //turn off LED
       wifiEnabled = 0;
       delay(1000);
   }
-
-    Serial.printf("End of debug section...\n");
-    // END DEBUG COMMENTING
-    /////////////////////// 
 
     // TODO: replace this timer with a millis() command.
     //interrupt timer setting
@@ -1149,22 +1152,19 @@ void setup()
   //   // Setup load cell device
   //   //REMOVED
 
-  //   preferences.begin("task-board",false); // second parameter must be false
-  //   resetCounter();
+  preferences.begin("task-board",false); // second parameter must be false
+  resetCounter();
   //   // trialCounter = preferences.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
 
   StickCP2.Display.fillScreen(BLACK); // clear screen
-  Serial.println("I'm at the end of the setup block!");
 }
 
 void loop()
 {
   // put your main code here, to run repeatedly:
-  Serial.println("I'm at the beginning of the main loop!");
   last = now;
   now = millis();
-  Serial.printf("scan timer: %d\n", now - last);
-
+  Serial.printf("scan timer: %dms\n", now - last);
 
   // main function refactor
   update_inputs();
@@ -1192,8 +1192,7 @@ void loop()
   send_telemetry();
   
   //print out seconds to the serial monitor
-  if (verbose == 1 && StickCP2.BtnA.isPressed()){
-     Serial.printf("DeviceToken:%s, State:Btn:%d,Fader:%d,Angle:%d,ProbeInserted:%d,CircuitProbed:%d,Post1:%d,Post2:%d, Protocol:%s, Batt:%d, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Time_us:%d\n", TOKEN.c_str(), buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, battVoltage, trialRunning, timeLeft, ptsCollected, cumForce, usecCount);
+  if (verbose == 1){
+     Serial.printf("DeviceToken:%s, State:Btn:%d,Fader:%d,Angle:%d,ProbeInserted:%d,CircuitProbed:%d,Post1:%d,Post2:%d, Protocol:%s, Batt:%d, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Time_us:%d\n", TOKEN.c_str(), buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, StickCP2.Power.getBatteryVoltage(), trialRunning, timeLeft, ptsCollected, cumForce, usecCount);
   }
-  Serial.println("I'm at the end of the main loop!");
 }
