@@ -51,8 +51,8 @@ const String FW_VERSION = "1.0.1"; // Firmware Version for OTA management
 // DO NOT CHANGE SETTINGS BELOW //
 const char* mqtt_server = "mqtt.cloud.kaaiot.com";
 
-const unsigned long trialPublishRate = 1 * 0.05 * 1000UL; //500ms
-const unsigned long fiveSeconds = 1 * 5 * 1000UL; //5 seconds
+const unsigned long trialPublishRate = 1 * 1 * 1000UL;  //1000ms this should be something small like 5Hz or 200ms
+const unsigned long fiveSeconds = 1 * 5 * 1000UL;         //5000ms or 5 seconds
 static unsigned long lastPublish = 0 - fiveSeconds;
 
 // Setup Persistent Memory
@@ -90,6 +90,7 @@ String task_board_ssid, unique_ssid;
 int display[4] = {0};
 unsigned long now = 0;
 unsigned long last = 0;
+unsigned long scan_time = -1;
 
 //timer start/stop check variable
 int screenSelector = 0; // int to navigate multiple screens
@@ -295,7 +296,7 @@ void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
 void resetCounter(){
     preferences.remove("trialCounter");  // Or remove the counter key only.
     trialCounter = preferences.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
-    Serial.printf("Counter value reset!\n");  // Print the counter to Serial Monitor. 
+    Serial.printf("Trial Counter value reset!\n");  // Print the counter to Serial Monitor. 
 }
 
 void publish_telemetry(){
@@ -338,11 +339,12 @@ void publish_telemetry(){
       telemetry[0]["trialPoints"] = ptsCollected; //INT 
       // telemetry[0]["FW_Version"] = String(FW_VERSION).c_str(); //STR 
       // telemetry[0]["PROTOCOL"] = String(PROTOCOL_ID).c_str(); //STR 
-      telemetry[0]["battVoltage"] = StickCP2.Power.getBatteryVoltage(); //FLOAT 
+      telemetry[0]["battVoltage(V)"] = StickCP2.Power.getBatteryVoltage()/1000; //FLOAT 
       telemetry[0]["battCurrent(mA)"] = StickCP2.Power.getBatteryCurrent(); //FLOAT 
       telemetry[0]["M5BattLevel"] = StickCP2.Power.getBatteryLevel(); //FLOAT
       telemetry[0]["M5IsCharging"] = StickCP2.Power.isCharging(); //FLOAT
       telemetry[0]["HumanStartFlag"] = humanStart; //BOOL
+      telemetry[0]["M5ScanTime"] = scan_time; //UL INT
       
       String topic = "kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
       client.publish(topic.c_str(), telemetry.as<String>().c_str());
@@ -377,46 +379,25 @@ void home_screen(){
     }
     StickCP2.Display.setCursor(5, 25);
     StickCP2.Display.setTextSize(1);
-    StickCP2.Display.printf("Home Screen \n");
-    StickCP2.Display.printf(" Smart Task Board");
+    // StickCP2.Display.printf("Smart Task Board v%s \n WiFi:%d\n Token: %s\n PROTOCOL:%s\n Trial Counter:%d\n Points:%d Interaction:%0.2f Human:%d\n", FW_VERSION, wifiEnabled, TOKEN.c_str(), PROTOCOL_ID, trialCounter, ptsCollected, cumForce, humanStart);
+    // StickCP2.Display.printf("Home Screen \n");
+    StickCP2.Display.printf("Smart Task Board");
     StickCP2.Display.printf(" v%s \n", FW_VERSION);
-    StickCP2.Display.printf(" Wifi On:%d Status:%d batt:%0.1fV %0.1fmA\n", wifiEnabled, WiFi.status(), StickCP2.Power.getBatteryVoltage(),StickCP2.Power.getBatteryCurrent());
+    // StickCP2.Display.printf(" Wifi On:%d Status:%d\n", wifiEnabled, WiFi.status());
+    StickCP2.Display.printf(" Wifi On:%d Status:%d batt:%0.2fV %0.2fmA\n", wifiEnabled, WiFi.status(), (float)StickCP2.Power.getBatteryVoltage()/1000, (float)StickCP2.Power.getBatteryCurrent());
     StickCP2.Display.printf(" Token: %s\n", TOKEN.c_str());
-    StickCP2.Display.printf(" PROTOCOL: %s\n", PROTOCOL_ID);
-    StickCP2.Display.printf(" Trial Counter:%d\n", trialCounter);
-    StickCP2.Display.printf(" Points:%d Interaction:%0.2f, Human:%d\n", ptsCollected, cumForce, humanStart);
+    StickCP2.Display.printf(" PROTOCOL:%s\n", PROTOCOL_ID);
+    StickCP2.Display.printf(" Trials Attempted:%d Human Attempt:%d\n", trialCounter, humanStart);
+    StickCP2.Display.printf(" Points:%d Interaction:%0.2f\n", ptsCollected, cumForce);
     StickCP2.Display.printf(" ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
-    StickCP2.Display.printf(" ST4:%0.2f, ST5:%0.2f\n", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
+    StickCP2.Display.printf(" ST4:%0.2f, ST5:%0.2f\n\n", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
     StickCP2.Display.printf(" Trial Time:\n ");
     StickCP2.Display.setTextSize(3);
+    // StickCP2.Display.printf("%02dm:%02ds\n", display[0], display[1]); 
     StickCP2.Display.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);    
 }
 void develop_screen(){
-    StickCP2.Display.setCursor(5, 5);
-    StickCP2.Display.setTextSize(1);
-    StickCP2.Display.printf("I/O SCREEN\n ");
-    StickCP2.Display.printf("Smart Task Board ");
-    StickCP2.Display.printf("v%s\n ", FW_VERSION);
-    StickCP2.Display.printf("Wifi On:%d Status:%d\n ", wifiEnabled, WiFi.status());
-    StickCP2.Display.printf("Token: %s\n ", TOKEN.c_str());
-    StickCP2.Display.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
-    StickCP2.Display.printf("TrialCount:%d\n ", trialCounter);
-    StickCP2.Display.printf("%d BLU_BTN:%d RED_BTN:%d\n ", buttonPushLatch, buttonPushState, stopBtnState); 
-    StickCP2.Display.printf("%d SP:%d Tol:%d Fader:%d\n ", faderLatch, FADERSP, FADERTOLERANCE, faderValue); 
-    StickCP2.Display.printf("%d P_TB:%d P_Holder:%d\n ", probeGoalLatch, probeStartState, probeGoalState); 
-    StickCP2.Display.printf("%d SP:%d Angle:%d\n ", angleLatch, ANGLESP, angleValue); 
-    StickCP2.Display.printf("%d Post1:%d Post2:%d\n ", cableWrapLatch, OP180_1_State, OP180_2_State); 
-    StickCP2.Display.printf(" Points:%d Interaction:%0.2f, Human:%d\n", ptsCollected, cumForce, humanStart);
-    StickCP2.Display.printf("ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n ", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
-    StickCP2.Display.printf("ST4:%0.2f, ST5:%0.2f\n ", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
-    StickCP2.Display.printf("Trial Time (sec):%0.2f\n ", (float)trialTime/1000000.0);
-    
-    // StickCP2.Display.printf("Interaction: %0.2f\n ", cumForce);
-    // StickCP2.Display.printf("Trial Time:\n ");
-    // StickCP2.Display.setTextSize(3);
-    // StickCP2.Display.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);    
-    // StickCP2.Display.printf("acX:%0.2f acY:%0.2f acZ:%0.2f\n  ", accX*1000, accY*1000, accZ*1000);
-  //    StickCP2.Display.printf("gyX:%0.2f gyY:%0.2f gyZ:%0.2f\n  ", gyroX, gyroY, gyroZ);
+  // removed
 }
 
 void screen2(){
@@ -468,30 +449,22 @@ void screen4(){
     StickCP2.Display.setCursor(5, 15);
     StickCP2.Display.setTextSize(1);
     StickCP2.Display.printf("\n ");
-    StickCP2.Display.printf("Subtask:2/6\n ");
-    StickCP2.Display.printf("PROTOCOL: %s\n ", PROTOCOL_ID);
+    // StickCP2.Display.printf("Subtask:2/6\n ");
     StickCP2.Display.printf("Move Slider to Setpoint\n ");
     StickCP2.Display.setTextSize(3);
     StickCP2.Display.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]); 
     StickCP2.Display.setTextSize(1);
-    // StickCP2.Display.printf("ST3 Time: %d\n", TS_fader);
     int x_offset = map(faderValue, 0, 4000, 10, 210); 
     int x_goal = map(FADERSP, 0, 4000,10,210);
     int x_goal2 = map(faderGoal2, 0, 4000,10,210);
     StickCP2.Display.fillRect(0, 80, 240, 25, BLACK);
     StickCP2.Display.fillTriangle(0+x_offset, 80, 20+x_offset, 80, 10+x_offset, 100, RED);
     StickCP2.Display.fillTriangle(0+x_goal, 120, 20+x_goal, 120, 10+x_goal, 100, YELLOW);
-    // StickCP2.Display.setCursor(x_goal, 100);
-    // StickCP2.Display.setTextColor(WHITE, GREEN);
-    // StickCP2.Display.printf("1");
     if (faderLatch2 == 1){
       // 1st fader position has been reached...
       StickCP2.Display.fillTriangle(0+x_goal2, 120, 20+x_goal2, 120, 10+x_goal2, 100, GREEN);
-      // StickCP2.Display.setCursor(x_goal2, 100);
-      // StickCP2.Display.setTextColor(WHITE, YELLOW);
-      // StickCP2.Display.printf("2");
     }
-    // StickCP2.Display.setTextColor(WHITE, BLUE);
+
 }
 void screen5(){
     StickCP2.Display.drawCircle(10, 10, 10, WHITE);
@@ -584,20 +557,17 @@ void update_inputs(){
     startBtnState = !StickCP2.BtnA.wasPressed();
     resetBtnState = !StickCP2.BtnB.wasPressed();
 
-    // this is the solution that fixed the floating values from the new STM vs MEGA chips on the PbHub
-    porthub.hub_d_wire_value_A(HUB_ADDR[3], 1); //write value high
-    porthub.hub_d_wire_value_B(HUB_ADDR[3], 1); //write value high
-
-    // // Read from PbHub Module
-    buttonPushState = porthub.hub_d_read_value_A(HUB_ADDR[0]); //blue button
-    stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);   //red button
-    faderValue = porthub.hub_a_read_value(HUB_ADDR[5]); //fader
-    angleValue = porthub.hub_a_read_value(HUB_ADDR[4]); //angle
-    probeStartState = porthub.hub_d_read_value_A(HUB_ADDR[3]); //flying-probeStart
-    probeGoalState = porthub.hub_d_read_value_B(HUB_ADDR[3]); //flying-probeGoal
-    OP180_1_State = porthub.hub_d_read_value_A(HUB_ADDR[1]); //post1. This sensor only works with PbHub when connected to Port0 or Port1
-    OP180_2_State = porthub.hub_d_read_value_A(HUB_ADDR[2]); //post2. This sensor only works with PbHub when connected to Port0 or Port1
-
+    // Read from PbHub Module
+    porthub.hub_d_wire_value_A(HUB_ADDR[3], 1); //write value high     // this is the solution that fixed the floating values from the new STM vs MEGA chips on the PbHub
+    porthub.hub_d_wire_value_B(HUB_ADDR[3], 1); //write value high    // this is the solution that fixed the floating values from the new STM vs MEGA chips on the PbHub
+    buttonPushState = porthub.hub_d_read_value_A(HUB_ADDR[0]);  //blue button
+    stopBtnState = porthub.hub_d_read_value_B(HUB_ADDR[0]);     //red button
+    faderValue = porthub.hub_a_read_value(HUB_ADDR[5]);         //fader
+    angleValue = porthub.hub_a_read_value(HUB_ADDR[4]);         //angle
+    probeStartState = porthub.hub_d_read_value_A(HUB_ADDR[3]);  //flying-probeStart
+    probeGoalState = porthub.hub_d_read_value_B(HUB_ADDR[3]);   //flying-probeGoal
+    OP180_1_State = porthub.hub_d_read_value_A(HUB_ADDR[1]);    //post1. This sensor only works with PbHub when connected to Port0 or Port1
+    OP180_2_State = porthub.hub_d_read_value_A(HUB_ADDR[2]);    //post2. This sensor only works with PbHub when connected to Port0 or Port1
 }
 
 bool check_blue_button(){
@@ -800,6 +770,12 @@ void check_trialStartStopLogic(){
       if (resetBtnState == BUTTON_ON){
         // human start option press and hold the reset button then pressing the trial start M5 button
         humanStart = 1;
+        StickCP2.Display.fillScreen(GREEN);
+        StickCP2.Display.setTextColor(BLACK, GREEN); //Text Color, Text Background Color
+      } 
+      else{
+        StickCP2.Display.fillScreen(BLUE);
+        StickCP2.Display.setTextColor(BLACK, BLUE);
       }
       countStart = 1;
       usecCount = 0; // reset trial timer
@@ -810,8 +786,8 @@ void check_trialStartStopLogic(){
       trialCounter++; //increment trial counter
       preferences.putUInt("trialCounter", trialCounter);  // Store the counter to the Preferences namespace
       Serial.printf("%d us Trial_Event: M5 Button pressed, Trial %d Started!\n", trialTime, trialCounter);
-      StickCP2.Display.fillScreen(BLUE);
-      StickCP2.Display.setTextColor(BLACK, BLUE);
+      // StickCP2.Display.fillScreen(BLUE);
+      // StickCP2.Display.setTextColor(BLACK, BLUE);
       // screenSelector = 1;
     }
     delay(1);
@@ -830,7 +806,6 @@ void check_trialStartStopLogic(){
       // screenSelector = 0;       
       trialCompletedLatch = 1;
       humanStart = 0;
-
     }
     delay(1);
   }
@@ -879,7 +854,7 @@ void check_trialStartStopLogic(){
         StickCP2.Display.setCursor(5,5);
         StickCP2.Display.setTextSize(3);
         StickCP2.Display.setTextColor(BLACK);
-        StickCP2.Display.printf("TRIAL OVER!");
+        StickCP2.Display.printf("TIME IS UP!\nTRIAL OVER!");
         delay(200);
         StickCP2.Display.fillScreen(BLACK);
         delay(200);
@@ -887,16 +862,6 @@ void check_trialStartStopLogic(){
       }
     delay(1);
   }
-
-  
-
-  
-
-  
-
-  
-
-  
 
   // Time Count Start
   if (countStart == 1 && trialRunning == 0)
@@ -916,7 +881,7 @@ void check_trialStartStopLogic(){
     StickCP2.Display.setTextColor(WHITE, BLACK);
   }
 
-  // Count Reset Check
+  // Trial Reset Check
   if (resetBtnState == BUTTON_ON && trialRunning == 0 && trialTime != 0)
   {
     Serial.println("Trial Reset Button pressed");
@@ -932,6 +897,7 @@ void check_trialStartStopLogic(){
     StickCP2.Display.fillScreen(BLACK); //clear screen
     StickCP2.Display.setTextColor(WHITE, BLACK);
     trialCompletedLatch = 0;
+    humanStart = 0;
   }
 
   // collect "force" during trial
@@ -944,25 +910,25 @@ void check_trialStartStopLogic(){
 
 void update_screen(){
   // Screen switching logic
-  if(StickCP2.BtnB.wasPressed()){
-    screenSelector_count++;
-    if(screenSelector_count >= 50){
-      StickCP2.Display.fillScreen(WHITE);
-      delay(50);
-      if (trialRunning == 1){
-        StickCP2.Display.fillScreen(BLUE);  
-      } else {
-        StickCP2.Display.fillScreen(BLACK);
-      }
-      if (screenSelector < 7){
-        screenSelector++;
-      } else {
-        screenSelector = 0;
-      }
-      screenSelector_count = 0; //reset button debounce
-      Serial.printf("value of screenSelector is %d\n", screenSelector);
-    }
-  }
+  // if(StickCP2.BtnB.wasPressed()){
+  //   screenSelector_count++;
+  //   if(screenSelector_count >= 50){
+  //     StickCP2.Display.fillScreen(WHITE);
+  //     delay(50);
+  //     if (trialRunning == 1){
+  //       StickCP2.Display.fillScreen(BLUE);  
+  //     } else {
+  //       StickCP2.Display.fillScreen(BLACK);
+  //     }
+  //     if (screenSelector < 7){
+  //       screenSelector++;
+  //     } else {
+  //       screenSelector = 0;
+  //     }
+  //     screenSelector_count = 0; //reset button debounce
+  //     Serial.printf("value of screenSelector is %d\n", screenSelector);
+  //   }
+  // }
 
   // update home screen display
   switch(screenSelector){
@@ -1103,7 +1069,6 @@ void setup()
     //Wifi Manager Config END
     Serial.printf("End of wifimanager code block.\n");
     
-
     // Setup wireless connection
     client.setServer(mqtt_server, 1883);
     client.setBufferSize(8192); // Increase limit, this line fixed problem for my device
@@ -1111,14 +1076,13 @@ void setup()
 
     //Check for new firmware
     turn_LED_on();
-
     client.setCallback(handleOtaUpdate);
     initServerConnection();
     delay(1000); 
     reportCurrentFirmwareVersion();
     requestNewFirmware(); 
-
     turn_LED_off(); //turn off LED
+
   } else 
   { // Press and hold M5 Button during power up to enter LOCAL Mode
       StickCP2.Display.setCursor(5,5);
@@ -1152,8 +1116,8 @@ void setup()
   //   // Setup load cell device
   //   //REMOVED
 
-  preferences.begin("task-board",false); // second parameter must be false
-  resetCounter();
+  preferences.begin("task-board",false); // used to enable persistent memory writes, second parameter must be false
+  // resetCounter();
   //   // trialCounter = preferences.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
 
   StickCP2.Display.fillScreen(BLACK); // clear screen
@@ -1164,7 +1128,8 @@ void loop()
   // put your main code here, to run repeatedly:
   last = now;
   now = millis();
-  Serial.printf("scan timer: %dms\n", now - last);
+  scan_time = now - last;
+  Serial.printf("scan timer: %dms\n", scan_time);
 
   // main function refactor
   update_inputs();
