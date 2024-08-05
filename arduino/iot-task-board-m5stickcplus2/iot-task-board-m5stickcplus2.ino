@@ -1024,8 +1024,8 @@ void setup()
   pinMode(19, OUTPUT);  //GPIO10 the builtin LED <<THIS IS THE PROBLEM!
 
   // // Print out the device's unique MAC address
-  // Serial.print("ESP Board MAC Address: ");
-  // Serial.println(WiFi.macAddress());
+  Serial.print("ESP Board MAC Address: ");
+  Serial.println(WiFi.macAddress());
   
   // START DEBUG COMMENTING
   /////////////////////////
@@ -1045,8 +1045,8 @@ void setup()
   StickCP2.Display.setCursor(0, 5);
 
   // // Setup WiFi connection or boot in LOCAL MODE
-  // if (StickCP2.BtnA.wasPressed() != 1) // this should be != 1 so that the default behavior is to connect to WiFi
-  // { 
+  if (StickCP2.BtnA.wasPressed() != 1) // this should be != 1 so that the default behavior is to connect to WiFi
+  { 
     StickCP2.Display.print(" Smart Task Board ");
     StickCP2.Display.printf("v%s\n ", FW_VERSION);
     StickCP2.Display.printf("TOKEN:%s\n\n", TOKEN.c_str());
@@ -1059,10 +1059,10 @@ void setup()
     StickCP2.Display.printf(" Password: %s\n\n", TASK_BOARD_PW);
     StickCP2.Display.print(" Connecting to last saved WiFi SSID...\n");
     StickCP2.Display.print(" Use w/o WiFi: reboot while holding M5 btn");
-  //   wifiEnabled = 1;
+    wifiEnabled = 1; //replace this with res variable
     
-  //   //Wifi Manager Config START
-  //   // WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
+    //Wifi Manager Config START
+    // WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
   
     Serial.printf("Starting wifimanager...\n");
     //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
@@ -1093,35 +1093,35 @@ void setup()
     Serial.printf("End of wifimanager code block.\n");
     
 
-    // // Setup wireless connection
-    // client.setServer(mqtt_server, 1883);
-    // // client.setCallback(callback); // Is this needed?
-    // client.setBufferSize(8192); // Increase limit, this line fixed problem for my device
-    // // setup_wifi(); // <<== this is suspicious, what does this function do? No definition found. Delete!
+    // Setup wireless connection
+    client.setServer(mqtt_server, 1883);
+    // client.setCallback(callback); // Is this needed?
+    client.setBufferSize(8192); // Increase limit, this line fixed problem for my device
+    // setup_wifi(); // <<== this is suspicious, what does this function do? No definition found. Delete!
 
-    // //Check for new firmware
-    // digitalWrite(19, LOW); //turn on LED
+    //Check for new firmware
+    digitalWrite(19, LOW); //turn on LED
 
   
 
-    // client.setCallback(handleOtaUpdate);
-    // initServerConnection();
-    // delay(1000); 
-    // reportCurrentFirmwareVersion();
-    // requestNewFirmware(); 
+    client.setCallback(handleOtaUpdate);
+    initServerConnection();
+    delay(1000); 
+    reportCurrentFirmwareVersion();
+    requestNewFirmware(); 
 
 
-    // digitalWrite(19, HIGH); //turn off LED
-  // } else 
-  // { // Press and hold M5 Button during power up to enter LOCAL Mode
-  //     StickCP2.Display.setCursor(5,5);
-  //     StickCP2.Display.setTextSize(2);
-  //     StickCP2.Display.print("Booting Local Mode, no WiFi!");
-  //     Serial.printf("Booting Local Mode, no WiFi!\n");
-  //     digitalWrite(19, HIGH); //turn off LED
-  //     wifiEnabled = 0;
-  //     delay(1000);
-  // }
+    digitalWrite(19, HIGH); //turn off LED
+  } else 
+  { // Press and hold M5 Button during power up to enter LOCAL Mode
+      StickCP2.Display.setCursor(5,5);
+      StickCP2.Display.setTextSize(2);
+      StickCP2.Display.print("Booting Local Mode, no WiFi!");
+      Serial.printf("Booting Local Mode, no WiFi!\n");
+      digitalWrite(19, HIGH); //turn off LED
+      wifiEnabled = 0;
+      delay(1000);
+  }
 
     Serial.printf("End of debug section...\n");
     // END DEBUG COMMENTING
