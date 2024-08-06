@@ -1050,6 +1050,19 @@ void setup()
   // // GPIO setting  
   pinMode(19, OUTPUT);  //GPIO19 for M5StickCPlus2 the builtin LED <<THIS WAS THE PROBLEM!
 
+   // Read values from non-volatile memory
+  myPrefs.begin("task-board", true); // defines the namespace used to enable persistent memory writes, second parameter must be false
+  Serial.printf("reading values from NVM into run-time memory...");
+  trialCounter = myPrefs.getUInt("trialCounter", 0);           //assign run-time var from NVM
+  humanAttempts = myPrefs.getUInt("humanAttempts", 0);         //assign run-time var from NVM
+  Serial.printf("trialCounter:%d, humanTrialsCount:%d\n", trialCounter, humanAttempts);
+  myPrefs.end();                        //close namespace
+  Serial.printf("done\n");
+  if (StickCP2.BtnB.isPressed()){ //press and hold BtnB during power on to reset the trial counters in persistent memory
+    Serial.printf("clearing NVM key-pair values.\n");
+    myPrefs.clear();
+  }
+
   // // Print out the device's unique MAC address
   Serial.print("ESP Board MAC Address: ");
   Serial.println(WiFi.macAddress());
@@ -1154,18 +1167,7 @@ void setup()
   //   // Setup load cell device
   //   //REMOVED
 
-  // Read values from non-volatile memory
-  myPrefs.begin("task-board", true); // defines the namespace used to enable persistent memory writes, second parameter must be false
-  Serial.printf("reading values from NVM into run-time memory...");
-  trialCounter = myPrefs.getUInt("trialCounter", 0);           //assign run-time var from NVM
-  humanAttempts = myPrefs.getUInt("humanAttempts", 0);         //assign run-time var from NVM
-  Serial.printf("trialCounter:%d, humanTrialsCount:%d\n", trialCounter, humanAttempts);
-  myPrefs.end();                        //close namespace
-  Serial.printf("done\n");
-  if (StickCP2.BtnB.isPressed()){
-    Serial.printf("clearing NVM key-pair values.\n");
-    myPrefs.clear();
-  }
+ 
 
   StickCP2.Display.fillScreen(BLACK); // clear screen
 }
