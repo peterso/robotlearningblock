@@ -99,6 +99,7 @@ int coin = 0;
 
 int forceStop = 0;
 int trialCounter = 0;
+int trialCounterHuman = 0;
 unsigned long trialTime = 0;
 int wifiEnabled = 0;
 int countStart = 0;
@@ -296,6 +297,8 @@ void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
 void resetCounter(){
     preferences.remove("trialCounter");  // Or remove the counter key only.
     trialCounter = preferences.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
+    preferences.remove("trialCounterHuman");  // Or remove the counter key only.
+    trialCounter = preferences.getUInt("trialCounterHuman", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
     Serial.printf("Trial Counter value reset!\n");  // Print the counter to Serial Monitor. 
 }
 
@@ -355,31 +358,54 @@ void publish_telemetry(){
 void home_screen(){
     StickCP2.Display.drawCircle(10, 10, 10, WHITE);
     if (buttonPushLatch){
-      StickCP2.Display.fillCircle(10, 10, 8, GREEN);
+      if (humanStart){
+        StickCP2.Display.fillCircle(10, 10, 8, RED);  
+      } else{
+        StickCP2.Display.fillCircle(10, 10, 8, GREEN);
+      }
     }
     StickCP2.Display.drawCircle(40, 10, 10, WHITE);
     if (faderLatch){
-      StickCP2.Display.fillCircle(40, 10, 8, GREEN);
+      if (humanStart){
+        StickCP2.Display.fillCircle(40, 10, 8, RED);  
+      } else{
+        StickCP2.Display.fillCircle(40, 10, 8, GREEN);
+      }
     }
     StickCP2.Display.drawCircle(70, 10, 10, WHITE);
     if (probeGoalLatch){
-      StickCP2.Display.fillCircle(70, 10, 8, GREEN);
+      if (humanStart){
+        StickCP2.Display.fillCircle(70, 10, 8, RED);  
+      } else{
+        StickCP2.Display.fillCircle(70, 10, 8, GREEN);
+      }
     }
     StickCP2.Display.drawCircle(100, 10, 10, WHITE);
     if (angleLatch){
-      StickCP2.Display.fillCircle(100, 10, 8, GREEN);
+      if (humanStart){
+        StickCP2.Display.fillCircle(100, 10, 8, RED);  
+      } else{
+        StickCP2.Display.fillCircle(100, 10, 8, GREEN);
+      }      
     }
     StickCP2.Display.drawCircle(130, 10, 10, WHITE);
     if (cableWrapProbeStowLatch){
+      if (humanStart){
+        StickCP2.Display.fillCircle(130, 10, 8, RED);  
+      } else{
       StickCP2.Display.fillCircle(130, 10, 8, GREEN);
+      }
     }
     StickCP2.Display.drawCircle(160, 10, 10, WHITE);
     if (trialCompletedLatch){
+      if (humanStart){
+        StickCP2.Display.fillCircle(160, 10, 8, RED);  
+      } else{
       StickCP2.Display.fillCircle(160, 10, 8, GREEN);
+      }
     }
     StickCP2.Display.setCursor(5, 25);
     StickCP2.Display.setTextSize(1);
-    // StickCP2.Display.printf("Smart Task Board v%s \n WiFi:%d\n Token: %s\n PROTOCOL:%s\n Trial Counter:%d\n Points:%d Interaction:%0.2f Human:%d\n", FW_VERSION, wifiEnabled, TOKEN.c_str(), PROTOCOL_ID, trialCounter, ptsCollected, cumForce, humanStart);
     // StickCP2.Display.printf("Home Screen \n");
     StickCP2.Display.printf("Smart Task Board");
     StickCP2.Display.printf(" v%s \n", FW_VERSION);
@@ -387,7 +413,7 @@ void home_screen(){
     StickCP2.Display.printf(" Wifi On:%d Status:%d batt:%0.2fV %0.2fmA\n", wifiEnabled, WiFi.status(), (float)StickCP2.Power.getBatteryVoltage()/1000, (float)StickCP2.Power.getBatteryCurrent());
     StickCP2.Display.printf(" Token: %s\n", TOKEN.c_str());
     StickCP2.Display.printf(" PROTOCOL:%s\n", PROTOCOL_ID);
-    StickCP2.Display.printf(" Trials Attempted:%d Human Attempt:%d\n", trialCounter, humanStart);
+    StickCP2.Display.printf(" Trials Attempted:%d Human Attempts:%d\n", trialCounter, trialCounterHuman);
     StickCP2.Display.printf(" Points:%d Interaction:%0.2f\n", ptsCollected, cumForce);
     StickCP2.Display.printf(" ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
     StickCP2.Display.printf(" ST4:%0.2f, ST5:%0.2f\n\n", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
@@ -439,7 +465,13 @@ void screen3(){
 }
 void screen4(){
     StickCP2.Display.drawCircle(10, 10, 10, WHITE);
-    StickCP2.Display.fillCircle(10, 10, 9, GREEN);
+    if (buttonPushLatch){
+      if (humanStart){
+        StickCP2.Display.fillCircle(10, 10, 8, RED);  
+      } else{
+        StickCP2.Display.fillCircle(10, 10, 8, GREEN);
+      }
+    }
     StickCP2.Display.drawCircle(40, 10, 10, WHITE);
     StickCP2.Display.fillCircle(40, 10, 3, YELLOW);
     StickCP2.Display.drawCircle(70, 10, 10, WHITE);
@@ -450,7 +482,7 @@ void screen4(){
     StickCP2.Display.setTextSize(1);
     StickCP2.Display.printf("\n ");
     // StickCP2.Display.printf("Subtask:2/6\n ");
-    StickCP2.Display.printf("Move Slider to Setpoint\n ");
+    StickCP2.Display.printf("Move Slider to align arrows\n ");
     StickCP2.Display.setTextSize(3);
     StickCP2.Display.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]); 
     StickCP2.Display.setTextSize(1);
@@ -767,16 +799,15 @@ void check_trialStartStopLogic(){
     }
     if (startBtnState == BUTTON_ON && faderValue < 20 && angleValue > 3500 && probeGoalState == BUTTON_OFF && OP180_1_State == 0 && OP180_2_State == 0){
       // Begin trial timer
-      if (resetBtnState == BUTTON_ON){
+      if (StickCP2.BtnB.isPressed() == 1){
         // human start option press and hold the reset button then pressing the trial start M5 button
         humanStart = 1;
-        StickCP2.Display.fillScreen(GREEN);
-        StickCP2.Display.setTextColor(BLACK, GREEN); //Text Color, Text Background Color
+        trialCounterHuman++; //increment trial counter for hunmans
+        // StickCP2.Display.fillScreen(GREEN);
+        // StickCP2.Display.setTextColor(BLACK, GREEN); //Text Color, Text Background Color
       } 
-      else{
-        StickCP2.Display.fillScreen(BLUE);
-        StickCP2.Display.setTextColor(BLACK, BLUE);
-      }
+      StickCP2.Display.fillScreen(BLUE);
+      StickCP2.Display.setTextColor(BLACK, BLUE);
       countStart = 1;
       usecCount = 0; // reset trial timer
       TS_button = 0; TS_fader_mid = 0; TS_fader = 0; TS_probeGoal = 0; TS_angle = 0; TS_cableWrap = 0; TS_cableWrapProbeStow = 0;
@@ -785,6 +816,7 @@ void check_trialStartStopLogic(){
       startaccZ = accZ;
       trialCounter++; //increment trial counter
       preferences.putUInt("trialCounter", trialCounter);  // Store the counter to the Preferences namespace
+      preferences.putUInt("trialCounterHuman", trialCounterHuman);  // Store the counter to the Preferences namespace
       Serial.printf("%d us Trial_Event: M5 Button pressed, Trial %d Started!\n", trialTime, trialCounter);
       // StickCP2.Display.fillScreen(BLUE);
       // StickCP2.Display.setTextColor(BLACK, BLUE);
@@ -805,7 +837,6 @@ void check_trialStartStopLogic(){
       // trialRunning = 0; //this seems correct here but isn't compatible with the logic of countStart
       // screenSelector = 0;       
       trialCompletedLatch = 1;
-      humanStart = 0;
     }
     delay(1);
   }
@@ -815,7 +846,7 @@ void check_trialStartStopLogic(){
   stopBtnState_old = stopBtnState; // store current value
 
   // FORCE Stop Trial on RED Button Press Check
-  if (stopBtnState == BUTTON_ON && trialRunning > 0 && StickCP2.BtnA.wasPressed() == 1)
+  if (stopBtnState == BUTTON_ON && trialRunning > 0 && StickCP2.BtnA.isPressed() == 1)
   {
     delay(1);
     if (stopBtnState == BUTTON_ON){
@@ -834,7 +865,7 @@ void check_trialStartStopLogic(){
   }
 
   // Reset the trial counter
-  if (stopBtnState == BUTTON_ON && trialRunning == 0 && StickCP2.BtnA.wasPressed() == 1 && StickCP2.BtnB.wasPressed() ==1 && buttonPushState == BUTTON_ON)
+  if (stopBtnState == BUTTON_ON && trialRunning == 0 && StickCP2.BtnA.isPressed() == 1 && StickCP2.BtnB.isPressed() ==1 && buttonPushState == BUTTON_ON)
   {
     resetCounter();
     StickCP2.Display.fillScreen(BLACK); //clear screen
@@ -910,7 +941,7 @@ void check_trialStartStopLogic(){
 
 void update_screen(){
   // Screen switching logic
-  // if(StickCP2.BtnB.wasPressed()){
+  // if(StickCP2.BtnB.isPressed()){
   //   screenSelector_count++;
   //   if(screenSelector_count >= 50){
   //     StickCP2.Display.fillScreen(WHITE);
@@ -1029,7 +1060,7 @@ void setup()
   StickCP2.Display.setCursor(0, 5);
 
   // // Setup WiFi connection or boot in LOCAL MODE
-  if (StickCP2.BtnA.wasPressed() != 1) // this should be != 1 so that the default behavior is to connect to WiFi
+  if (StickCP2.BtnA.isPressed() != 1) // this should be != 1 so that the default behavior is to connect to WiFi
   { 
     StickCP2.Display.print(" Smart Task Board ");
     StickCP2.Display.printf("v%s\n ", FW_VERSION);
@@ -1042,7 +1073,7 @@ void setup()
     StickCP2.Display.printf(" Task Board SSID: \n %s\n", unique_ssid.c_str());
     StickCP2.Display.printf(" Password: %s\n\n", TASK_BOARD_PW);
     StickCP2.Display.print(" Connecting to last saved WiFi SSID...\n");
-    StickCP2.Display.print(" Use w/o WiFi: reboot while holding M5 btn");
+    StickCP2.Display.print(" Use w/o WiFi: Power while holding M5 btn");
     wifiEnabled = 1; //replace this with res variable
     
     //Wifi Manager Config START
@@ -1117,9 +1148,9 @@ void setup()
   //   //REMOVED
 
   preferences.begin("task-board",false); // used to enable persistent memory writes, second parameter must be false
-  // resetCounter();
-  //   // trialCounter = preferences.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
-
+  preferences.begin("trialCounter",false); // used to enable persistent memory writes, second parameter must be false
+  preferences.begin("trialCounterHuman",false); // used to enable persistent memory writes, second parameter must be false
+  
   StickCP2.Display.fillScreen(BLACK); // clear screen
 }
 
@@ -1160,4 +1191,5 @@ void loop()
   if (verbose == 1){
      Serial.printf("DeviceToken:%s, State:Btn:%d,Fader:%d,Angle:%d,ProbeInserted:%d,CircuitProbed:%d,Post1:%d,Post2:%d, Protocol:%s, Batt:%d, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Time_us:%d\n", TOKEN.c_str(), buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, StickCP2.Power.getBatteryVoltage(), trialRunning, timeLeft, ptsCollected, cumForce, usecCount);
   }
+  // Serial.printf("resetBtnState:%d BtnB:%d\n", resetBtnState, StickCP2.BtnB.isPressed());
 }
