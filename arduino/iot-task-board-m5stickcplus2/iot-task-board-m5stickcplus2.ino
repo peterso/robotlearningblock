@@ -46,7 +46,7 @@ int verbose = 0; // set to 1 to enable serial output, default 0
 const String TOKEN = "task_board_2000";                // Endpoint token - you get (or specify) it during device provisioning
 const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";    // Application version - you specify it during device provisioning 
 // const String APP_VERSION = "bvhkhrtbhnjc0btkj7r0-v0";    // Application version - you specify it during device provisioning FOR DEVELOPMENT ONLY
-const String FW_VERSION = "1.0.1"; // Firmware Version for OTA management
+const String FW_VERSION = "1.1.0"; // Firmware Version for OTA management
 
 // DO NOT CHANGE SETTINGS BELOW //
 const char* mqtt_server = "mqtt.cloud.kaaiot.com";
@@ -56,7 +56,7 @@ const unsigned long fiveSeconds = 1 * 5 * 1000UL;         //5000ms or 5 seconds
 static unsigned long lastPublish = 0 - fiveSeconds;
 
 // Setup Persistent Memory
-Preferences preferences;
+Preferences myPrefs; //declare a namespace for the non-volatile memory (NVM)
 
 // Setup PbHub device
 PortHub porthub;
@@ -99,7 +99,7 @@ int coin = 0;
 
 int forceStop = 0;
 int trialCounter = 0;
-int trialCounterHuman = 0;
+int humanAttempts = 0;
 unsigned long trialTime = 0;
 int wifiEnabled = 0;
 int countStart = 0;
@@ -295,10 +295,13 @@ void handleOtaUpdate(char* topic, byte* payload, unsigned int length) {
 }
 
 void resetCounter(){
-    preferences.remove("trialCounter");  // Or remove the counter key only.
-    trialCounter = preferences.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
-    preferences.remove("trialCounterHuman");  // Or remove the counter key only.
-    trialCounter = preferences.getUInt("trialCounterHuman", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
+    myPrefs.begin("task-board", false);
+    myPrefs.clear();  //remove all key-value pairs in namespace
+    myPrefs.end();
+    // myPrefs.remove("trialCounter");  // Or remove the counter key only.
+    // trialCounter = myPrefs.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
+    // myPrefs.remove("humanAttempts");  // Or remove the counter key only.
+    // trialCounter = myPrefs.getUInt("humanAttempts", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
     Serial.printf("Trial Counter value reset!\n");  // Print the counter to Serial Monitor. 
 }
 
@@ -313,6 +316,7 @@ void publish_telemetry(){
       telemetry[0]["gyroY"] = gyroY; //Float
       telemetry[0]["gyroZ"] = gyroZ; //Float
       telemetry[0]["trialCounter"] = trialCounter; //INT
+      telemetry[0]["HumanAttempts"] = humanAttempts; //INT
       telemetry[0]["faderValue"] = faderValue; //INT
       telemetry[0]["angleValue"] = angleValue; //INT
       telemetry[0]["startButtonState"] = startBtnState; //BOOL
@@ -410,10 +414,10 @@ void home_screen(){
     StickCP2.Display.printf("Smart Task Board");
     StickCP2.Display.printf(" v%s \n", FW_VERSION);
     // StickCP2.Display.printf(" Wifi On:%d Status:%d\n", wifiEnabled, WiFi.status());
-    StickCP2.Display.printf(" Wifi On:%d Status:%d batt:%0.2fV %0.2fmA\n", wifiEnabled, WiFi.status(), (float)StickCP2.Power.getBatteryVoltage()/1000, (float)StickCP2.Power.getBatteryCurrent());
+    StickCP2.Display.printf(" Wifi On:%d Status:%d batt:%0.2fV Lvl:%d\n", wifiEnabled, WiFi.status(), (float)StickCP2.Power.getBatteryVoltage()/1000, (int)StickCP2.Power.getBatteryLevel());
     StickCP2.Display.printf(" Token: %s\n", TOKEN.c_str());
     StickCP2.Display.printf(" PROTOCOL:%s\n", PROTOCOL_ID);
-    StickCP2.Display.printf(" Trials Attempted:%d Human Attempts:%d\n", trialCounter, trialCounterHuman);
+    StickCP2.Display.printf(" Trials Attempted:%d Human Attempts:%d\n", trialCounter, humanAttempts);
     StickCP2.Display.printf(" Points:%d Interaction:%0.2f\n", ptsCollected, cumForce);
     StickCP2.Display.printf(" ST1:%0.2f, ST2:%0.2f, ST3:%0.2f\n", (float)TS_button/1000000.0, (float)TS_fader/1000000.0, (float)TS_probeGoal/1000000.0);
     StickCP2.Display.printf(" ST4:%0.2f, ST5:%0.2f\n\n", (float)TS_angle/1000000.0, (float)TS_cableWrapProbeStow/1000000.0);
@@ -802,7 +806,7 @@ void check_trialStartStopLogic(){
       if (StickCP2.BtnB.isPressed() == 1){
         // human start option press and hold the reset button then pressing the trial start M5 button
         humanStart = 1;
-        trialCounterHuman++; //increment trial counter for hunmans
+        humanAttempts++; //increment trial counter for hunmans
         // StickCP2.Display.fillScreen(GREEN);
         // StickCP2.Display.setTextColor(BLACK, GREEN); //Text Color, Text Background Color
       } 
@@ -811,12 +815,14 @@ void check_trialStartStopLogic(){
       countStart = 1;
       usecCount = 0; // reset trial timer
       TS_button = 0; TS_fader_mid = 0; TS_fader = 0; TS_probeGoal = 0; TS_angle = 0; TS_cableWrap = 0; TS_cableWrapProbeStow = 0;
-      startaccX = accX;
-      startaccY = accY;
-      startaccZ = accZ;
+      startaccX = accX; startaccY = accY; startaccZ = accZ; //store the orientation of the board at start
       trialCounter++; //increment trial counter
-      preferences.putUInt("trialCounter", trialCounter);  // Store the counter to the Preferences namespace
-      preferences.putUInt("trialCounterHuman", trialCounterHuman);  // Store the counter to the Preferences namespace
+      Serial.printf("Writing values into NVM...");
+      myPrefs.begin("task-board", false);
+      myPrefs.putUInt("trialCounter", trialCounter);  // Store the counter to the Preferences namespace
+      myPrefs.putUInt("humanAttempts", humanAttempts);  // Store the counter to the Preferences namespace
+      myPrefs.end();
+      Serial.printf("done!\n");
       Serial.printf("%d us Trial_Event: M5 Button pressed, Trial %d Started!\n", trialTime, trialCounter);
       // StickCP2.Display.fillScreen(BLUE);
       // StickCP2.Display.setTextColor(BLACK, BLUE);
@@ -864,8 +870,8 @@ void check_trialStartStopLogic(){
     delay(1);
   }
 
-  // Reset the trial counter
-  if (stopBtnState == BUTTON_ON && trialRunning == 0 && StickCP2.BtnA.isPressed() == 1 && StickCP2.BtnB.isPressed() ==1 && buttonPushState == BUTTON_ON)
+  // Reset the trial counter in NVM by pressing the red and blue button and then the BtnB all together. 
+  if (trialRunning == 0 && stopBtnState == BUTTON_ON && buttonPushState == BUTTON_ON && StickCP2.BtnB.isPressed() == 1)
   {
     resetCounter();
     StickCP2.Display.fillScreen(BLACK); //clear screen
@@ -1039,6 +1045,7 @@ void setup()
   StickCP2.begin(cfg);
   porthub.begin();
   Serial.begin(115200);
+  delay(250); //give serial some time to startup
   
   // // GPIO setting  
   pinMode(19, OUTPUT);  //GPIO19 for M5StickCPlus2 the builtin LED <<THIS WAS THE PROBLEM!
@@ -1073,7 +1080,7 @@ void setup()
     StickCP2.Display.printf(" Task Board SSID: \n %s\n", unique_ssid.c_str());
     StickCP2.Display.printf(" Password: %s\n\n", TASK_BOARD_PW);
     StickCP2.Display.print(" Connecting to last saved WiFi SSID...\n");
-    StickCP2.Display.print(" Use w/o WiFi: Power while holding M5 btn");
+    StickCP2.Display.print(" Use w/o WiFi:Power while holding M5 btn");
     wifiEnabled = 1; //replace this with res variable
     
     //Wifi Manager Config START
@@ -1147,10 +1154,27 @@ void setup()
   //   // Setup load cell device
   //   //REMOVED
 
-  preferences.begin("task-board",false); // used to enable persistent memory writes, second parameter must be false
-  preferences.begin("trialCounter",false); // used to enable persistent memory writes, second parameter must be false
-  preferences.begin("trialCounterHuman",false); // used to enable persistent memory writes, second parameter must be false
-  
+  // Read values from non-volatile memory
+  myPrefs.begin("task-board", true); // defines the namespace used to enable persistent memory writes, second parameter must be false
+  // check existence and read stored values into run-time vars
+  // bool keysExist = myPrefs.isKey("trialCounter");
+  // if (!keysExist){
+  //   Serial.printf("creating key-value pairs in NVM...");
+  //   myPrefs.end();                        //close namespace
+  //   myPrefs.begin("task-board", false);   //re-open namespace in RW_MODE (2nd arg is false)
+  //   myPrefs.putUInt("trialCounter", 0);   //assign default value
+  //   myPrefs.putUInt("humanAttempts", 0);   //assign default value
+  //   myPrefs.end();                        //close namespace
+  //   Serial.printf("done\n");
+  //   myPrefs.begin("task-board", true);    //open namespace in RO_MODE (2nd arg is true)
+  // }
+  Serial.printf("reading values from NVM into run-time memory...");
+  trialCounter = myPrefs.getUInt("trialCounter", 0);           //assign run-time var from NVM
+  humanAttempts = myPrefs.getUInt("humanAttempts", 0);         //assign run-time var from NVM
+  Serial.printf("trialCounter:%d, humanTrialsCount:%d\n", trialCounter, humanAttempts);
+  myPrefs.end();                        //close namespace
+  Serial.printf("done\n");
+
   StickCP2.Display.fillScreen(BLACK); // clear screen
 }
 
@@ -1158,7 +1182,7 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   last = now;
-  now = millis();
+  now = millis(); //maybe this could replace the interrupt timer?
   scan_time = now - last;
   Serial.printf("scan timer: %dms\n", scan_time);
 
@@ -1192,4 +1216,8 @@ void loop()
      Serial.printf("DeviceToken:%s, State:Btn:%d,Fader:%d,Angle:%d,ProbeInserted:%d,CircuitProbed:%d,Post1:%d,Post2:%d, Protocol:%s, Batt:%d, TrialRunning:%d, TimeLeft_sec:%d, TrialPts:%d, TotalTrialForce:%0.2f, Time_us:%d\n", TOKEN.c_str(), buttonPushState, faderValue, angleValue, probeStartState, probeGoalState, OP180_1_State, OP180_2_State, PROTOCOL_ID, StickCP2.Power.getBatteryVoltage(), trialRunning, timeLeft, ptsCollected, cumForce, usecCount);
   }
   // Serial.printf("resetBtnState:%d BtnB:%d\n", resetBtnState, StickCP2.BtnB.isPressed());
+  // adding a manual restart method
+  if (StickCP2.BtnA.isPressed() && StickCP2.Power.getKeyState() == 1){
+    ESP.restart();
+  }
 }
