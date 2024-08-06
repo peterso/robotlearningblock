@@ -1156,24 +1156,16 @@ void setup()
 
   // Read values from non-volatile memory
   myPrefs.begin("task-board", true); // defines the namespace used to enable persistent memory writes, second parameter must be false
-  // check existence and read stored values into run-time vars
-  // bool keysExist = myPrefs.isKey("trialCounter");
-  // if (!keysExist){
-  //   Serial.printf("creating key-value pairs in NVM...");
-  //   myPrefs.end();                        //close namespace
-  //   myPrefs.begin("task-board", false);   //re-open namespace in RW_MODE (2nd arg is false)
-  //   myPrefs.putUInt("trialCounter", 0);   //assign default value
-  //   myPrefs.putUInt("humanAttempts", 0);   //assign default value
-  //   myPrefs.end();                        //close namespace
-  //   Serial.printf("done\n");
-  //   myPrefs.begin("task-board", true);    //open namespace in RO_MODE (2nd arg is true)
-  // }
   Serial.printf("reading values from NVM into run-time memory...");
   trialCounter = myPrefs.getUInt("trialCounter", 0);           //assign run-time var from NVM
   humanAttempts = myPrefs.getUInt("humanAttempts", 0);         //assign run-time var from NVM
   Serial.printf("trialCounter:%d, humanTrialsCount:%d\n", trialCounter, humanAttempts);
   myPrefs.end();                        //close namespace
   Serial.printf("done\n");
+  if (StickCP2.BtnB.isPressed()){
+    Serial.printf("clearing NVM key-pair values.\n");
+    myPrefs.clear();
+  }
 
   StickCP2.Display.fillScreen(BLACK); // clear screen
 }
