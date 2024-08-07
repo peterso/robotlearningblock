@@ -413,14 +413,13 @@ void home_screen() {
   }
   StickCP2.Display.setCursor(5, 25);
   StickCP2.Display.setTextSize(1);
-  // StickCP2.Display.printf("T1:%0.1f T2:%0.1f T3:%0.1f T4:%0.1f T5:%0.1f TT:%0.1f\n", (float)TS_button / 1000.0, (float)TS_fader / 1000.0, (float)TS_probeGoal / 1000.0, (float)TS_angle / 1000.0, (float)TS_cableWrapProbeStow / 1000.0, (float)trialTime / 1000.0);
   StickCP2.Display.printf("%0.1f %0.1f %0.1f %0.1f %0.1f %0.1f\n", (float)TS_button / 1000.0, (float)TS_fader / 1000.0, (float)TS_probeGoal / 1000.0, (float)TS_angle / 1000.0, (float)TS_cableWrapProbeStow / 1000.0, (float)TS_finalTrialTime / 1000.0);
-  StickCP2.Display.printf("Smart Task Board");
+  StickCP2.Display.printf(" Smart Task Board");
   StickCP2.Display.printf(" v%s \n", FW_VERSION);
   StickCP2.Display.printf(" Wifi On:%d Status:%d Batt:%0.1fV Lvl:%d\n", wifiEnabled, WiFi.status(), (float)StickCP2.Power.getBatteryVoltage() / 1000, (int)StickCP2.Power.getBatteryLevel());
   StickCP2.Display.printf(" Token: %s\n", TOKEN.c_str());
   StickCP2.Display.printf(" PROTOCOL:%s\n", PROTOCOL_ID);
-  StickCP2.Display.printf(" Trials Attempted:%d Human Attempts:%d\n", trialCounter, humanAttempts);
+  StickCP2.Display.printf(" Total Attempts:%d Human Attempts:%d\n", trialCounter, humanAttempts);
   StickCP2.Display.printf(" Points:%d Interaction:%0.2f\n", ptsCollected, cumForce);
   StickCP2.Display.printf(" Trial Time (secs):\n");
   StickCP2.Display.setTextSize(3);
@@ -484,11 +483,8 @@ void screen4() {
   StickCP2.Display.drawCircle(160, 10, 10, WHITE);
   StickCP2.Display.setCursor(5, 22); // column, row
   StickCP2.Display.setTextSize(1);
-  StickCP2.Display.printf("T1:%0.1f T2:%0.1f T3:%0.1f T4:%0.1f T5:%0.1f TT:%0.1f\n", (float)TS_button / 1000.0, (float)TS_fader / 1000.0, (float)TS_probeGoal / 1000.0, (float)TS_angle / 1000.0, (float)TS_cableWrapProbeStow / 1000.0, (float)trialTime / 1000.0);
-
-  StickCP2.Display.printf("\n ");
-  // StickCP2.Display.printf("Subtask:2/6\n ");
-  StickCP2.Display.printf("Move Slider to align arrows\n ");
+  StickCP2.Display.printf("%0.1f %0.1f %0.1f %0.1f %0.1f %0.1f\n", (float)TS_button / 1000.0, (float)TS_fader / 1000.0, (float)TS_probeGoal / 1000.0, (float)TS_angle / 1000.0, (float)TS_cableWrapProbeStow / 1000.0, (float)trialTime / 1000.0);
+  StickCP2.Display.printf("Move Slider to align arrows\n");
   StickCP2.Display.printf(" Trial Time (secs):\n");
   StickCP2.Display.setTextSize(3);
   StickCP2.Display.printf("%0.2f\n ", (float)trialTime / 1000.0);
