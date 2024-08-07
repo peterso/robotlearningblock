@@ -43,7 +43,7 @@
 int verbose = 0;  // set to 1 to enable serial output, default 0
 
 //////// TASK BOARD SPECIFIC SETTINGS /////////
-const String TOKEN = "task_board_2000";                // Endpoint token - you get (or specify) it during device provisioning
+const String TOKEN = "task_board_dev";                // Endpoint token - you get (or specify) it during device provisioning
 const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";  // Application version - you specify it during device provisioning
 // const String APP_VERSION = "bvhkhrtbhnjc0btkj7r0-v0";    // Application version - you specify it during device provisioning FOR DEVELOPMENT ONLY
 const String FW_VERSION = "1.1.0";  // Firmware Version for OTA management
@@ -488,7 +488,6 @@ void screen4() {
   StickCP2.Display.printf(" Trial Time (secs):\n");
   StickCP2.Display.setTextSize(3);
   StickCP2.Display.printf("%0.2f\n ", (float)trialTime / 1000.0);
-  // StickCP2.Display.printf("%02dm:%02ds:%03dms\n", display[0], display[1], display[2]);
   StickCP2.Display.setTextSize(1);
   int x_offset = map(faderValue, 0, 4000, 10, 210);
   int x_goal = map(FADERSP, 0, 4000, 10, 210);
