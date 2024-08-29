@@ -5,8 +5,6 @@
 // Program will not run on board without being connected to the PbHub unit.
 // Default behavior is board will attempt to WiFi network. Hold M5 button during power up to use without WiFi.
 //
-// To connect to wifi you will need to ensure the correct credentials are added to the secrets.h file.
-
 #include <M5StickCPlus2.h>  // https://github.com/m5stack/M5StickC-Plus
 #include <Preferences.h>
 #include <Wire.h>
@@ -300,10 +298,10 @@ void resetCounter() {
   myPrefs.begin("task-board", false);
   myPrefs.clear();  //remove all key-value pairs in namespace
   myPrefs.end();
-  // myPrefs.remove("trialCounter");  // Or remove the counter key only.
-  // trialCounter = myPrefs.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
-  // myPrefs.remove("humanAttempts");  // Or remove the counter key only.
-  // trialCounter = myPrefs.getUInt("humanAttempts", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
+  myPrefs.remove("trialCounter");  // Or remove the counter key only.
+  trialCounter = myPrefs.getUInt("trialCounter", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
+  myPrefs.remove("humanAttempts");  // Or remove the counter key only.
+  humanAttempts = myPrefs.getUInt("humanAttempts", 0);  // Get the counter value in current namesapce, if no key exists then return default value as second parameter
   Serial.printf("Trial Counter value reset!\n");  // Print the counter to Serial Monitor.
 }
 
@@ -875,6 +873,10 @@ void check_trialStartStopLogic() {
   if (trialRunning == 0 && stopBtnState == BUTTON_ON && buttonPushState == BUTTON_ON && StickCP2.BtnB.isPressed() == 1) {
     resetCounter();
     StickCP2.Display.fillScreen(BLACK);  //clear screen
+    StickCP2.Display.setCursor(5, 5);
+    StickCP2.Display.printf("Trial Counters Reset!");
+    delay(500);
+    StickCP2.Display.fillScreen(BLACK);
   }
 
   // Time Limit Check
@@ -1090,8 +1092,13 @@ void setup() {
     //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
     WiFiManager wm;
 
-    //reset settings - wipe credentials for testing
-    // wm.resetSettings(); //leave commented
+    //reset stored wifi settings - wipe credentials for testing
+    if (StickCP2.BtnA.isPressed() && StickCP2.BtnB.isPressed()){ // plug in device while holding down both the BtnA and BtnB to reset the stored wifi settings
+      Serial.printf("Resetting wifi manager stored settings...");
+      wm.resetSettings(); //leave commented
+      Serial.printf("reset done!\n");
+    }
+    
 
     bool res;                                                  // connection status of the wifimanager
     res = wm.autoConnect(unique_ssid.c_str(), TASK_BOARD_PW);  // password protected ap
