@@ -1092,10 +1092,15 @@ void setup() {
     //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
     WiFiManager wm;
 
+    update_inputs();
     //reset stored wifi settings - wipe credentials for testing
-    if (StickCP2.BtnA.isPressed() && StickCP2.BtnB.isPressed()){ // plug in device while holding down both the BtnA and BtnB to reset the stored wifi settings
+    if (porthub.hub_d_read_value_A(HUB_ADDR[0]) == 0 && porthub.hub_d_read_value_B(HUB_ADDR[0]) == 0 ){ // plug in device while holding down both the blue and red buttons to reset the stored wifi settings
       Serial.printf("Resetting wifi manager stored settings...");
       wm.resetSettings(); //leave commented
+      StickCP2.Display.fillScreen(BLACK);
+      StickCP2.Display.setCursor(5,5);
+      StickCP2.Display.printf("Resetting wifi manager stored settings\n Power cycle device!");
+      turn_LED_on();
       Serial.printf("reset done!\n");
     }
     
@@ -1149,15 +1154,10 @@ void loop() {
   // main function refactor
   update_inputs();  //required
   if (trialRunning) {
-    // if (trialProtocolComplete || trialAborted || trialTimeUp) {
-    //   trialRunning = 0;
-    // }
     // update trialTime variable in telemetry while trial is running
     trialTime = now - startTime;  //trial time in milliseconds, if I make this usec then I don't need to change my analysis from before
 
     //time calculation
-    // display[2] = (int)(trialTime % 1000) / 1000;   // milliseconds
-    // display[2] = round((float)trialTime / 10000.0, 3);
     display[1] = (int)((trialTime / 1000) % 60);     // seconds
     display[0] = (int)((trialTime / 1000 / 60) % 3600);  // minutes
   }
