@@ -46,7 +46,7 @@
 int verbose = 0; // set to 1 to enable serial output, default 0
 
 //////// SYSTEM SETTINGS /////////
-const String TOKEN = "task_board_200";                // Endpoint token - you get (or specify) it during device provisioning
+const String TOKEN = "task_board_dev";                // Endpoint token - you get (or specify) it during device provisioning
 const String APP_VERSION = "c1v9jqmgul2l1s47m6bg-v0";    // Application version - you specify it during device provisioning 
 // const String APP_VERSION = "bvhkhrtbhnjc0btkj7r0-v0";    // Application version - you specify it during device provisioning FOR DEVELOPMENT ONLY
 const String FW_VERSION = "1.0.2"; // Firmware Version for OTA management
