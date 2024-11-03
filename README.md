@@ -1,8 +1,12 @@
 # robotlearningblock
 
-Welcome to the project repository for the internet-connected task board for evaluating real-world robot manipulation skills. This project, known as the Digital Robotic Judge, or DR.J, benchmarks asynchronous manipulation performances across the electronic task board network. Side note, the name is borrowed from the legendary basketball star [Julius "DR.J" Irving](https://www.youtube.com/watch?v=bWLXcg-V8FI). Industrial use cases collected through a survey are modelled and incorporated into portable electronic task boards to be solved by the community of robot developers. The best solutions across the network are ranked on a leaderboard and developers are encouraged to share and reproduce solutions of others in the network. If you find this work helpful, please cite our [IEEE-RAM paper](https://ieeexplore.ieee.org/document/10378967). 
+Welcome to the project repository for the Internet-connected task board, an electronic real-world benchmarking platform for evaluating robot manipulation skills. This project, known as the Digital Robotic Judge, or DR.J, contains the complete design of competition task boards used in the [Robothon Grand Challenge](https://www.robothon-grand-challenge.com) and the [euROBIN Manipulation Skill Versatility Challenge](http://sites.google.com/view/eurobin-msvc/home) to remotely assess manipulation performances over the Internet. Trial attempts are recorded by an on-board microcontroller which verifies the execution time and successful task completion through performance circuits. Task board telemetry is automatically published on a [web dashboard](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/0d2f0e4c-6a80-4cf4-a48d-5b25fcb35ac0/50cdf30f-955e-4ccf-b13a-8e1d0281f68a?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad). The best automated robot solutions are collected, ranked, and verified with an expert jury over a video conference call. The top copmetition results are posted on a [leaderboard](http://github.com/peterso/robothon-grand-challenge) and developers are encouraged to share their project code in the form of competition submissions so that others can reproduce and improve on their results.
 
-See the illustration of DR.J crowdsourced robot solution for real-world use cases pipeline below.
+Industrial use cases collected through a survey are incorporated into the design of portable electronic task boards and made available to the community of robot developers to solve and put forth their best automated solution. New task board designs are developed annually. Share your use case to be considered in upcoming designs with the [Use Case Survey Google Form](https://forms.gle/XueGB4yPwioggSN97).
+
+If you find this work helpful, please cite our [IEEE-RAM paper](https://ieeexplore.ieee.org/document/10378967). 
+
+The concept of a crowdsourced robot solution for real-world use cases with the DR.J pipeline is shown below.
 
 ![DRJConcept.png](/assets/images/DRJ-Figure1_RealWorld-LaboratoryDR-J.png)
 
@@ -10,13 +14,15 @@ See the illustration of DR.J crowdsourced robot solution for real-world use case
 
 - IEEE-RAM Paper: [DOI: 10.1109/MRA.2023.3336473](https://doi.org/10.1109/MRA.2023.3336473)
 - 1-min Paper [Highlight Video](https://drive.google.com/file/d/1jVCkPBq7-JO2KUGaQfxDcgK1_qGyWVMT/view) 
+- ERF 2022 Hackathon: Franka Emika Tactile Manipulation Benchmark Challenge: [Highlight Video](https://www.youtube.com/watch?app=desktop&v=eqpV09Kuc_o)
 - Robothon Grand Challenge Competition [automatica website](https://automatica-munich.com/en/munich-i/robothon/)
+- IROS 2024 Competiton: [euROBIN Manipulation Skill Versatility Challenge](http://sites.google.com/view/eurobin-msvc/home)
 - Links to Web Dashboards for Deployed Task Boards:
   - [TBv2023: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/0d2f0e4c-6a80-4cf4-a48d-5b25fcb35ac0/50cdf30f-955e-4ccf-b13a-8e1d0281f68a?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
   - [TBv2023: Subtask Completion Times](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/a8b5be5f-cc23-4724-8f06-3f67f8fef104?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
   - [TBv2021: Teams Single Board View](https://cloud.kaaiot.com/wd-public/c1v9jqmgul2l1s47m6bg/dashboards/dashboard2/931cb10a-3044-49c8-8530-5ce0951e291b?public_id=4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad)
-- Fake Task Board Emulator (Python browser-based) [Replit](https://replit.com/@peterso/TaskBoardSimulator?v=1)
-- Simulated Task Board on Mujoco for Offline Skill Development [Multiverse Github Project](https://github.com/Multiverse-Framework/Multiverse-Objects/tree/main/task_board)
+- Task Board Telmetry Emulator in Python (browser-based) [Replit](https://replit.com/@peterso/TaskBoardSimulator?v=1)
+- Simulated Task Board Model on Mujoco for Offline Skill Development [Multiverse Github Project](https://github.com/Multiverse-Framework/Multiverse-Objects/tree/main/task_board)
 - Request a physical task board [Task Board Request Google Form](https://forms.gle/EJiNF4A1qsrMpy8i6)
 - Propose new tasks for future board designs [Use Case Survey Google Form](https://forms.gle/XueGB4yPwioggSN97)
 
@@ -31,6 +37,8 @@ An example demonstration of the internet-connected task board can be viewed on [
 A screenshot of a web dashboard from the 2021 Robothon Grand Challenge competition.
 
 ![KaaIoTDashboard.png](/assets/images/KaaIoTwithDashboard.png)
+
+Just for fun: The name is borrowed from the legendary basketball star [Julius "DR.J" Irving](https://www.youtube.com/watch?v=bWLXcg-V8FI). 
 
 #### A little history on the smart task board development...
 The internet-connected task board was first featured during the internationl robot manipulation competition, [Robothon Grand Challenge](https://www.robothon-grand-challenge.com) at automatica in 2021. The design of the task board has been expanded and reimplemented for the competition again in 2022 and has also been picked up by the pan-European robotics excellence collaboration project, [euROBIN](https://www.eurobin-project.eu/).
@@ -91,7 +99,7 @@ The microcontroller (orange component) has 3 Buttons and a USB-C charge/programm
 
   • ***Offline/Local Mode:*** Use your task board without the internet by holding Button A down when powering on the device.
 
-  • ***Abort an Active Trial:*** Stop a trial early by holding down the Red Push Button and pressing Button A.
+  • ***Abort an Active Trial:*** Stop an ongoing trial early by holding down the Red Push Button and pressing Button A.
 
 ### Detailed User Instructions 
 
@@ -191,12 +199,13 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 - [M5Stack Docs](https://docs.m5stack.com/)
 - [M5Stack Community Forum](https://community.m5stack.com/category/17/m5-stick-stickc)
 - [KaaIoT Arduino SDK](https://github.com/kaaproject/kaa-arduino-sdk)
+- European Robotics Forum 2022 Franka Emika Tactile Manipulation Benchmark Challenge [Highlight Video](https://www.youtube.com/watch?app=desktop&v=eqpV09Kuc_o)
 - Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2022](https://drive.google.com/file/d/1OdqM9bOmNVIISuL4vuRz019WOS697p_8/view?usp=sharing)
 - Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
 - euROBIN Manipulation Skill Versatility Challenge at IROS 2024 [Competition Website](http://sites.google.com/view/eurobin-msvc/home)
 
 ### Citation 
-If you find this work insightful to your research or you reference data from our Robothon Grand Challenge competitions please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. An early release is available on IEEE [here](https://ieeexplore.ieee.org/document/10378967).
+If you find this work insightful to your research or you reference data from our competitions, please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine as an open-access publication and an early release is available on [IEEE-Xplore](https://ieeexplore.ieee.org/document/10378967).
 
 
 Bibtex:
