@@ -145,6 +145,7 @@ The core design features of the task board microcontroller are:
 - [ ] Look into Device Management with BalenaOS for multiple OTA updates as an alternative to Kaa OTA
 - [ ] Add ROS messages to the task board microcontroller to broadcast task results to robots
 
+Please make a Github pull request with an updated README to add your new feature requests. Task board designs are updated annually and the firmware is continuously improved based on user feedback.
 
 ### Design Goals & System Architecture
 
@@ -163,13 +164,13 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 
 | Design Document       | TBv2021 | TBv2023 |
 |-----------------------|---------|---------|
-| Design BOM            | [TBv2021](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit?usp=sharing)        | TODO        |
-| Assembly Drawing      | [PDF](https://drive.google.com/file/d/1hJSEHZe9U0Q7VRQKNKOsz96tIN9Y0mhF/view?usp=sharing)        | TODO        |
-| CAD Files             | [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)        | TODO        |
-| Assembly Instructions | [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)        | TODO        |
-| Wiring Diagram | [PNG](/assets/images/TaskBoard-5Level-Wiring.png)        | TODO        |
-| 3D Print Files        | ./assets        | TODO        |
-| CNC Files             | ./assets        | TODO        |
+| Design BOM            | [TBv2021](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit?usp=sharing)        | [TBv2023](https://drive.google.com/file/d/1Rnd_u9MT5yowWGOLc9BP8yHH_inwEdMb/view?usp=sharing)        |
+| Assembly Drawing      | [PDF](https://drive.google.com/file/d/1hJSEHZe9U0Q7VRQKNKOsz96tIN9Y0mhF/view?usp=sharing)        | [PDF](https://drive.google.com/file/d/1tS-sQoqfd0bgX27vQssPpRKi-OBj2Tsp/view?usp=sharing)        |
+| CAD Files             | [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)        | [Onshape](https://cad.onshape.com/documents/db5a4ee49311d077447cc358/w/9c0b93db9a3945ee3cde6ada/e/5ab54cca5c27c6df318a9a63?renderMode=0&uiState=6720a79a1d02e666789b5f03)        |
+| Assembly Instructions | [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)        | [PDF](https://drive.google.com/file/d/1LZS_wPafdJOO1Q0lu-8TDO9xGrxpoSBB/view?usp=sharing)        |
+| Wiring Diagram | [PNG](/assets/images/TaskBoard-5Level-Wiring.png)        | [PDF](https://drive.google.com/file/d/1LZS_wPafdJOO1Q0lu-8TDO9xGrxpoSBB/view?usp=sharing)        |
+| 3D Print Files        | ./assets        | ./assets        |
+| CNC Files             | ./assets        | ./assets        |
 
 
 ### Task Board Deployment
@@ -192,6 +193,7 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 - [KaaIoT Arduino SDK](https://github.com/kaaproject/kaa-arduino-sdk)
 - Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2022](https://drive.google.com/file/d/1OdqM9bOmNVIISuL4vuRz019WOS697p_8/view?usp=sharing)
 - Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
+- euROBIN Manipulation Skill Versatility Challenge at IROS 2024 [Competition Website](http://sites.google.com/view/eurobin-msvc/home)
 
 ### Citation 
 If you find this work insightful to your research or you reference data from our Robothon Grand Challenge competitions please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine. An early release is available on IEEE [here](https://ieeexplore.ieee.org/document/10378967).
