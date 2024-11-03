@@ -25,12 +25,13 @@ The location of the *.bin files after compiling will be listed in the Arduino ID
 
 For Linux
 
-Run the following two commands in a shell.
+Run the following two commands in a shell. Note, the second command parameters may need to be adapted depending on the file name during the binary export process and the port the task board controller is bound to.
 
 `$ cd <PATH-to-UNZIPPED-FILES>`
+
 `$ python esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 1500000 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 80m --flash_size detect 0xe000 ./boot_app0.bin 0x1000 ./bootloader_dio_80m.bin 0x10000 ./stopwatch_m5stickcplus.ino.bin 0x8000 ./stopwatch_m5stickcplus.ino.partitions.bin`
 
-Tip: if you get a permission denied on /dev/ttyUSB0 try the following command:
+Tip: On Linux, if you get a permission denied error on /dev/ttyUSB0 try the following command:
 `sudo chmod a+rw /dev/ttyUSB0`
 
 ## Helpful Coding Resources
