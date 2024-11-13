@@ -10,12 +10,6 @@ dependencies:
       service_url: https://api.components.espressif.com/
       type: service
     version: 0.1.17
-  m5stack/m5unified:
-    component_hash: null
-    source:
-      path: /workspaces/robotlearningblock/idf/taskboard/components/m5stack__m5unified
-      type: local
-    version: 0.1.17
 manifest_hash: cd26d0940c4ea58c7219b29b1c3bff4c72042b00a763ce18a1d195c2aa421386
 target: esp32
 version: 1.0.0
