@@ -853,13 +853,8 @@
         const sensorGraphs = new Map();
         const heapGraph = new Map();
 
-        function updateUI(data) {
-            document.getElementById('device-id').textContent = data.device_id;
-            document.getElementById('last-update').textContent = "Last updated: " + formatTimestamp();
-
-            const sensorsGrid = document.getElementById('sensors-grid');
-            sensorsGrid.innerHTML = '';
-
+        function updateSystemStatus(data)
+        {
             // Update micro-ROS status
             if(data.microros)
             {
@@ -872,6 +867,96 @@
                 statusIndicator.classList.toggle('true', data.microros.connected);
                 statusIndicator.classList.toggle('false', !data.microros.connected);
             }
+
+            // Update system status
+            const tasksBody = document.getElementById('tasks-body');
+            tasksBody.innerHTML = '';
+
+            const original_data_tasks = JSON.parse(JSON.stringify(data.tasks));
+            const original_total_time = data.total_time;
+
+            // If this.last_data_tasks exists
+            if (this.last_data_tasks && this.last_total_time) {
+                // Filter out tasks that are not in the new data
+                data.tasks = data.tasks.filter(task => {
+                    return this.last_data_tasks.some(last_task => last_task.name === task.name);
+                });
+
+                data.total_time = data.total_time - this.last_total_time;
+
+                // Calculate CPU usage for each task
+                data.tasks.forEach(task => {
+                    const last_task = this.last_data_tasks.find(last_task => last_task.name === task.name);
+
+                    task.cpu = task.cpu - last_task.cpu;
+                    task.cpu_pc = (task.cpu / data.total_time) * 100;
+                });
+
+                // Sort tasks by CPU usage
+                data.tasks.sort((a, b) => b.cpu_pc - a.cpu_pc);
+
+                // If core is 2147483647, set it to "Any"
+                data.tasks.forEach(task => {
+                    if (task.core === 2147483647) {
+                        task.core = "Any";
+                    }
+                });
+
+                data.tasks.forEach(task => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${task.name}</td>
+                        <td>${task.stack.toLocaleString()} B</td>
+                        <td>${task.cpu_pc.toLocaleString()} %</td>
+                        <td>${task.priority}</td>
+                        <td>${task.core}</td>
+                    `;
+                    tasksBody.appendChild(row);
+                });
+            }
+
+            this.last_data_tasks = original_data_tasks
+            this.last_total_time = original_total_time;
+
+
+            // Handle heap
+            const heapBar = document.getElementById('heap');
+            const freeHeap = data.free_heap;
+
+            // Update heap display with graph
+            heapBar.innerHTML = `
+                <div class="heap-indicator">
+                    <div class="heap-title">Free Heap</div>
+                    <div class="heap-value">${(freeHeap/1024).toFixed(2)} kB</div>
+                    <div class="graph-container">
+                        <canvas class="graph-canvas"></canvas>
+                    </div>
+                </div>
+            `;
+
+            // Rest of your heap graph code remains the same
+            const heapContainer = heapBar.querySelector('.graph-container');
+            let graph = heapGraph.get('heap');
+            if (!graph) {
+                graph = new HeapGraph(heapContainer);
+                heapGraph.set('heap', graph);
+            } else {
+                graph.container = heapContainer;
+                graph.canvas = heapContainer.querySelector('canvas');
+                graph.ctx = graph.canvas.getContext('2d');
+                graph.resizeCanvas();
+            }
+
+            graph.addValue(freeHeap);
+
+        }
+
+        function updateUI(data) {
+            document.getElementById('device-id').textContent = data.device_id;
+            document.getElementById('last-update').textContent = "Last updated: " + formatTimestamp();
+
+            const sensorsGrid = document.getElementById('sensors-grid');
+            sensorsGrid.innerHTML = '';
 
             // Order sensors by object, boolean or number, first are numbers
             data.sensors.sort((a, b) => {
@@ -982,86 +1067,6 @@
                     sensorGraphs.delete(sensorId);
                 }
             }
-
-            const tasksBody = document.getElementById('tasks-body');
-            tasksBody.innerHTML = '';
-
-            const original_data_tasks = JSON.parse(JSON.stringify(data.tasks));
-            const original_total_time = data.total_time;
-
-            // If this.last_data_tasks exists
-            if (this.last_data_tasks && this.last_total_time) {
-                // Filter out tasks that are not in the new data
-                data.tasks = data.tasks.filter(task => {
-                    return this.last_data_tasks.some(last_task => last_task.name === task.name);
-                });
-
-                data.total_time = data.total_time - this.last_total_time;
-
-                // Calculate CPU usage for each task
-                data.tasks.forEach(task => {
-                    const last_task = this.last_data_tasks.find(last_task => last_task.name === task.name);
-
-                    task.cpu = task.cpu - last_task.cpu;
-                    task.cpu_pc = (task.cpu / data.total_time) * 100;
-                });
-
-                // Sort tasks by CPU usage
-                data.tasks.sort((a, b) => b.cpu_pc - a.cpu_pc);
-
-                // If core is 2147483647, set it to "Any"
-                data.tasks.forEach(task => {
-                    if (task.core === 2147483647) {
-                        task.core = "Any";
-                    }
-                });
-
-                data.tasks.forEach(task => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${task.name}</td>
-                        <td>${task.stack.toLocaleString()} B</td>
-                        <td>${task.cpu_pc.toLocaleString()} %</td>
-                        <td>${task.priority}</td>
-                        <td>${task.core}</td>
-                    `;
-                    tasksBody.appendChild(row);
-                });
-            }
-
-            this.last_data_tasks = original_data_tasks
-            this.last_total_time = original_total_time;
-
-
-            // Handle heap
-            const heapBar = document.getElementById('heap');
-            const freeHeap = data.free_heap;
-
-            // Update heap display with graph
-            heapBar.innerHTML = `
-                <div class="heap-indicator">
-                    <div class="heap-title">Free Heap</div>
-                    <div class="heap-value">${(freeHeap/1024).toFixed(2)} kB</div>
-                    <div class="graph-container">
-                        <canvas class="graph-canvas"></canvas>
-                    </div>
-                </div>
-            `;
-
-            // Rest of your heap graph code remains the same
-            const heapContainer = heapBar.querySelector('.graph-container');
-            let graph = heapGraph.get('heap');
-            if (!graph) {
-                graph = new HeapGraph(heapContainer);
-                heapGraph.set('heap', graph);
-            } else {
-                graph.container = heapContainer;
-                graph.canvas = heapContainer.querySelector('canvas');
-                graph.ctx = graph.canvas.getContext('2d');
-                graph.resizeCanvas();
-            }
-
-            graph.addValue(freeHeap);
         }
 
         function updateTaskUI(data)
@@ -1136,6 +1141,23 @@
         async function fetchData() {
             fetchTaskBoardData();
             fetchTaskData();
+            fetchSystemStatus();
+        }
+
+        async function fetchSystemStatus() {
+            try {
+                const url = deviceIP ? "http://" + deviceIP + "/system_status" : '/system_status';
+                const response = await fetchWithTimeout(url);
+                if (!response.ok) {
+                    throw new Error("HTTP error! status: " + response.status);
+                }
+                clearError();
+                const data = await response.json();
+                usingSampleData = false;
+                updateSystemStatus(data);
+            } catch (error) {
+                showError("API Unreachable");
+            }
         }
 
         async function fetchTaskBoardData() {
@@ -1182,7 +1204,7 @@
 
         async function fetchLeaderboard() {
             try {
-                const url = deviceIP ? "http://" + deviceIP + "/logs" : '/logs';
+                const url = deviceIP ? "http://" + deviceIP + "/leaderboard" : '/leaderboard';
                 const response = await fetchWithTimeout(url);
                 if (!response.ok) {
                     throw new Error("HTTP error! status: " + response.status);

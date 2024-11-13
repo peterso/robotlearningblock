@@ -253,7 +253,7 @@ struct TaskBoardDriver_v1 :
             new TaskStepEqual(*get_sensor_by_name("FREE_CABLE"), SensorMeasurement(true)),
         };
 
-        default_main_task_ = new SequentialTask(*main_steps, "Main Task");
+        default_task_ = new SequentialTask(*main_steps, "Default Task");
     }
 
     /**
@@ -265,16 +265,18 @@ struct TaskBoardDriver_v1 :
     }
 
     /**
-     * @brief Gets the main task sequence
-     * @return Reference to the default main task
+     * @brief Gets the default task
+     *
+     * @return Reference to the default task
      */
     Task& get_default_task()
     {
-        return *default_main_task_;
+        return *default_task_;
     }
 
     /**
-     * @brief Gets the precondition task sequence
+     * @brief Gets the precondition task
+     *
      * @return Reference to the default precondition task
      */
     Task& get_default_task_precondition()
@@ -284,6 +286,7 @@ struct TaskBoardDriver_v1 :
 
     /**
      * @brief Gets the board's unique identifier
+     *
      * @return Reference to unique ID string
      */
     const std::string& get_unique_id() const override
@@ -293,6 +296,7 @@ struct TaskBoardDriver_v1 :
 
     /**
      * @brief Updates all sensor readings
+     *
      * @details Updates M5Stack hardware state, IMU readings, and all sensor values
      */
     void update() override
@@ -313,6 +317,7 @@ struct TaskBoardDriver_v1 :
 
     /**
      * @brief Gets the total number of sensors
+     *
      * @return Count of all sensors (physical and virtual)
      */
     uint32_t get_sensor_count() const
@@ -322,7 +327,9 @@ struct TaskBoardDriver_v1 :
 
     /**
      * @brief Gets a sensor by index
+     *
      * @param index Zero-based index of sensor to retrieve
+     *
      * @return Pointer to sensor reader interface, or nullptr if index invalid
      */
     const SensorReader* get_sensor(
@@ -340,7 +347,9 @@ struct TaskBoardDriver_v1 :
 
     /**
      * @brief Gets a sensor by name
+     *
      * @param sensor_name Name identifier of sensor to retrieve
+     *
      * @return Pointer to sensor reader interface, or nullptr if name not found
      */
     const SensorReader* get_sensor_by_name(
@@ -364,9 +373,9 @@ private:
 
     HardwareLowLevelController& hardware_low_level_controller_;    ///< Reference to hardware interface
     std::vector<Sensor*> sensors_;                                 ///< List of all board sensors
-    std::string unique_id_ = "TaskBoard_v1";                      ///< Board identifier
+    std::string unique_id_ = "TaskBoard_v1";                       ///< Board identifier
 
-    Task* default_main_task_;              ///< Default main task sequence
-    Task* default_precondition_task_;      ///< Default precondition task sequence
+    Task* default_task_;                    ///< Default main task sequence
+    Task* default_precondition_task_;       ///< Default precondition task sequence
 
 };

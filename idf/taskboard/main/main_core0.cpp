@@ -120,7 +120,8 @@ extern "C" void app_main(
     const SensorReader& BLUE_BUTTON = *task_board_driver.get_sensor_by_name("BLUE_BUTTON");
 
     // Check if system should start in local mode (Button A pressed during boot)
-    if (BUTTON_A.read() == true)
+    const bool start_local_mode = BUTTON_A.read() == true;
+    if (start_local_mode)
     {
         ESP_LOGI("app_main", "Starting in local mode");
         screen_controller.print("-> Starting in local mode");
@@ -220,7 +221,10 @@ extern "C" void app_main(
             // Update screen with cancellation message
             screen_controller.clear();
             screen_controller.print("-> Task cancelled");
-            screen_controller.print("-> IP: " + micro_ros_controller.get_agent_ip());
+            if (!start_local_mode)
+            {
+                screen_controller.print("-> IP: " + micro_ros_controller.get_agent_ip());
+            }
             screen_controller.print("-> Press button B for default task");
 
             // Notify Micro-ROS task if it's waiting for a goal

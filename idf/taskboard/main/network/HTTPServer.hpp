@@ -84,6 +84,13 @@ struct HTTPServer
             .user_ctx = this
         };
 
+        httpd_uri_t get_system_status_uri = {
+            .uri      = "/system_status",
+            .method   = HTTP_GET,
+            .handler  = HTTPServer::system_status,
+            .user_ctx = this
+        };
+
         httpd_uri_t get_task_status_uri = {
             .uri      = "/task_status",
             .method   = HTTP_GET,
@@ -92,7 +99,7 @@ struct HTTPServer
         };
 
         httpd_uri_t get_logs_uri = {
-            .uri      = "/logs",
+            .uri      = "/leaderboard",
             .method   = HTTP_GET,
             .handler  = HTTPServer::logs_handler,
             .user_ctx = this
@@ -136,6 +143,7 @@ struct HTTPServer
         httpd_register_uri_handler(server_, &get_index_uri);
         httpd_register_uri_handler(server_, &get_taskboard_status_uri);
         httpd_register_uri_handler(server_, &get_task_status_uri);
+        httpd_register_uri_handler(server_, &get_system_status_uri);
         httpd_register_uri_handler(server_, &get_logs_uri);
         httpd_register_uri_handler(server_, &options_uri);
         httpd_register_uri_handler(server_, &post_microros_uri);
@@ -231,6 +239,31 @@ private:
                 json_handler.add_sensor_measure(sensor->name(), sensor->read());
             }
         }
+
+        char* status = json_handler.get_json_string();
+
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_send(req, status, strlen(status));
+
+        return ESP_OK;
+    }
+
+    /**
+     * @brief Handler for get system status
+     *
+     * @param req HTTP request
+     */
+    static esp_err_t system_status(
+            httpd_req_t* req)
+    {
+        // Add CORS headers
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");  // Allow all origins
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
+
+        // Generate JSON response
+        HTTPServer* server = (HTTPServer*)req->user_ctx;
+        JSONHandler json_handler(server->task_board_driver_.get_unique_id());
 
         // Add microros info
         json_handler.add_microros_info(server->micro_ros_controller_);

@@ -101,7 +101,7 @@ private:
         return SensorMeasurement(value);
     }
 
-    const uint32_t filter_size_;    ///< Number of samples to use in moving average filter
+    const uint32_t filter_size_;                                         ///< Number of samples to use in moving average filter
     mutable std::deque<SensorMeasurement::AnalogType> analog_filter_;    ///< Circular buffer for filter samples
 
 };
