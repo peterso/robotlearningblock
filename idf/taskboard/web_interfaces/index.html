@@ -1062,11 +1062,10 @@
             }
 
             graph.addValue(freeHeap);
+        }
 
-            // const heapBar = document.getElementById('heap');
-            // const freeHeap = data.free_heap;
-            // heapBar.textContent = `Free Heap: ${(freeHeap/1024).toFixed(2)} kB`;
-
+        function updateTaskUI(data)
+        {
             const dashboardDiv = document.querySelector('.dashboard');
             if (data.current_task) {
                 prevTaskStatus = true;
@@ -1135,8 +1134,13 @@
         }
 
         async function fetchData() {
+            fetchTaskBoardData();
+            fetchTaskData();
+        }
+
+        async function fetchTaskBoardData() {
             try {
-                const url = deviceIP ? "http://" + deviceIP + "/api" : '/api';
+                const url = deviceIP ? "http://" + deviceIP + "/taskboard_status" : '/taskboard_status';
                 const response = await fetchWithTimeout(url);
                 if (!response.ok) {
                     throw new Error("HTTP error! status: " + response.status);
@@ -1145,6 +1149,22 @@
                 const data = await response.json();
                 usingSampleData = false;
                 updateUI(data);
+            } catch (error) {
+                showError("API Unreachable");
+            }
+        }
+
+        async function fetchTaskData() {
+            try {
+                const url = deviceIP ? "http://" + deviceIP + "/task_status" : '/task_status';
+                const response = await fetchWithTimeout(url);
+                if (!response.ok) {
+                    throw new Error("HTTP error! status: " + response.status);
+                }
+                clearError();
+                const data = await response.json();
+                usingSampleData = false;
+                updateTaskUI(data);
             } catch (error) {
                 showError("API Unreachable");
             }

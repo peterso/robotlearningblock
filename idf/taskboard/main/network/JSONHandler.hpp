@@ -24,7 +24,10 @@ struct JSONHandler
         root_ = cJSON_CreateObject();
 
         cJSON_AddStringToObject(root_, "device_id", unique_id.c_str());
+    }
 
+    void add_freertos_summary()
+    {
         // Add freertos task list with stack consumption
         cJSON * tasks = cJSON_CreateArray();
         cJSON_AddItemToObject(root_, "tasks", tasks);
@@ -50,14 +53,17 @@ struct JSONHandler
         // Add free heap
         cJSON_AddNumberToObject(root_, "free_heap", esp_get_free_heap_size());
         cJSON_AddNumberToObject(root_, "total_time", total_run_time);
-
-        // Add sensors array
-        sensors_ = cJSON_CreateArray();
-        cJSON_AddItemToObject(root_, "sensors", sensors_);
     }
 
     void add_sensor_measure(const std::string& id, const SensorMeasurement& measurement)
     {
+        if (sensors_ == nullptr)
+        {
+            // Add sensors array
+            sensors_ = cJSON_CreateArray();
+            cJSON_AddItemToObject(root_, "sensors", sensors_);
+        }
+
         cJSON * sensor = cJSON_CreateObject();
         cJSON_AddStringToObject(sensor, "id", id.c_str());
 
@@ -139,6 +145,6 @@ struct JSONHandler
 
 private:
     cJSON * root_;
-    cJSON * sensors_;
+    cJSON * sensors_ = nullptr;
     char * json_string_ = nullptr;
 };
