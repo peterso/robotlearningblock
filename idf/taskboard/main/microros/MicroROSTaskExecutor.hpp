@@ -18,7 +18,7 @@
  */
 struct MicroROSTaskExecutor
 {
-    const char * TAG = "MicroROSTaskExecutor";      ///< Logging tag
+    const char* TAG = "MicroROSTaskExecutor";       ///< Logging tag
 
     /**
      * @brief Constructs a new MicroROSTaskExecutor object
@@ -27,18 +27,23 @@ struct MicroROSTaskExecutor
      * @param microros_controller Reference to the micro-ROS controller
      * @param task_board_driver Reference to the task board driver
      */
-    MicroROSTaskExecutor(TaskExecutor & task_executor, MicroROSController & microros_controller, TaskBoardDriver & task_board_driver)
-    : task_executor_(task_executor)
-    , microros_controller_(microros_controller)
-    , task_board_driver_(task_board_driver)
+    MicroROSTaskExecutor(
+            TaskExecutor& task_executor,
+            MicroROSController& microros_controller,
+            TaskBoardDriver& task_board_driver)
+        : task_executor_(task_executor)
+        , microros_controller_(microros_controller)
+        , task_board_driver_(task_board_driver)
     {
-        microros_controller_.set_handle_goal([this](rclc_action_goal_handle_t * goal_handle){
-            return this->handle_goal(goal_handle);
-        });
+        microros_controller_.set_handle_goal([this](rclc_action_goal_handle_t* goal_handle)
+                {
+                    return this->handle_goal(goal_handle);
+                });
 
-        microros_controller_.set_handle_cancel([this](rclc_action_goal_handle_t * goal_handle){
-            return this->handle_cancel(goal_handle);
-        });
+        microros_controller_.set_handle_cancel([this](rclc_action_goal_handle_t* goal_handle)
+                {
+                    return this->handle_cancel(goal_handle);
+                });
     }
 
     /**
@@ -54,7 +59,8 @@ struct MicroROSTaskExecutor
         if (nullptr != micro_ros_task_ && micro_ros_task_->done())
         {
             MicroROSTypes::ResultMessage result_message(*micro_ros_task_);
-            microros_controller_.publish_goal_result(result_message, micro_ros_task_->goal_handle(), GOAL_STATE_SUCCEEDED);
+            microros_controller_.publish_goal_result(result_message,
+                    micro_ros_task_->goal_handle(), GOAL_STATE_SUCCEEDED);
             delete micro_ros_task_;
             micro_ros_task_ = nullptr;
         }
@@ -70,7 +76,8 @@ struct MicroROSTaskExecutor
             ESP_LOGI(TAG, "Cancelled task");
 
             MicroROSTypes::ResultMessage result_message;
-            microros_controller_.publish_goal_result(result_message, micro_ros_task_->goal_handle(), GOAL_STATE_CANCELED);
+            microros_controller_.publish_goal_result(result_message, micro_ros_task_->goal_handle(),
+                    GOAL_STATE_CANCELED);
             delete micro_ros_task_;
             micro_ros_task_ = nullptr;
         }
@@ -97,11 +104,13 @@ private:
      *
      * @return Return Code
      */
-    rcl_ret_t handle_goal(rclc_action_goal_handle_t * goal_handle)
+    rcl_ret_t handle_goal(
+            rclc_action_goal_handle_t* goal_handle)
     {
         if (task_executor_.running())
         {
             ESP_LOGI(TAG, "Task already running, rejecting goal");
+
             return RCL_RET_ACTION_GOAL_REJECTED;
         }
 
@@ -112,6 +121,7 @@ private:
             ESP_LOGI(TAG, "Invalid task, rejecting goal");
             delete micro_ros_task_;
             micro_ros_task_ = nullptr;
+
             return RCL_RET_ACTION_GOAL_REJECTED;
         }
 
@@ -127,14 +137,16 @@ private:
      *
      * @return True if the goal was successfully cancelled
      */
-    bool handle_cancel(rclc_action_goal_handle_t * goal_handle)
+    bool handle_cancel(
+            rclc_action_goal_handle_t* goal_handle)
     {
         if (nullptr != micro_ros_task_ && micro_ros_task_->goal_handle() == goal_handle)
         {
             task_executor_.cancel_task();
 
             MicroROSTypes::ResultMessage result_message;
-            microros_controller_.publish_goal_result(result_message, micro_ros_task_->goal_handle(), GOAL_STATE_CANCELED);
+            microros_controller_.publish_goal_result(result_message, micro_ros_task_->goal_handle(),
+                    GOAL_STATE_CANCELED);
 
             delete micro_ros_task_;
             micro_ros_task_ = nullptr;
@@ -146,13 +158,15 @@ private:
     /**
      * @brief Periodic operation for publishing feedback on a running task from ROS 2
      */
-    TimedOperation publish_feedback_ = {250, [this](){
-        this->publish_feedback();
-    }};
+    TimedOperation publish_feedback_ = {250, [this]()
+                                        {
+                                            this->publish_feedback();
+                                        }
+    };
 
-    MicroROSTask * micro_ros_task_ = nullptr;       ///< Pointer to the current micro-ROS task
+    MicroROSTask* micro_ros_task_ = nullptr;        ///< Pointer to the current micro-ROS task
 
-    TaskExecutor & task_executor_;                  ///< Reference to the task executor
-    MicroROSController & microros_controller_;      ///< Reference to the micro-ROS controller
-    TaskBoardDriver & task_board_driver_;           ///< Reference to the task board driver
+    TaskExecutor& task_executor_;                   ///< Reference to the task executor
+    MicroROSController& microros_controller_;       ///< Reference to the micro-ROS controller
+    TaskBoardDriver& task_board_driver_;            ///< Reference to the task board driver
 };

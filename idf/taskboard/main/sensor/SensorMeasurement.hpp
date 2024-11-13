@@ -47,30 +47,36 @@ struct SensorMeasurement
      *
      * @param boolean_value Boolean value to store
      */
-    SensorMeasurement(const BooleanType& boolean_value)
-    : type_(Type::BOOLEAN),
-      boolean_value(boolean_value)
-    {}
+    SensorMeasurement(
+            const BooleanType& boolean_value)
+        : type_(Type::BOOLEAN)
+        , boolean_value(boolean_value)
+    {
+    }
 
     /**
      * @brief Constructs a new analog SensorMeasurement
      *
      * @param analog_value Float value to store
      */
-    SensorMeasurement(const AnalogType& analog_value)
-    : type_(Type::ANALOG),
-      analog_value(analog_value)
-    {}
+    SensorMeasurement(
+            const AnalogType& analog_value)
+        : type_(Type::ANALOG)
+        , analog_value(analog_value)
+    {
+    }
 
     /**
      * @brief Constructs a new vector SensorMeasurement
      *
      * @param vector3 3D vector value to store
      */
-    SensorMeasurement(const Vector3Type& vector3)
-    : type_(Type::VECTOR3),
-      vector3(vector3)
-    {}
+    SensorMeasurement(
+            const Vector3Type& vector3)
+        : type_(Type::VECTOR3)
+        , vector3(vector3)
+    {
+    }
 
     /**
      * @brief Gets the type of measurement stored
@@ -87,7 +93,7 @@ struct SensorMeasurement
      */
     std::string to_string() const
     {
-        switch(type_)
+        switch (type_)
         {
             case Type::BOOLEAN:
                 return boolean_value ? "true" : "false";
@@ -96,7 +102,8 @@ struct SensorMeasurement
                 return std::to_string(analog_value);
                 break;
             case Type::VECTOR3:
-                return "[" + std::to_string(vector3.x) + ", " + std::to_string(vector3.y) + ", " + std::to_string(vector3.z) + "]";
+                return "[" + std::to_string(vector3.x) + ", " + std::to_string(vector3.y) + ", " + std::to_string(
+                    vector3.z) + "]";
                 break;
         }
 
@@ -112,13 +119,16 @@ struct SensorMeasurement
      *
      * @return true if measurements are equal within tolerance, false otherwise
      */
-    static bool equal(const SensorMeasurement & a, const SensorMeasurement & b, const float tolerance = 0.00)
+    static bool equal(
+            const SensorMeasurement& a,
+            const SensorMeasurement& b,
+            const float tolerance = 0.00)
     {
         bool ret = false;
 
         if (a.type_ == b.type_)
         {
-            switch(a.type_)
+            switch (a.type_)
             {
                 case Type::BOOLEAN:
                     ret = a.boolean_value == b.boolean_value;
@@ -128,8 +138,8 @@ struct SensorMeasurement
                     break;
                 case Type::VECTOR3:
                     ret = compare_floats(a.vector3.x, b.vector3.x, tolerance) &&
-                          compare_floats(a.vector3.y, b.vector3.y, tolerance) &&
-                          compare_floats(a.vector3.z, b.vector3.z, tolerance);
+                            compare_floats(a.vector3.y, b.vector3.y, tolerance) &&
+                            compare_floats(a.vector3.z, b.vector3.z, tolerance);
                     break;
             }
         }
@@ -145,13 +155,15 @@ struct SensorMeasurement
      *
      * @return true if a >= b component-wise, false otherwise
      */
-    static bool greater_or_equal(const SensorMeasurement & a, const SensorMeasurement & b)
+    static bool greater_or_equal(
+            const SensorMeasurement& a,
+            const SensorMeasurement& b)
     {
         bool ret = false;
 
         if (a.type_ == b.type_)
         {
-            switch(a.type_)
+            switch (a.type_)
             {
                 case Type::BOOLEAN:
                     ret = a.boolean_value == b.boolean_value;
@@ -161,8 +173,8 @@ struct SensorMeasurement
                     break;
                 case Type::VECTOR3:
                     ret = a.vector3.x >= b.vector3.x &&
-                          a.vector3.y >= b.vector3.y &&
-                          a.vector3.z >= b.vector3.z;
+                            a.vector3.y >= b.vector3.y &&
+                            a.vector3.z >= b.vector3.z;
                     break;
             }
         }
@@ -177,7 +189,8 @@ struct SensorMeasurement
      *
      * @return true if measurement is boolean and equals b, false otherwise
      */
-    bool operator==(const bool & b) const
+    bool operator ==(
+            const bool& b) const
     {
         return type_ == Type::BOOLEAN && boolean_value == b;
     }
@@ -213,6 +226,7 @@ struct SensorMeasurement
     }
 
 private:
+
     /**
      * @brief Compares two float values within tolerance
      * @param a First float to compare
@@ -220,7 +234,10 @@ private:
      * @param tolerance Maximum allowed difference
      * @return true if |a-b| < tolerance, false otherwise
      */
-    static bool compare_floats(float a, float b, float tolerance)
+    static bool compare_floats(
+            float a,
+            float b,
+            float tolerance)
     {
         return std::abs(a - b) < tolerance;
     }

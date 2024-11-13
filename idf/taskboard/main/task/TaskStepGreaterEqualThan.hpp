@@ -16,7 +16,8 @@
  * @details Performs comparison to verify if the current sensor measurement meets or exceeds
  *          a specified threshold value
  */
-struct TaskStepGreaterEqualThan : public TaskStep
+struct TaskStepGreaterEqualThan :
+    public TaskStep
 {
     /**
      * @brief Constructs a new TaskStepGreaterEqualThan object
@@ -24,9 +25,11 @@ struct TaskStepGreaterEqualThan : public TaskStep
      * @param sensor Reference to the sensor to monitor
      * @param expected_value Minimum threshold value that sensor should meet or exceed
      */
-    TaskStepGreaterEqualThan(const SensorReader & sensor, const SensorMeasurement & expected_value)
-    : TaskStep(sensor)
-    , expected_value_(expected_value)
+    TaskStepGreaterEqualThan(
+            const SensorReader& sensor,
+            const SensorMeasurement& expected_value)
+        : TaskStep(sensor)
+        , expected_value_(expected_value)
     {
         TaskStep::type_ = Type::GREATER_OR_EQUAL;
     }

@@ -13,7 +13,8 @@
  *
  * @brief Implementation of Task interface that executes steps in sequential order
  */
-struct SequentialTask : public Task
+struct SequentialTask :
+    public Task
 {
     /**
      * @brief Constructs a new SequentialTask object
@@ -22,9 +23,13 @@ struct SequentialTask : public Task
      * @param task_name Name identifier for the task
      * @param first_task_init_timer If true, timer starts only after first step completion
      */
-    SequentialTask(const std::vector<const TaskStep*> & steps, const std::string & task_name = "",  bool first_task_init_timer = true)
-    : Task(steps, task_name, first_task_init_timer)
-    {}
+    SequentialTask(
+            const std::vector<const TaskStep*>& steps,
+            const std::string& task_name = "",
+            bool first_task_init_timer = true)
+        : Task(steps, task_name, first_task_init_timer)
+    {
+    }
 
     /**
      * @brief Virtual destructor
@@ -60,12 +65,15 @@ struct SequentialTask : public Task
      *
      * @return true if values were retrieved, false if not
      */
-    bool get_clue(SensorMeasurement & current_value, SensorMeasurement & target_value) const override
+    bool get_clue(
+            SensorMeasurement& current_value,
+            SensorMeasurement& target_value) const override
     {
         bool ret = false;
+
         if (current_step_ < steps_.size())
         {
-            const SensorMeasurement & sensor_value = steps_[current_step_]->sensor().read();
+            const SensorMeasurement& sensor_value = steps_[current_step_]->sensor().read();
             current_value = sensor_value;
             target_value = steps_[current_step_]->expected_value();
             ret = true;
@@ -112,7 +120,8 @@ struct SequentialTask : public Task
      *
      * @return true if specified step is done (previous to current), false otherwise
      */
-    bool step_done(size_t step) const override
+    bool step_done(
+            size_t step) const override
     {
         return step < current_step_;
     }

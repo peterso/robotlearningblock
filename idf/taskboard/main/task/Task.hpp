@@ -26,12 +26,16 @@ struct Task
      * @param task_name Name identifier for the task
      * @param first_task_init_timer If true, timer starts only after first step completion
      */
-    Task(const std::vector<const TaskStep*> & steps, const std::string & task_name = "", bool first_task_init_timer = true)
-    : steps_(steps)
-    , init_time_(esp_timer_get_time())
-    , task_name_(task_name)
-    , first_task_init_timer_(first_task_init_timer)
-    {}
+    Task(
+            const std::vector<const TaskStep*>& steps,
+            const std::string& task_name = "",
+            bool first_task_init_timer = true)
+        : steps_(steps)
+        , init_time_(esp_timer_get_time())
+        , task_name_(task_name)
+        , first_task_init_timer_(first_task_init_timer)
+    {
+    }
 
     /**
      * @brief Checks if the entire task has been completed
@@ -47,7 +51,8 @@ struct Task
      *
      * @return true if the specified step is done, false otherwise
      */
-    virtual bool step_done(size_t step) const = 0;
+    virtual bool step_done(
+            size_t step) const = 0;
 
     /**
      * @brief Gets a text hint or instruction for the next step
@@ -64,7 +69,9 @@ struct Task
      *
      * @return true if analog feedback is available, false otherwise
      */
-    virtual bool get_clue(SensorMeasurement & current_value, SensorMeasurement & target_value) const = 0;
+    virtual bool get_clue(
+            SensorMeasurement& current_value,
+            SensorMeasurement& target_value) const = 0;
 
     /**
      * @brief Resets the task to its initial state
@@ -105,7 +112,7 @@ struct Task
         ret = previous_done_state_ != done_state;
         previous_done_state_ = done_state;
 
-        if(!done_state)
+        if (!done_state)
         {
             task_time_ = esp_timer_get_time();
         }
@@ -134,7 +141,7 @@ struct Task
      *
      * @return Reference to task name string
      */
-    const std::string & name() const
+    const std::string& name() const
     {
         return task_name_;
     }
@@ -146,7 +153,8 @@ struct Task
      *
      * @return Const reference to the TaskStep object
      */
-    const TaskStep & step(size_t step) const
+    const TaskStep& step(
+            size_t step) const
     {
         return *steps_[step];
     }
@@ -166,24 +174,28 @@ struct Task
      *
      * @param is_human_task true for human operation, false for robot
      */
-    void set_human_task(bool is_human_task)
+    void set_human_task(
+            bool is_human_task)
     {
         is_human_task_ = is_human_task;
     }
 
 protected:
+
     /**
      * @brief Sets the task name
      * @param task_name New name for the task
      */
-    void set_task_name(const std::string & task_name)
+    void set_task_name(
+            const std::string& task_name)
     {
         task_name_ = task_name;
     }
 
-    const std::vector<const TaskStep*> & steps_;    ///< Sequence of steps in the task
+    const std::vector<const TaskStep*>& steps_;     ///< Sequence of steps in the task
 
 private:
+
     int64_t init_time_ = 0;                         ///< Task start time in microseconds
     int64_t task_time_;                             ///< Current task time in microseconds
     bool previous_done_state_ = false;              ///< Previous task completion state

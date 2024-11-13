@@ -34,9 +34,10 @@
  *
  * @return TaskBoardDriver& The task board implementation
  */
-TaskBoardDriver & get_task_board_implementation(HardwareLowLevelController & hardware_low_level_controller)
+TaskBoardDriver& get_task_board_implementation(
+        HardwareLowLevelController& hardware_low_level_controller)
 {
-    TaskBoardDriver_v1 * task_board_driver = new TaskBoardDriver_v1(hardware_low_level_controller);
+    TaskBoardDriver_v1* task_board_driver = new TaskBoardDriver_v1(hardware_low_level_controller);
 
     return *task_board_driver;
 }
@@ -44,7 +45,8 @@ TaskBoardDriver & get_task_board_implementation(HardwareLowLevelController & har
 /**
  * @brief System entry point
  */
-extern "C" void app_main(void)
+extern "C" void app_main(
+        void)
 {
     // ------------------------
     // System Initialization
@@ -53,7 +55,9 @@ extern "C" void app_main(void)
     // Initialize Non-Volatile Storage (NVS) flash memory
     // If no free pages are available or a new version is found, erase and reinitialize
     esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ESP_ERROR_CHECK(nvs_flash_init());
     }
@@ -74,13 +78,14 @@ extern "C" void app_main(void)
     // Initialize hardware controllers and drivers
     PbHubController pb_hub_controller;
     HardwareLowLevelController hardware_low_level_controller = {pb_hub_controller, M5};
-    TaskBoardDriver & task_board_driver = get_task_board_implementation(hardware_low_level_controller);
+    TaskBoardDriver& task_board_driver = get_task_board_implementation(hardware_low_level_controller);
     ScreenController screen_controller(hardware_low_level_controller);
     NonVolatileStorage non_volatile_storage(task_board_driver.get_unique_id());
 
     // Wait for PbHubController to initialize
     // This can take variable time after boot
-    while (!pb_hub_controller.check_status()) {
+    while (!pb_hub_controller.check_status())
+    {
         ESP_LOGI("app_main", "Waiting for PbHubController to start");
         vTaskDelay(pdMS_TO_TICKS(10));
     }
@@ -108,25 +113,28 @@ extern "C" void app_main(void)
     task_board_driver.update();
 
     // Get references to buttons
-    const SensorReader & BUTTON_A = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_A");
-    const SensorReader & BUTTON_B = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_B");
-    const SensorReader & BUTTON_PWR = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_PWR");
-    const SensorReader & RED_BUTTON = *task_board_driver.get_sensor_by_name("RED_BUTTON");
-    const SensorReader & BLUE_BUTTON = *task_board_driver.get_sensor_by_name("BLUE_BUTTON");
+    const SensorReader& BUTTON_A = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_A");
+    const SensorReader& BUTTON_B = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_B");
+    const SensorReader& BUTTON_PWR = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_PWR");
+    const SensorReader& RED_BUTTON = *task_board_driver.get_sensor_by_name("RED_BUTTON");
+    const SensorReader& BLUE_BUTTON = *task_board_driver.get_sensor_by_name("BLUE_BUTTON");
 
     // Check if system should start in local mode (Button A pressed during boot)
-    if(BUTTON_A.read() == true) {
+    if (BUTTON_A.read() == true)
+    {
         ESP_LOGI("app_main", "Starting in local mode");
         screen_controller.print("-> Starting in local mode");
     }
     // Otherwise, initialize WiFi provisioning
-    else {
+    else
+    {
         ESP_LOGI("app_main", "Initializing provisioning");
 
         // Check if WiFi credentials should be reset (Red + Blue buttons pressed)
         bool reset_provisioning = RED_BUTTON.read() == true && BLUE_BUTTON.read() == true;
 
-        if (reset_provisioning) {
+        if (reset_provisioning)
+        {
             screen_controller.print("-> Resetting WiFi credentials");
         }
 
@@ -134,10 +142,13 @@ extern "C" void app_main(void)
         WifiManager wifi_manager(http_server, "Roboton Task Board", reset_provisioning);
 
         // Display appropriate connection instructions based on provisioning state
-        if (wifi_manager.is_provisioned()) {
+        if (wifi_manager.is_provisioned())
+        {
             screen_controller.print("-> Trying " + wifi_manager.get_ssid());
             screen_controller.print("-> Reset with red and blue buttons");
-        } else {
+        }
+        else
+        {
             screen_controller.print("-> Connect to \"" + wifi_manager.get_provisioning_ssid() + "\"");
             screen_controller.print("-> Navigate to 192.168.4.1");
         }
@@ -161,7 +172,8 @@ extern "C" void app_main(void)
     MicroROSMainArgs micro_ros_args = {micro_ros_controller, task_board_driver, task_executor};
     TaskHandle_t microros_task_handle;
     constexpr uint8_t MICROROS_THREAD_CORE_AFFINITY = 1;
-    xTaskCreatePinnedToCore(microros_main, "microros", 20000, &micro_ros_args, 4, &microros_task_handle, MICROROS_THREAD_CORE_AFFINITY);
+    xTaskCreatePinnedToCore(microros_main, "microros", 20000, &micro_ros_args, 4, &microros_task_handle,
+            MICROROS_THREAD_CORE_AFFINITY);
 
     // Wait for tasks
     screen_controller.print("-> Waiting tasks to start");
@@ -170,19 +182,21 @@ extern "C" void app_main(void)
     // ------------------------
     // Main Control Loop
     // ------------------------
-    while(true) {
+    while (true)
+    {
 
         // Update board sensor readings
         task_board_driver.update();
 
         // Handle Button B press - Start/Restart default task
-        if(BUTTON_B.read() == true) {
+        if (BUTTON_B.read() == true)
+        {
             ESP_LOGI("app_main", "Button B pressed, launching default task");
             task_executor.cancel_task();
 
             // Get and configure default task
-            Task & main_task = task_board_driver.get_default_task();
-            Task & precondition_main_task = task_board_driver.get_default_task_precondition();
+            Task& main_task = task_board_driver.get_default_task();
+            Task& precondition_main_task = task_board_driver.get_default_task_precondition();
 
             // Restart default tasks
             main_task.restart();
@@ -198,7 +212,8 @@ extern "C" void app_main(void)
             vTaskDelay(pdMS_TO_TICKS(100));
         }
         // Handle Button A press - Cancel current task
-        else if(BUTTON_A.read() == true) {
+        else if (BUTTON_A.read() == true)
+        {
             ESP_LOGI("app_main", "Button A pressed, cancelling current task");
             task_executor.cancel_task();
 
@@ -209,7 +224,8 @@ extern "C" void app_main(void)
             screen_controller.print("-> Press button B for default task");
 
             // Notify Micro-ROS task if it's waiting for a goal
-            if (microros_task_handle != nullptr) {
+            if (microros_task_handle != nullptr)
+            {
                 xTaskNotify(microros_task_handle, MANUALLY_CANCELLED_TASK, eSetBits);
             }
 

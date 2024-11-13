@@ -21,7 +21,7 @@ struct TaskStep
 {
     /**
      * @enum Type
-     * 
+     *
      * @brief Defines the comparison types for sensor value evaluation
      */
     enum class Type
@@ -37,9 +37,11 @@ struct TaskStep
      *
      * @param sensor Reference to the sensor that will be monitored
      */
-    TaskStep(const SensorReader & sensor)
-    : sensor_(sensor)
-    {}
+    TaskStep(
+            const SensorReader& sensor)
+        : sensor_(sensor)
+    {
+    }
 
     /**
      * @brief Virtual destructor
@@ -65,7 +67,7 @@ struct TaskStep
      *
      * @return Reference to the sensor being monitored
      */
-    const SensorReader & sensor() const
+    const SensorReader& sensor() const
     {
         return sensor_;
     }
@@ -75,12 +77,13 @@ struct TaskStep
      *
      * @return Reference to the step's comparison type
      */
-    const Type & type() const
+    const Type& type() const
     {
         return type_;
     }
 
 protected:
-    const SensorReader & sensor_;    ///< Reference to the monitored sensor
+
+    const SensorReader& sensor_;     ///< Reference to the monitored sensor
     Type type_ = Type::UNKNOWN;      ///< Type of comparison for success evaluation
 };

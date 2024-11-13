@@ -14,7 +14,8 @@
  *
  * @brief Implementation of TaskStep that checks for equality against a dynamically generated random value
  */
-struct TaskStepEqualToRandom : public TaskStepEqual
+struct TaskStepEqualToRandom :
+    public TaskStepEqual
 {
     /**
      * @brief Constructs a new TaskStepEqualToRandom object
@@ -22,9 +23,11 @@ struct TaskStepEqualToRandom : public TaskStepEqual
      * @param sensor Reference to the sensor to monitor
      * @param tolerance Allowable deviation from random value (default: 0.00)
      */
-    TaskStepEqualToRandom(const SensorReader & sensor, const float tolerance = 0.00)
-    : TaskStepEqual(sensor, SensorMeasurement(true), tolerance)
-    , random_expected_value_(false)
+    TaskStepEqualToRandom(
+            const SensorReader& sensor,
+            const float tolerance = 0.00)
+        : TaskStepEqual(sensor, SensorMeasurement(true), tolerance)
+        , random_expected_value_(false)
     {
         TaskStep::type_ = Type::EQUAL_TO_RANDOM;
 

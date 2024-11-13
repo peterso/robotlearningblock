@@ -11,16 +11,18 @@
 
 struct TaskExecutor
 {
-    const char * TAG = "TaskExecutor";
+    const char* TAG = "TaskExecutor";
 
     static constexpr int64_t ANALOG_UPDATE_INTERVAL = 5e4; // 100 ms
 
-    using FinishTaskCallback = std::function<void(const Task &)>;
+    using FinishTaskCallback = std::function<void (const Task&)>;
 
-    TaskExecutor(ScreenController & screen_controller, NonVolatileStorage & non_volatile_storage)
-    : screen_controller_(screen_controller)
-    , non_volatile_storage_(non_volatile_storage)
-    , last_analog_update_(esp_timer_get_time())
+    TaskExecutor(
+            ScreenController& screen_controller,
+            NonVolatileStorage& non_volatile_storage)
+        : screen_controller_(screen_controller)
+        , non_volatile_storage_(non_volatile_storage)
+        , last_analog_update_(esp_timer_get_time())
     {
     }
 
@@ -30,7 +32,7 @@ struct TaskExecutor
         if (precondition_ != nullptr && current_task_ != nullptr)
         {
             // If update returns true, the task has changed, update the screen
-            if(precondition_->update() || force_screen_update_)
+            if (precondition_->update() || force_screen_update_)
             {
                 screen_controller_.print_task_status(
                     "Configure " + current_task_->name(),
@@ -48,7 +50,7 @@ struct TaskExecutor
             update_analog_clue(*precondition_);
 
             // Get rid of precondition if done
-            if(precondition_->done())
+            if (precondition_->done())
             {
                 precondition_ = nullptr;
                 force_screen_update_ = true;
@@ -60,7 +62,7 @@ struct TaskExecutor
         if (precondition_ == nullptr && current_task_ != nullptr)
         {
             // If update returns true, the task has changed, update the screen
-            if(current_task_->update() || force_screen_update_)
+            if (current_task_->update() || force_screen_update_)
             {
                 screen_controller_.print_task_status(
                     current_task_->name(),
@@ -80,13 +82,13 @@ struct TaskExecutor
             screen_controller_.print_task_status_time(current_task_->elapsed_time() / 1e6);
 
             // Check if task is done
-            if(current_task_->done())
+            if (current_task_->done())
             {
                 // Store register
                 non_volatile_storage_.add_new_register(*current_task_, current_task_->is_human_task());
 
                 // Call finish task callbacks
-                for(auto & callback : finish_task_callbacks_)
+                for (auto& callback : finish_task_callbacks_)
                 {
                     callback(*current_task_);
                 }
@@ -96,15 +98,20 @@ struct TaskExecutor
         }
     }
 
-    bool run_task(Task & task)
+    bool run_task(
+            Task& task)
     {
         ESP_LOGI(TAG, "Running task: %s", task.name().c_str());
+
         return run_task_inner(task, nullptr);
     }
 
-    bool run_task(Task & task, Task & precondition)
+    bool run_task(
+            Task& task,
+            Task& precondition)
     {
         ESP_LOGI(TAG, "Running task: %s with precondition", task.name().c_str());
+
         return run_task_inner(task, &precondition);
     }
 
@@ -121,42 +128,51 @@ struct TaskExecutor
         return current_task_ != nullptr;
     }
 
-    const Task * current_task() const
+    const Task* current_task() const
     {
         return current_task_;
     }
 
-    const Task * current_precondition() const
+    const Task* current_precondition() const
     {
         return precondition_;
     }
 
-    void add_finish_task_callback(FinishTaskCallback callback)
+    void add_finish_task_callback(
+            FinishTaskCallback callback)
     {
         finish_task_callbacks_.push_back(callback);
     }
+
 private:
 
-    void update_analog_clue(Task & task)
+    void update_analog_clue(
+            Task& task)
     {
         // Check if analog clue is available
-        if(last_analog_update_ + ANALOG_UPDATE_INTERVAL < esp_timer_get_time())
+        if (last_analog_update_ + ANALOG_UPDATE_INTERVAL < esp_timer_get_time())
         {
             SensorMeasurement current_measurement(false);
             SensorMeasurement target_measurement(false);
-            if(task.get_clue(current_measurement, target_measurement) &&
-                current_measurement.get_type() == SensorMeasurement::Type::ANALOG &&
-                target_measurement.get_type() == SensorMeasurement::Type::ANALOG)
+
+            if (task.get_clue(current_measurement, target_measurement) &&
+                    current_measurement.get_type() == SensorMeasurement::Type::ANALOG &&
+                    target_measurement.get_type() == SensorMeasurement::Type::ANALOG)
             {
-                screen_controller_.print_task_clue_analog(current_measurement.get_analog(), target_measurement.get_analog());
+                screen_controller_.print_task_clue_analog(
+                    current_measurement.get_analog(), target_measurement.get_analog());
             }
+
             last_analog_update_ = esp_timer_get_time();
         }
     }
 
-    bool run_task_inner(Task & task, Task * precondition)
+    bool run_task_inner(
+            Task& task,
+            Task* precondition)
     {
         bool ret = false;
+
         if (current_task_ == nullptr && !task.done())
         {
             current_task_ = &task;
@@ -180,14 +196,15 @@ private:
             force_screen_update_ = true;
             ret = true;
         }
+
         return ret;
     }
 
-    ScreenController & screen_controller_;
-    NonVolatileStorage & non_volatile_storage_;
+    ScreenController& screen_controller_;
+    NonVolatileStorage& non_volatile_storage_;
 
-    Task * current_task_ = nullptr;
-    Task * precondition_ = nullptr;
+    Task* current_task_ = nullptr;
+    Task* precondition_ = nullptr;
     bool force_screen_update_ = false;
     int64_t last_analog_update_ = 0;
 

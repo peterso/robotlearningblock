@@ -29,10 +29,12 @@ struct SensorUpdater
      *
      * @param read_function Callback function that reads the sensor value
      */
-    SensorUpdater(ReadFunction read_function)
+    SensorUpdater(
+            ReadFunction read_function)
         : read_function_(read_function)
         , last_value_(0.0f)
-    {}
+    {
+    }
 
     /**
      * @brief Updates the stored sensor value using the read function
@@ -43,6 +45,7 @@ struct SensorUpdater
     }
 
 protected:
+
     ReadFunction read_function_;        ///< Callback function to read sensor value
     SensorMeasurement last_value_;      ///< Last read sensor measurement
 };
@@ -62,7 +65,7 @@ struct SensorReader
      *
      * @return Reference to sensor name string
      */
-    virtual const std::string & name() const = 0;
+    virtual const std::string& name() const = 0;
 
     /**
      * @brief Gets the current sensor measurement
@@ -77,7 +80,9 @@ struct SensorReader
  *
  * @brief Concrete implementation of a sensor combining update and read capabilities
  */
-struct Sensor : public SensorUpdater, public SensorReader
+struct Sensor :
+    public SensorUpdater,
+    public SensorReader
 {
     /**
      * @brief Constructs a new Sensor object
@@ -85,10 +90,13 @@ struct Sensor : public SensorUpdater, public SensorReader
      * @param name Identifier for the sensor
      * @param read_function Callback function that reads the sensor value
      */
-    Sensor(const std::string & name, ReadFunction read_function)
+    Sensor(
+            const std::string& name,
+            ReadFunction read_function)
         : SensorUpdater(read_function)
         , name_(name)
-    {}
+    {
+    }
 
     /**
      * @brief Virtual destructor
@@ -100,7 +108,7 @@ struct Sensor : public SensorUpdater, public SensorReader
      *
      * @return Reference to sensor name string
      */
-    const std::string & name() const override
+    const std::string& name() const override
     {
         return name_;
     }
@@ -116,5 +124,6 @@ struct Sensor : public SensorUpdater, public SensorReader
     }
 
 protected:
+
     std::string name_;    ///< Sensor identifier
 };

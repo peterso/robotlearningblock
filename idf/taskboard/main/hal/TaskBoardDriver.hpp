@@ -33,7 +33,7 @@ struct TaskBoardDriver
      *
      * @return Reference to the board's unique ID string
      */
-    virtual const std::string & get_unique_id() const = 0;
+    virtual const std::string& get_unique_id() const = 0;
 
     /**
      * @brief Gets the total number of sensors available on the board
@@ -49,7 +49,8 @@ struct TaskBoardDriver
      *
      * @return Pointer to the sensor reader interface, or nullptr if index is invalid
      */
-    virtual const SensorReader* get_sensor(const size_t & index) const = 0;
+    virtual const SensorReader* get_sensor(
+            const size_t& index) const = 0;
 
     /**
      * @brief Gets a sensor by its name
@@ -58,19 +59,20 @@ struct TaskBoardDriver
      *
      * @return Pointer to the sensor reader interface, or nullptr if name not found
      */
-    virtual const SensorReader * get_sensor_by_name(const std::string & sensor_name) const = 0;
+    virtual const SensorReader* get_sensor_by_name(
+            const std::string& sensor_name) const = 0;
 
     /**
      * @brief Gets the default task configured for this board
      *
      * @return Reference to the default task
      */
-    virtual Task & get_default_task() = 0;
+    virtual Task& get_default_task() = 0;
 
     /**
      * @brief Gets the precondition task that must be satisfied before the default task
      *
      * @return Reference to the precondition task
      */
-    virtual Task & get_default_task_precondition() = 0;
+    virtual Task& get_default_task_precondition() = 0;
 };

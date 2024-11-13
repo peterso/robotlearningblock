@@ -17,7 +17,8 @@
  * @details Performs equality comparison between sensor measurement and expected value,
  *          allowing for an optional tolerance to account for sensor noise or precision limits
  */
-struct TaskStepEqual : public TaskStep
+struct TaskStepEqual :
+    public TaskStep
 {
     /**
      * @brief Constructs a new TaskStepEqual object
@@ -26,10 +27,13 @@ struct TaskStepEqual : public TaskStep
      * @param expected_value Target value that sensor should match
      * @param tolerance Allowable deviation from expected value (default: 0.00)
      */
-    TaskStepEqual(const SensorReader & sensor, const SensorMeasurement & expected_value, const float tolerance = 0.00)
-    : TaskStep(sensor)
-    , expected_value_(expected_value)
-    , tolerance_(tolerance)
+    TaskStepEqual(
+            const SensorReader& sensor,
+            const SensorMeasurement& expected_value,
+            const float tolerance = 0.00)
+        : TaskStep(sensor)
+        , expected_value_(expected_value)
+        , tolerance_(tolerance)
     {
         TaskStep::type_ = Type::EQUAL;
     }

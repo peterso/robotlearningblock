@@ -24,7 +24,7 @@
  */
 struct HTTPServer
 {
-    const char *TAG = "HTTPServer";     ///< Logging tag
+    const char* TAG = "HTTPServer";     ///< Logging tag
 
     /**
      * @brief Constructs a new HTTPServer object
@@ -34,18 +34,23 @@ struct HTTPServer
      * @param micro_ros_controller Reference to the micro-ROS controller
      * @param non_volatile_storage Reference to the non-volatile storage
      */
-    HTTPServer(TaskBoardDriver & task_board_driver, TaskExecutor & task_executor, MicroROSController & micro_ros_controller, NonVolatileStorage & non_volatile_storage)
-    : task_board_driver_(task_board_driver)
-    , task_executor_(task_executor)
-    , micro_ros_controller_(micro_ros_controller)
-    , non_volatile_storage_(non_volatile_storage)
+    HTTPServer(
+            TaskBoardDriver& task_board_driver,
+            TaskExecutor& task_executor,
+            MicroROSController& micro_ros_controller,
+            NonVolatileStorage& non_volatile_storage)
+        : task_board_driver_(task_board_driver)
+        , task_executor_(task_executor)
+        , micro_ros_controller_(micro_ros_controller)
+        , non_volatile_storage_(non_volatile_storage)
     {
         httpd_config_t config = HTTPD_DEFAULT_CONFIG();
         config.lru_purge_enable = true;
         config.core_id = 1;
         config.max_uri_handlers = 20;
 
-        if (httpd_start(&server_, &config) != ESP_OK) {
+        if (httpd_start(&server_, &config) != ESP_OK)
+        {
             ESP_LOGE(TAG, "Failed to start file server!");
         }
     }
@@ -55,7 +60,7 @@ struct HTTPServer
      *
      * @return HTTP server handle
      */
-    httpd_handle_t & get_handle()
+    httpd_handle_t& get_handle()
     {
         return server_;
     }
@@ -148,7 +153,8 @@ private:
      *
      * @param req HTTP request
      */
-    static esp_err_t index_handler(httpd_req_t *req)
+    static esp_err_t index_handler(
+            httpd_req_t* req)
     {
         // Add CORS headers
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");  // Allow all origins
@@ -166,7 +172,8 @@ private:
      *
      * @param req HTTP request
      */
-    static esp_err_t logs_handler(httpd_req_t *req)
+    static esp_err_t logs_handler(
+            httpd_req_t* req)
     {
         // Add CORS headers
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");  // Allow all origins
@@ -174,16 +181,18 @@ private:
         httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
 
         // Open file for reading
-        FILE * file = fopen(NonVolatileStorage::log_file().c_str(), "r");
+        FILE* file = fopen(NonVolatileStorage::log_file().c_str(), "r");
 
         if (file == NULL)
         {
             httpd_resp_send(req, "No logs available", -1);
+
             return ESP_OK;
         }
 
         // Read file and send it
         char buffer[128];
+
         while (fgets(buffer, sizeof(buffer), file) != NULL)
         {
             httpd_resp_send_chunk(req, buffer, strlen(buffer));
@@ -201,20 +210,21 @@ private:
      *
      * @param req HTTP request
      */
-    static esp_err_t taskboard_status(httpd_req_t *req)
+    static esp_err_t taskboard_status(
+            httpd_req_t* req)
     {
-         // Add CORS headers
+        // Add CORS headers
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");  // Allow all origins
         httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
 
         // Generate JSON response
-        HTTPServer * server = (HTTPServer *)req->user_ctx;
+        HTTPServer* server = (HTTPServer*)req->user_ctx;
         JSONHandler json_handler(server->task_board_driver_.get_unique_id());
 
         for (size_t i = 0; i < server->task_board_driver_.get_sensor_count(); i++)
         {
-            const SensorReader * sensor = server->task_board_driver_.get_sensor(i);
+            const SensorReader* sensor = server->task_board_driver_.get_sensor(i);
 
             if (sensor != nullptr)
             {
@@ -228,7 +238,7 @@ private:
         // Add FreeRTOS status
         json_handler.add_freertos_summary();
 
-        char * status = json_handler.get_json_string();
+        char* status = json_handler.get_json_string();
 
         httpd_resp_set_type(req, "application/json");
         httpd_resp_send(req, status, strlen(status));
@@ -241,25 +251,27 @@ private:
      *
      * @param req HTTP request
      */
-    static esp_err_t task_status(httpd_req_t *req)
+    static esp_err_t task_status(
+            httpd_req_t* req)
     {
-         // Add CORS headers
+        // Add CORS headers
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");  // Allow all origins
         httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
 
         // Generate JSON response
-        HTTPServer * server = (HTTPServer *)req->user_ctx;
+        HTTPServer* server = (HTTPServer*)req->user_ctx;
         JSONHandler json_handler(server->task_board_driver_.get_unique_id());
 
         // Add task status if there is a task
-        const Task * current_task = server->task_executor_.current_task();
+        const Task* current_task = server->task_executor_.current_task();
+
         if (nullptr != current_task)
         {
             json_handler.add_task_status(*current_task);
         }
 
-        char * status = json_handler.get_json_string();
+        char* status = json_handler.get_json_string();
 
         httpd_resp_set_type(req, "application/json");
         httpd_resp_send(req, status, strlen(status));
@@ -272,7 +284,8 @@ private:
      *
      * @param req HTTP request
      */
-    static esp_err_t options_handler(httpd_req_t *req)
+    static esp_err_t options_handler(
+            httpd_req_t* req)
     {
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
         httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -291,7 +304,8 @@ private:
      *
      * @param req HTTP request
      */
-    static esp_err_t microros_handler(httpd_req_t *req)
+    static esp_err_t microros_handler(
+            httpd_req_t* req)
     {
         // Set CORS headers consistently
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
@@ -299,7 +313,7 @@ private:
         httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type, Content-Length");
         httpd_resp_set_type(req, "application/json");  // Add content type header
 
-        HTTPServer * server = (HTTPServer *)req->user_ctx;
+        HTTPServer* server = (HTTPServer*)req->user_ctx;
 
         char content[100];
         const size_t recv_size = req->content_len < sizeof(content) ? req->content_len : sizeof(content);
@@ -311,26 +325,29 @@ private:
             {
                 httpd_resp_send_408(req);
             }
+
             return ESP_FAIL;
         }
 
-        cJSON * json = cJSON_Parse(content);
+        cJSON* json = cJSON_Parse(content);
 
         if (json == NULL)
         {
             const char* error_response = "{\"error\": \"Invalid JSON\"}";
             httpd_resp_send(req, error_response, strlen(error_response));
+
             return ESP_OK;
         }
 
-        cJSON * agent_ip = cJSON_GetObjectItem(json, "agent_ip");
-        cJSON * agent_port = cJSON_GetObjectItem(json, "agent_port");
+        cJSON* agent_ip = cJSON_GetObjectItem(json, "agent_ip");
+        cJSON* agent_port = cJSON_GetObjectItem(json, "agent_port");
 
         if (agent_ip == NULL || agent_port == NULL)
         {
             const char* error_response = "{\"error\": \"Missing required fields\"}";
             httpd_resp_send(req, error_response, strlen(error_response));
             cJSON_Delete(json);
+
             return ESP_OK;
         }
 
@@ -339,6 +356,7 @@ private:
             const char* error_response = "{\"error\": \"Invalid field types\"}";
             httpd_resp_send(req, error_response, strlen(error_response));
             cJSON_Delete(json);
+
             return ESP_OK;
         }
 
@@ -349,6 +367,7 @@ private:
         httpd_resp_send(req, success_response, strlen(success_response));
 
         cJSON_Delete(json);
+
         return ESP_OK;
     }
 
@@ -357,7 +376,8 @@ private:
      *
      * @param req HTTP request
      */
-    static esp_err_t clear_logs(httpd_req_t *req)
+    static esp_err_t clear_logs(
+            httpd_req_t* req)
     {
         // Set CORS headers consistently
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
@@ -365,10 +385,10 @@ private:
         httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type, Content-Length");
         httpd_resp_set_type(req, "application/json");  // Add content type header
 
-        HTTPServer * server = (HTTPServer *)req->user_ctx;
+        HTTPServer* server = (HTTPServer*)req->user_ctx;
         server->non_volatile_storage_.clear_log();
 
-       httpd_resp_send(req, "{\"status\": \"success\"}", -1);
+        httpd_resp_send(req, "{\"status\": \"success\"}", -1);
 
         return ESP_OK;
     }
@@ -376,8 +396,8 @@ private:
 private:
 
     httpd_handle_t server_;                         ///< HTTP server handle
-    TaskBoardDriver & task_board_driver_;           ///< Reference to the task board driver
-    TaskExecutor & task_executor_;                  ///< Reference to the task executor
-    MicroROSController & micro_ros_controller_;     ///< Reference to the micro-ROS controller
-    NonVolatileStorage & non_volatile_storage_;     ///< Reference to the non-volatile storage
+    TaskBoardDriver& task_board_driver_;            ///< Reference to the task board driver
+    TaskExecutor& task_executor_;                   ///< Reference to the task executor
+    MicroROSController& micro_ros_controller_;      ///< Reference to the micro-ROS controller
+    NonVolatileStorage& non_volatile_storage_;      ///< Reference to the non-volatile storage
 };

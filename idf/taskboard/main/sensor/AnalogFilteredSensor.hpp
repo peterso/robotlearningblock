@@ -19,7 +19,8 @@
  *          for analog sensor values. The filter is only applied to analog
  *          measurements; other measurement types pass through unmodified.
  */
-struct AnalogFilteredSensor : public Sensor
+struct AnalogFilteredSensor :
+    public Sensor
 {
     /**
      * @brief Constructs a new AnalogFilteredSensor object
@@ -28,7 +29,10 @@ struct AnalogFilteredSensor : public Sensor
      * @param filter_size Number of samples to use in moving average filter
      * @param read_function Callback function that reads the sensor value
      */
-    AnalogFilteredSensor(const std::string & name, uint32_t filter_size, ReadFunction read_function)
+    AnalogFilteredSensor(
+            const std::string& name,
+            uint32_t filter_size,
+            ReadFunction read_function)
         : Sensor(name, read_function)
         , filter_size_(filter_size)
     {
@@ -59,6 +63,7 @@ struct AnalogFilteredSensor : public Sensor
         if (filter_size_ > 1 && value.get_type() == SensorMeasurement::Type::ANALOG)
         {
             analog_filter_.push_back(value.get_analog());
+
             if (analog_filter_.size() > filter_size_)
             {
                 analog_filter_.pop_front();
@@ -85,7 +90,7 @@ private:
 
         if (!analog_filter_.empty())
         {
-            for (const auto & v : analog_filter_)
+            for (const auto& v : analog_filter_)
             {
                 value += v;
             }

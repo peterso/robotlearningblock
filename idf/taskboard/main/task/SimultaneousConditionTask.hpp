@@ -17,7 +17,8 @@
  *          this task requires all conditions to be satisfied at the same time. If any condition
  *          becomes unsatisfied, that step becomes incomplete again.
  */
-struct SimultaneousConditionTask : public ParallelTask
+struct SimultaneousConditionTask :
+    public ParallelTask
 {
     /**
      * @brief Constructs a new SimultaneousConditionTask object
@@ -25,8 +26,10 @@ struct SimultaneousConditionTask : public ParallelTask
      * @param steps Vector of pointers to TaskStep objects defining the simultaneous conditions
      * @param task_name Name identifier for the task
      */
-    SimultaneousConditionTask(const std::vector<const TaskStep*> & steps, const std::string & task_name = "")
-    : ParallelTask(steps, task_name)
+    SimultaneousConditionTask(
+            const std::vector<const TaskStep*>& steps,
+            const std::string& task_name = "")
+        : ParallelTask(steps, task_name)
     {
         steps_status_.resize(steps.size(), false);
     }

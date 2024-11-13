@@ -14,7 +14,8 @@
  * @brief Implementation of Task interface that executes steps in parallel,
  * that means that each step can be achieved independently from the others.
  */
-struct ParallelTask : public Task
+struct ParallelTask :
+    public Task
 {
     /**
      * @brief Constructs a new ParallelTask object
@@ -22,8 +23,10 @@ struct ParallelTask : public Task
      * @param steps Vector of pointers to TaskStep objects defining the parallel steps
      * @param task_name Name identifier for the task
      */
-    ParallelTask(const std::vector<const TaskStep*> & steps, const std::string & task_name = "")
-    : Task(steps, task_name, false)
+    ParallelTask(
+            const std::vector<const TaskStep*>& steps,
+            const std::string& task_name = "")
+        : Task(steps, task_name, false)
     {
         steps_status_.resize(steps.size(), false);
     }
@@ -37,7 +40,7 @@ struct ParallelTask : public Task
     {
         std::string clue = "";
 
-        if(done())
+        if (done())
         {
             clue = "Task Done";
         }
@@ -67,7 +70,9 @@ struct ParallelTask : public Task
      *
      * @return true if values were retrieved, false otherwise
      */
-    bool get_clue(SensorMeasurement & current_value, SensorMeasurement & target_value) const override
+    bool get_clue(
+            SensorMeasurement& current_value,
+            SensorMeasurement& target_value) const override
     {
         bool ret = false;
 
@@ -75,7 +80,7 @@ struct ParallelTask : public Task
         {
             if (!steps_status_[i])
             {
-                const SensorMeasurement & sensor_value = steps_[i]->sensor().read();
+                const SensorMeasurement& sensor_value = steps_[i]->sensor().read();
                 current_value = sensor_value;
                 target_value = steps_[i]->expected_value();
                 ret = true;
@@ -132,7 +137,8 @@ struct ParallelTask : public Task
      *
      * @return true if specified step is done, false otherwise
      */
-    bool step_done(size_t step) const override
+    bool step_done(
+            size_t step) const override
     {
         return steps_status_[step];
     }
