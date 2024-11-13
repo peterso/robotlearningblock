@@ -1,0 +1,50 @@
+name: Roboton Task Board Firmware CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch or tag to test"
+        required: true
+        type: string
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - 'idf/**'
+
+jobs:
+    Build:
+        name: Build
+        runs-on: ubuntu-latest
+        container:
+          image: espressif/idf:release-v5.3
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+            with:
+              submodules: recursive
+              clean: true
+              path: repo
+              ref: ${{ inputs.branch }}
+
+          - name: Install dependencies
+            shell: bash
+            run: |
+              source /opt/esp/idf/export.sh
+              pip3 install catkin_pkg lark-parser colcon-common-extensions empy==3.3.4
+
+          - name: Build firmware
+            shell: bash
+            run: |
+              source /opt/esp/idf/export.sh
+              cd repo/idf/taskboard
+              idf.py build
+
+          - name: Upload firmware
+            uses: actions/upload-artifact@v4
+            with:
+              name: taskboard_firmware
+              path: repo/idf/taskboard/build/taskboard.bin
+

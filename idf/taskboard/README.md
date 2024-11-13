@@ -4,7 +4,7 @@ A flexible and extensible firmware for Roboton Task Board.
 
 Noteworthy features:
 
-- Configurable task execution system with sequential, parallel, and simultaneous task patterns
+- Configurable task execution system with configurable patterns
 - Modular sensor monitoring framework based on M5Stack
 - REST API and Web Interface for remote control
 - ROS 2 integration with custom message types
@@ -241,13 +241,13 @@ Roboton Task Board firmware assummes that every **TaskBoardDriver** implementati
 
 By means of these buttons, the following basic configuration actions can be performed:
 
-| Action | Trigger |
-| ------ | ------- |
+| Action                            | Trigger                                                           |
+| --------------------------------- | ----------------------------------------------------------------- |
 | Reset Wifi and start provisioning | Press `RED_BUTTON` and `BLUE_BUTTON` at the same time during boot |
-| Start in local mode (No Wifi) | Press `BUTTON_A` during boot |
-| Start default task | Press `BUTTON_B` |
-| Start default task (human mode) | Press `BUTTON_B` and `BUTTON_PWR` at the same time |
-| Cancel current task | Press `BUTTON_A` |
+| Start in local mode (No Wifi)     | Press `BUTTON_A` during boot                                      |
+| Start default task                | Press `BUTTON_B`                                                  |
+| Start default task (human mode)   | Press `BUTTON_B` and `BUTTON_PWR` at the same time                |
+| Cancel current task               | Press `BUTTON_A`                                                  |
 
 ## To Do
 
