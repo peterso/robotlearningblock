@@ -13,6 +13,7 @@
 #include <hal/HardwareLowLevelController.hpp>
 #include <microros/MicroROS.hpp>
 #include <microros/MicroROSController.hpp>
+#include <version.hpp>
 
 #include <esp_log.h>
 #include <nvs_flash.h>
@@ -96,6 +97,11 @@ extern "C" void app_main(
 
     // Initialize task executor
     TaskExecutor task_executor(screen_controller, non_volatile_storage);
+
+    // Intialize screen
+    screen_controller.clear();
+    screen_controller.print("FW: " + FW_VERSION_STRING);
+    vTaskDelay(pdMS_TO_TICKS(1000));
     screen_controller.clear();
     screen_controller.print("-> TaskExecutor started");
 

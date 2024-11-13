@@ -14,6 +14,7 @@ Noteworthy features:
 
 - [Roboton Task Board Firmware](#roboton-task-board-firmware)
   - [Table of Contents](#table-of-contents)
+  - [Build firmware](#build-firmware)
   - [Data Model Overview](#data-model-overview)
     - [SensorMeasurement](#sensormeasurement)
     - [Sensor](#sensor)
@@ -37,6 +38,32 @@ Noteworthy features:
   - [Common actions](#common-actions)
   - [To Do](#to-do)
 
+## Build firmware
+
+The Roboton Task Board firmware is built on top of the ESP-IDF framework.
+
+The easiest way to get started is to use the ESP-IDF Docker image:
+
+```bash
+# Enter ESP-IDF Docker image
+docker run -it --rm -v /dev:/dev --privileged espressif/idf:release-v5.3
+
+# Install dependencies inside the Docker container
+pip3 install catkin_pkg lark-parser colcon-common-extensions empy==3.3.4
+
+# Clone the repository
+git clone https://github.com/peterso/robotlearningblock
+
+# Initialize the submodules
+cd robotlearningblock
+git submodule update --init --recursive
+
+# Change to the project directory
+cd /robotlearningblock/idf/taskboard
+
+# Configure the project
+idf.py build flash monitor
+```
 
 ## Data Model Overview
 
@@ -183,14 +210,14 @@ The Roboton Task Board firmware exposes two primary interfaces for accessing the
 
 This two interfaces exposes access and control over the system and the data model in the following way:
 
-| Action              | REST API            | ROS 2                                                                    |
-| ------------------- | ------------------- | ------------------------------------------------------------------------ |
-| Task Board Status   | `/taskboard_status` | `/roboton_taskboard_status` [roboton_taskboard_msgs/msg/TaskBoardStatus] |
-| Current Task Status | `/task_status`      | `/roboton_task_status` [roboton_task_msgs/msg/TaskStatus]                |
-| Execute a new Task  | Not available       | `/taskboard_execute_task` [roboton_taskboard_msgs/action/ExecuteTask]    |
-| Leaderboard         | `/leaderboard`      | Not available                                                            |
-| System Status       | `/system_status`    | Not available                                                            |
-
+| Action                            | REST API            | ROS 2                                                                    |
+| --------------------------------- | ------------------- | ------------------------------------------------------------------------ |
+| Task Board Status                 | `/taskboard_status` | `/roboton_taskboard_status` [roboton_taskboard_msgs/msg/TaskBoardStatus] |
+| Current Task Status               | `/task_status`      | `/roboton_task_status` [roboton_task_msgs/msg/TaskStatus]                |
+| Execute a new Task                | Not available       | `/taskboard_execute_task` [roboton_taskboard_msgs/action/ExecuteTask]    |
+| Leaderboard                       | `/leaderboard`      | Not available                                                            |
+| System Status                     | `/system_status`    | Not available                                                            |
+| Configure micro-ROS Agent address | `/microros`         | Not available                                                            |
 
 ### Example applications
 
@@ -249,11 +276,17 @@ By means of these buttons, the following basic configuration actions can be perf
 | Start default task (human mode)   | Press `BUTTON_B` and `BUTTON_PWR` at the same time                |
 | Cancel current task               | Press `BUTTON_A`                                                  |
 
+In order to **connect to a micro-ROS Agent** to start the ROS 2 integration, an micro-ROS Agent can be instantiated using docker:
+
+```bash
+docker run -it --rm -v /dev:/dev --privileged --net=host microros/micro-ros-agent:jazzy udp4 --port 8888 -v5
+```
+
+And the IP address and port of the micro-ROS Agent can be configured using the Web Interface or the REST API.
+
 ## To Do
 
-- [ ] Document build procedure
 - [ ] Add JSON/Kaa/MQTT API
-- [ ] Github CI
 - [ ] OTA updates
-- [ ] Perform a dinamic memory analisys and remove usages, i.e.: MicroROSTaskRepresentation or JSONHandler
+- [ ] Perform a dinamic memory analisys and remove critical usages, i.e.: MicroROSTaskRepresentation or JSONHandler
 - [ ] Randomize task steps
