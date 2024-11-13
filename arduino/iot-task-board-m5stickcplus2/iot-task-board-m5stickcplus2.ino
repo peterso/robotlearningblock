@@ -342,7 +342,7 @@ void publish_telemetry() {
   telemetry[0]["Time_CableWrappedProbeTipReplaced"] = TS_cableWrapProbeStow;  //INT
   telemetry[0]["Time_ProbePlugInserted"] = TS_probeGoal;                      //INT
   telemetry[0]["Time_ProbeGoal"] = TS_probeGoal;                              //INT legacy
-  telemetry[0]["Time_FinalTrialTime"] = TS_finalTrialTime;                    //INT 
+  telemetry[0]["Time_FinalTrialTime"] = TS_finalTrialTime;                    //INT
   telemetry[0]["cumForce"] = cumForce;                                        //Float
   telemetry[0]["trialPoints"] = ptsCollected;                                 //INT
   // telemetry[0]["FW_Version"] = String(FW_VERSION).c_str(); //STR
@@ -759,7 +759,6 @@ void check_trialStartStopLogic() {
       delay(1000);
       StickCP2.Display.setTextColor(WHITE, BLACK);
       StickCP2.Display.fillScreen(BLACK);
-    }
     if (faderValue > 20) {
       // WARNING flash alert screen to adjust fader
       StickCP2.Display.setCursor(5, 5);
@@ -932,7 +931,7 @@ void check_trialStartStopLogic() {
     turn_LED_off();                      //turn off LED
     StickCP2.Display.fillScreen(BLACK);  //clear screen
     StickCP2.Display.setTextColor(WHITE, BLACK);
-    
+
   }
 }
 
@@ -1103,7 +1102,7 @@ void setup() {
       turn_LED_on();
       Serial.printf("reset done!\n");
     }
-    
+
 
     bool res;                                                  // connection status of the wifimanager
     res = wm.autoConnect(unique_ssid.c_str(), TASK_BOARD_PW);  // password protected ap

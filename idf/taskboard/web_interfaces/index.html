@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskBoard Monitor</title>
+
+    <style>
+        .graph-container {
+            position: relative;
+            height: 100px;
+            width: 100%;
+            background: #f8f8f8;
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 8px;
+        }
+
+        .graph-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .graph-label {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            font-size: 12px;
+            color: #666;
+            background: rgba(255,255,255,0.8);
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+
+        .heap-indicator {
+        background: #f8f8f8;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        }
+        .heap-value {
+            font-family: monospace;
+            font-size: 1.1em;
+            margin: 8px 0;
+        }
+        .heap-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2196f3;
+        }
+
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            grid-template-areas:
+                "top top"
+                "sensors leaderboard"
+                "sensors microros"
+                "sensors tasks";
+            gap: 20px;
+        }
+        .top-card { grid-area: top; }
+        .sensors-card { grid-area: sensors; }
+        .tasks-card { grid-area: tasks; }
+        .leaderboard-card { grid-area: leaderboard; }
+        .micro-ros-card { grid-area: microros; }
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .tasks-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        .tasks-table th, .tasks-table td {
+            text-align: left;
+            padding: 6px;
+            border-bottom: 1px solid #eee;
+        }
+        .tasks-table th {
+            background: #f8f8f8;
+        }
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 15px;
+        }
+        .sensor-item {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 6px;
+            transition: transform 0.2s;
+        }
+        .sensor-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .sensor-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2196f3;
+        }
+        .sensor-value {
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+        .vector-value {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+        .vector-component {
+            background: #e3f2fd;
+            padding: 6px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .boolean-value {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+        }
+        .true {
+            background: #4caf50;
+        }
+        .false {
+            background: #f44336;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .controls {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .refresh-button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .refresh-button:hover {
+            background: #1976d2;
+        }
+        .refresh-rate, .device-ip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .refresh-rate input, .device-ip input {
+            width: 150px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .last-update {
+            color: #666;
+            margin-left: auto;
+        }
+        .using-sample {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+        .task-info {
+            margin-top: 15px;
+        }
+        .task-progress {
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            background: #eee;
+            border-radius: 4px;
+            height: 20px;
+            margin-bottom: 5px;
+            overflow: hidden;
+        }
+        .progress {
+            background: #2196f3;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .task-time {
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .task-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 4px;
+        }
+        .step.done {
+            background: #e8f5e9;
+        }
+        .step.pending {
+            background: #fff3e0;
+        }
+        .step-status {
+            font-size: 1.2em;
+            color: #666;
+        }
+        .step.done .step-status {
+            color: #4caf50;
+        }
+        .step.pending .step-status {
+            color: #ff9800;
+        }
+        .step-name {
+            font-weight: 500;
+        }
+
+        .leaderboard {
+            margin-bottom: 20px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .leaderboard-title {
+            font-weight: bold;
+            color: #2196f3;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .leaderboard-table th, .leaderboard-table td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .leaderboard-table th {
+            background: #fff;
+            color: #666;
+        }
+
+        .leaderboard-row {
+            transition: background-color 0.2s;
+        }
+
+        .leaderboard-row:hover {
+            background: #fff;
+        }
+
+        .time-cell {
+            font-family: monospace;
+        }
+
+        .is-human {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .micro-ros-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-connected {
+            background: #4caf50;
+        }
+
+        .status-disconnected {
+            background: #f44336;
+        }
+
+        .micro-ros-config {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+            align-items: start;
+        }
+
+        .micro-ros-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .micro-ros-inputs input {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 150px;
+        }
+
+        .micro-ros-button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .micro-ros-button:hover {
+            background: #1976d2;
+        }
+
+        .current-config {
+            font-family: monospace;
+            background: #f8f8f8;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .leaderboard-card h2 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .clear-button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 60%;
+        }
+
+        .clear-button:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>Roboton Task Board - <span id="device-id">Loading...</span></h1>
+    <div id="error-message"></div>
+
+    <div class="dashboard">
+        <div class="card top-card">
+            <h2>Top Section</h2>
+        </div>
+        <div class="card sensors-card">
+            <h2>Sensors</h2>
+            <div class="sensor-grid" id="sensors-grid"></div>
+        </div>
+
+        <div class="card micro-ros-card">
+            <h2>micro-ROS</h2>
+            <div class="micro-ros-status">
+                <span class="boolean-value false">Not Connected</span>
+            </div>
+            <div class="micro-ros-config">
+                <div class="micro-ros-inputs">
+                    <input type="text" id="micro-ros-ip" placeholder="IP Address">
+                    <input type="text" id="micro-ros-port" placeholder="Port">
+                </div>
+                <button class="micro-ros-button" onclick="updateMicroROS()">Update</button>
+            </div>
+            <div>
+                <small>Current config: <span id="current-micro-ros-config">192.168.1.100:8888</span></small>
+            </div>
+        </div>
+
+        <div class="card leaderboard-card">
+            <h2>Leaderboard
+                <button onclick="clearLeaderboard()" class="clear-button">Clear</button>
+            </h2>
+            <div class="leaderboard-body">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Time</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card tasks-card">
+            <h2>System Status</h2>
+            <div id="tasks-container">
+                <div id="heap">
+                </div>
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Min stack</th>
+                            <th>CPU</th>
+                            <th>Priority</th>
+                            <th>Core</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasks-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="device-ip">
+            <label for="device-ip">Device IP:</label>
+            <input type="text" id="device-ip" placeholder="Leave empty for same domain"
+                   onchange="updateDeviceIP(this.value)">
+        </div>
+        <div class="refresh-rate">
+            <label for="refresh-rate">Auto-refresh rate (ms):</label>
+            <input type="number" id="refresh-rate" value="5000" min="0" step="500"
+                   onchange="updateRefreshInterval(this.value)">
+        </div>
+        <button onclick="fetchData()" class="refresh-button">Refresh Now</button>
+        <span id="sample-data-notice"></span>
+        <span id="last-update" class="last-update"></span>
+    </div>
+
+    <script>
+
+    class AnalogGraph {
+        constructor(container) {
+            this.container = container;
+            this.canvas = container.querySelector('canvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.data = new Array(30).fill(null);  // 30 samples = 15 seconds at 500ms refresh
+            this.lineColor = '#2196f3';
+            this.fillColor = 'rgba(33, 150, 243, 0.1)';
+
+            this.resizeCanvas();
+            window.addEventListener('resize', () => this.resizeCanvas());
+        }
+
+        resizeCanvas() {
+            const rect = this.container.getBoundingClientRect();
+            this.canvas.width = rect.width;
+            this.canvas.height = rect.height;
+            this.draw();
+        }
+
+        addValue(value) {
+            // Ensure value is between 0 and 1
+            value = Math.max(0, Math.min(1, value));
+            this.data.push(value);
+            this.data.shift();
+            this.draw();
+        }
+
+        draw() {
+            const ctx = this.ctx;
+            const width = this.canvas.width;
+            const height = this.canvas.height;
+            const padding = 4;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Filter out null values
+            const validData = this.data.map((value, index) => ({value, index}))
+                                    .filter(item => item.value !== null);
+
+            if (validData.length < 2) return;
+
+            // Draw filled area
+            ctx.beginPath();
+            validData.forEach(({value, index}, i) => {
+                const x = (index / (this.data.length - 1)) * width;
+                const y = height - (value * (height - padding * 2) + padding);
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+
+            // Complete the fill path
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.closePath();
+            ctx.fillStyle = this.fillColor;
+            ctx.fill();
+
+            // Draw line
+            ctx.beginPath();
+            validData.forEach(({value, index}, i) => {
+                const x = (index / (this.data.length - 1)) * width;
+                const y = height - (value * (height - padding * 2) + padding);
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.strokeStyle = this.lineColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+
+    class IMUGraph {
+        constructor(container) {
+            this.container = container;
+            this.canvas = container.querySelector('canvas');
+            this.ctx = this.canvas.getContext('2d');
+            // Separate arrays for each axis
+            this.dataX = new Array(30).fill(null);
+            this.dataY = new Array(30).fill(null);
+            this.dataZ = new Array(30).fill(null);
+
+            // Color scheme for axes
+            this.colors = {
+                x: '#f44336', // red
+                y: '#4caf50', // green
+                z: '#2196f3'  // blue
+            };
+
+            this.resizeCanvas();
+            window.addEventListener('resize', () => this.resizeCanvas());
+        }
+
+        resizeCanvas() {
+            const rect = this.container.getBoundingClientRect();
+            this.canvas.width = rect.width;
+            this.canvas.height = rect.height;
+            this.draw();
+        }
+
+        addValue(x, y, z) {
+            this.dataX.push(x);
+            this.dataX.shift();
+            this.dataY.push(y);
+            this.dataY.shift();
+            this.dataZ.push(z);
+            this.dataZ.shift();
+            this.draw();
+        }
+
+        drawAxis(data, color) {
+            const ctx = this.ctx;
+            const width = this.canvas.width;
+            const height = this.canvas.height;
+            const padding = 4;
+
+            const validData = data.map((value, index) => ({value, index}))
+                                .filter(item => item.value !== null);
+
+            if (validData.length < 2) return;
+
+            // Draw line
+            ctx.beginPath();
+            validData.forEach(({value, index}, i) => {
+                // Scale value from -1..1 to graph height
+                const normalizedValue = (value + 1) / 2; // Convert -1..1 to 0..1
+                const x = (index / (data.length - 1)) * width;
+                const y = height - (normalizedValue * (height - padding * 2) + padding);
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        draw() {
+            const ctx = this.ctx;
+            ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+            // Draw grid lines
+            this.drawGrid();
+
+            // Draw each axis
+            this.drawAxis(this.dataX, this.colors.x);
+            this.drawAxis(this.dataY, this.colors.y);
+            this.drawAxis(this.dataZ, this.colors.z);
+
+            // Draw legend
+            this.drawLegend();
+        }
+
+        drawGrid() {
+            const ctx = this.ctx;
+            const width = this.canvas.width;
+            const height = this.canvas.height;
+
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+
+            // Draw horizontal lines at -1, 0, 1 positions
+            const levels = [-1, 0, 1];
+            levels.forEach(level => {
+                const y = height - ((level + 1) / 2 * height);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            });
+        }
+
+        drawLegend() {
+            const ctx = this.ctx;
+            const padding = 8;
+            const itemWidth = 40;
+            const itemHeight = 20;
+
+            // Background
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillRect(padding, padding, itemWidth * 3 + padding * 2, itemHeight);
+
+            // Legend items
+            const axes = [
+                { label: 'X', color: this.colors.x },
+                { label: 'Y', color: this.colors.y },
+                { label: 'Z', color: this.colors.z }
+            ];
+
+            axes.forEach((axis, i) => {
+                const x = padding + itemWidth * i + padding * i;
+
+                // Line
+                ctx.beginPath();
+                ctx.moveTo(x + 5, padding + itemHeight/2);
+                ctx.lineTo(x + 25, padding + itemHeight/2);
+                ctx.strokeStyle = axis.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Label
+                ctx.fillStyle = '#000';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(axis.label, x + 30, padding + itemHeight/2 + 4);
+            });
+        }
+    }
+
+    class HeapGraph {
+        constructor(container) {
+            this.container = container;
+            this.canvas = container.querySelector('canvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.data = new Array(30).fill(null);
+            this.maxValue = 0; // Will be adjusted dynamically
+            this.lineColor = '#4caf50'; // Green color for heap
+            this.fillColor = 'rgba(76, 175, 80, 0.1)';
+
+            this.resizeCanvas();
+            window.addEventListener('resize', () => this.resizeCanvas());
+        }
+
+        resizeCanvas() {
+            const rect = this.container.getBoundingClientRect();
+            this.canvas.width = rect.width;
+            this.canvas.height = rect.height;
+            this.draw();
+        }
+
+        addValue(value) {
+            this.data.push(value);
+            this.data.shift();
+            // Update max value if needed with some headroom
+            this.maxValue = Math.max(this.maxValue, value * 1.2);
+            this.draw();
+        }
+
+        draw() {
+            const ctx = this.ctx;
+            const width = this.canvas.width;
+            const height = this.canvas.height;
+            const padding = 4;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Filter out null values
+            const validData = this.data.map((value, index) => ({value, index}))
+                                    .filter(item => item.value !== null);
+
+            if (validData.length < 2) return;
+
+            // Draw grid lines
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+
+            // Draw 3 horizontal lines (0%, 50%, 100%)
+            [0, 0.5, 1].forEach(percent => {
+                const y = height - (percent * (height - padding * 2) + padding);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+
+                // Add labels
+                ctx.fillStyle = '#666';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'right';
+                const label = (this.maxValue * percent / 1024).toFixed(1) + "kB";
+                ctx.fillText(label, width - 4, y - 2);
+            });
+
+            // Draw filled area
+            ctx.beginPath();
+            validData.forEach(({value, index}, i) => {
+                const x = (index / (this.data.length - 1)) * width;
+                const y = height - ((value / this.maxValue) * (height - padding * 2) + padding);
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+
+            // Complete the fill path
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.closePath();
+            ctx.fillStyle = this.fillColor;
+            ctx.fill();
+
+            // Draw line
+            ctx.beginPath();
+            validData.forEach(({value, index}, i) => {
+                const x = (index / (this.data.length - 1)) * width;
+                const y = height - ((value / this.maxValue) * (height - padding * 2) + padding);
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.strokeStyle = this.lineColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+
+    </script>
+
+    <script>
+        let currentRefreshRate;
+        let refreshInterval;
+        let logsInterval;
+        let prevTaskStatus = false;
+        let deviceIP = '';
+
+        function formatTimestamp() {
+            const now = new Date();
+            return now.toLocaleTimeString();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.innerHTML = '<div class="error"' + message + "</div>";
+        }
+
+        function clearError() {
+            document.getElementById('error-message').innerHTML = '';
+        }
+
+        function updateDeviceIP(ip) {
+            deviceIP = ip.trim();
+            // Store in localStorage for persistence
+            localStorage.setItem('deviceIP', deviceIP);
+            // Trigger immediate refresh with new IP
+            fetchData();
+        }
+
+        const sensorGraphs = new Map();
+        const heapGraph = new Map();
+
+        function updateUI(data) {
+            document.getElementById('device-id').textContent = data.device_id;
+            document.getElementById('last-update').textContent = "Last updated: " + formatTimestamp();
+
+            const sensorsGrid = document.getElementById('sensors-grid');
+            sensorsGrid.innerHTML = '';
+
+            // Update micro-ROS status
+            if(data.microros)
+            {
+                // Here you would typically make an API call to update the configuration
+                // For now, we'll just update the display
+                document.getElementById('current-micro-ros-config').textContent = data.microros.agent_ip + ":" + data.microros.agent_port;
+
+                const statusIndicator = document.querySelector('.micro-ros-status .boolean-value');
+                statusIndicator.textContent = data.microros.connected ? 'Connected' : 'Not Connected';
+                statusIndicator.classList.toggle('true', data.microros.connected);
+                statusIndicator.classList.toggle('false', !data.microros.connected);
+            }
+
+            // Order sensors by object, boolean or number, first are numbers
+            data.sensors.sort((a, b) => {
+                if (typeof a.value === 'object' && typeof b.value !== 'object') {
+                    return 1;
+                } else if (typeof a.value !== 'object' && typeof b.value === 'object') {
+                    return -1;
+                } else if (typeof a.value === 'boolean' && typeof b.value !== 'boolean') {
+                    return 1;
+                } else if (typeof a.value !== 'boolean' && typeof b.value === 'boolean') {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            });
+
+            data.sensors.forEach(sensor => {
+                const sensorDiv = document.createElement('div');
+                sensorDiv.className = 'sensor-item';
+
+                let valueHtml = '';
+                let includeGraph = false;
+
+                const isIMU = typeof sensor.value === 'object' &&
+                     'x' in sensor.value &&
+                     'y' in sensor.value &&
+                     'z' in sensor.value;
+
+                if (isIMU) {
+                    valueHtml = `
+                        <div class="vector-value">
+                            ${Object.entries(sensor.value).map(([key, val]) =>
+                                `<div class="vector-component">${key}: ${val.toFixed(3)}</div>`
+                            ).join('')}
+                        </div>
+                    `;
+                    includeGraph = true;
+                } else if (typeof sensor.value === 'object') {
+                    valueHtml = `
+                        <div class="vector-value">
+                            ${Object.entries(sensor.value).map(([key, val]) =>
+                                `<div class="vector-component">${key}: ${val.toFixed(3)}</div>`
+                            ).join('')}
+                        </div>
+                    `;
+                } else if (typeof sensor.value === 'boolean') {
+                    valueHtml = `<span class="boolean-value ${sensor.value}">${sensor.value}</span>`;
+                } else if (typeof sensor.value === 'number') {
+                    valueHtml = sensor.value.toFixed(3);
+                    includeGraph = true;  // Only add graphs for numeric sensors
+                } else {
+                    valueHtml = sensor.value;
+                }
+
+                sensorDiv.innerHTML = `
+                    <div class="sensor-name">${sensor.id}</div>
+                    <div class="sensor-value">${valueHtml}</div>
+                    ${includeGraph ? `
+                        <div class="graph-container">
+                            <canvas class="graph-canvas"></canvas>
+                        </div>
+                    ` : ''}
+                `;
+
+                sensorsGrid.appendChild(sensorDiv);
+
+                // Handle graph if needed
+                if (includeGraph) {
+                    const graphContainer = sensorDiv.querySelector('.graph-container');
+
+                    // Get existing graph or create new one
+                    let graph = sensorGraphs.get(sensor.id);
+                    if (!graph) {
+                        if (isIMU) {
+                            graph = new IMUGraph(graphContainer);
+                        }
+                        else
+                        {
+                            const value = sensor.value;
+                            graph = new AnalogGraph(graphContainer, {
+                                points: 30,
+                                maxValue: Math.ceil(1.0),
+                                minValue: Math.floor(0.0)
+                            });
+                        }
+                        sensorGraphs.set(sensor.id, graph);
+                    } else {
+                        // Update existing graph's container reference
+                        graph.container = graphContainer;
+                        graph.canvas = graphContainer.querySelector('canvas');
+                        graph.ctx = graph.canvas.getContext('2d');
+                        graph.resizeCanvas();
+                    }
+
+                    if (isIMU) {
+                        // Add new value to graph
+                        graph.addValue(sensor.value.x, sensor.value.y, sensor.value.z);
+                    } else {
+                        // Add new value to graph
+                        graph.addValue(sensor.value);
+                    }
+                }
+            });
+
+            // Clean up graphs for sensors that no longer exist
+            for (const [sensorId] of sensorGraphs) {
+                if (!data.sensors.some(sensor => sensor.id === sensorId)) {
+                    sensorGraphs.delete(sensorId);
+                }
+            }
+
+            const tasksBody = document.getElementById('tasks-body');
+            tasksBody.innerHTML = '';
+
+            const original_data_tasks = JSON.parse(JSON.stringify(data.tasks));
+            const original_total_time = data.total_time;
+
+            // If this.last_data_tasks exists
+            if (this.last_data_tasks && this.last_total_time) {
+                // Filter out tasks that are not in the new data
+                data.tasks = data.tasks.filter(task => {
+                    return this.last_data_tasks.some(last_task => last_task.name === task.name);
+                });
+
+                data.total_time = data.total_time - this.last_total_time;
+
+                // Calculate CPU usage for each task
+                data.tasks.forEach(task => {
+                    const last_task = this.last_data_tasks.find(last_task => last_task.name === task.name);
+
+                    task.cpu = task.cpu - last_task.cpu;
+                    task.cpu_pc = (task.cpu / data.total_time) * 100;
+                });
+
+                // Sort tasks by CPU usage
+                data.tasks.sort((a, b) => b.cpu_pc - a.cpu_pc);
+
+                // If core is 2147483647, set it to "Any"
+                data.tasks.forEach(task => {
+                    if (task.core === 2147483647) {
+                        task.core = "Any";
+                    }
+                });
+
+                data.tasks.forEach(task => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${task.name}</td>
+                        <td>${task.stack.toLocaleString()} B</td>
+                        <td>${task.cpu_pc.toLocaleString()} %</td>
+                        <td>${task.priority}</td>
+                        <td>${task.core}</td>
+                    `;
+                    tasksBody.appendChild(row);
+                });
+            }
+
+            this.last_data_tasks = original_data_tasks
+            this.last_total_time = original_total_time;
+
+
+            // Handle heap
+            const heapBar = document.getElementById('heap');
+            const freeHeap = data.free_heap;
+
+            // Update heap display with graph
+            heapBar.innerHTML = `
+                <div class="heap-indicator">
+                    <div class="heap-title">Free Heap</div>
+                    <div class="heap-value">${(freeHeap/1024).toFixed(2)} kB</div>
+                    <div class="graph-container">
+                        <canvas class="graph-canvas"></canvas>
+                    </div>
+                </div>
+            `;
+
+            // Rest of your heap graph code remains the same
+            const heapContainer = heapBar.querySelector('.graph-container');
+            let graph = heapGraph.get('heap');
+            if (!graph) {
+                graph = new HeapGraph(heapContainer);
+                heapGraph.set('heap', graph);
+            } else {
+                graph.container = heapContainer;
+                graph.canvas = heapContainer.querySelector('canvas');
+                graph.ctx = graph.canvas.getContext('2d');
+                graph.resizeCanvas();
+            }
+
+            graph.addValue(freeHeap);
+
+            // const heapBar = document.getElementById('heap');
+            // const freeHeap = data.free_heap;
+            // heapBar.textContent = `Free Heap: ${(freeHeap/1024).toFixed(2)} kB`;
+
+            const dashboardDiv = document.querySelector('.dashboard');
+            if (data.current_task) {
+                prevTaskStatus = true;
+                let topCard = document.querySelector('.top-card');
+                if (!topCard) {
+                    topCard = document.createElement('div');
+                    topCard.className = 'card top-card';
+                    dashboardDiv.prepend(topCard);
+                }
+
+                const progressPercentage = Math.round(
+                    (data.current_task.steps.filter(step => step.done).length /
+                    data.current_task.steps.length) * 100
+                );
+
+                topCard.innerHTML = `
+                    <h2>Current Task: ${data.current_task.name}</h2>
+                    <div class="task-info">
+                        <div class="task-progress">
+                            <div class="progress-bar">
+                                <div class="progress" style="width: ${progressPercentage}%"></div>
+                            </div>
+                            <span class="progress-text">${progressPercentage}% Complete</span>
+                        </div>
+                        <div class="task-time">Time: ${data.current_task.time.toFixed(2)}s</div>
+                        <div class="task-steps">
+                            ${data.current_task.steps.map(step => `
+                                <div class="step ${step.done ? 'done' : 'pending'}">
+                                    <span class="step-status">${step.done ? '✓' : '○'}</span>
+                                    <span class="step-name">${step.sensor}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                if(prevTaskStatus == true)
+                {
+                    prevTaskStatus = false;
+                    fetchLeaderboard();
+                }
+
+                const topCard = document.querySelector('.top-card');
+                if (topCard) {
+                    topCard.remove();
+                }
+            }
+        }
+
+        async function fetchWithTimeout(url) {
+            const timeout = refreshInterval ? 5 * currentRefreshRate : 5000;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    throw new Error('Request timed out');
+                }
+                throw error;
+            }
+        }
+
+        async function fetchData() {
+            try {
+                const url = deviceIP ? "http://" + deviceIP + "/api" : '/api';
+                const response = await fetchWithTimeout(url);
+                if (!response.ok) {
+                    throw new Error("HTTP error! status: " + response.status);
+                }
+                clearError();
+                const data = await response.json();
+                usingSampleData = false;
+                updateUI(data);
+            } catch (error) {
+                showError("API Unreachable");
+            }
+        }
+
+        function updateRefreshInterval(ms) {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            currentRefreshRate = ms;
+            const rate = Math.max(50, parseInt(ms));
+            document.getElementById('refresh-rate').value = rate;
+            refreshInterval = setInterval(fetchData, rate);
+        }
+
+        async function fetchLeaderboard() {
+            try {
+                const url = deviceIP ? "http://" + deviceIP + "/logs" : '/logs';
+                const response = await fetchWithTimeout(url);
+                if (!response.ok) {
+                    throw new Error("HTTP error! status: " + response.status);
+                }
+                const csvText = await response.text();
+
+                // Parse CSV (skip first line with device ID and second line with headers)
+                const lines = csvText.split('\n').slice(2);
+
+                const leaderboardData = lines
+                    .filter(line => line.trim()) // Remove empty lines
+                    .map(line => {
+                        const [taskName, timestamp, isHuman] = line.split(',');
+                        return {
+                            taskName,
+                            timestamp: parseInt(timestamp),
+                            isHuman: parseInt(isHuman) === 1
+                        };
+                    })
+                    .sort((a, b) => a.timestamp - b.timestamp); // Sort by time
+
+                const leaderboardBody = document.getElementById('leaderboard-body');
+                leaderboardBody.innerHTML = '';
+
+                leaderboardData.forEach(entry => {
+                    const row = document.createElement('tr');
+                    row.className = 'leaderboard-row';
+                    row.innerHTML = `
+                        <td>${entry.taskName}</td>
+                        <td class="time-cell">${(entry.timestamp / 1000000).toFixed(3)} s</td>
+                        <td>${entry.isHuman ? '👤' : '🤖'}</td>
+                    `;
+                    leaderboardBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error);
+            }
+        }
+
+        function updateMicroROS() {
+            const ip = document.getElementById('micro-ros-ip').value;
+            const port = document.getElementById('micro-ros-port').value;
+
+            if (!ip || !port) {
+                return;
+            }
+
+            // Post to the micro-ROS configuration endpoint
+            const url = deviceIP ? "http://" + deviceIP + "/microros" : '/microros';
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    agent_ip: ip,
+                    agent_port: port
+                })
+            })
+
+            // Clean the UI
+            document.getElementById('micro-ros-ip').value = '';
+            document.getElementById('micro-ros-port').value = '';
+        }
+
+        // Add new function for clearing leaderboard
+        async function clearLeaderboard() {
+            if (!confirm('Are you sure you want to clear the leaderboard?')) {
+                return;
+            }
+
+            try {
+                const clearUrl = deviceIP ? "http://" + deviceIP + "/clear_logs" : '/clear_logs';
+                const response = await fetch(clearUrl, {
+                    method: 'POST',
+                });
+
+                if (!response.ok) {
+                    throw new Error("HTTP error! status: " + response.status);
+                }
+
+                // Refresh the leaderboard immediately after clearing
+                await fetchLeaderboard();
+            } catch (error) {
+                showError("Failed to clear leaderboard: " + error.message);
+            }
+        }
+
+        // Load saved IP on startup
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedIP = localStorage.getItem('deviceIP');
+            if (savedIP) {
+                deviceIP = savedIP;
+                document.getElementById('device-ip').value = savedIP;
+            }
+            fetchLeaderboard();
+            logsInterval = setInterval(fetchLeaderboard, 5000);
+        });
+
+        // Initial fetchWithTimeout and interval setup
+        fetchData();
+        updateRefreshInterval(500);
+    </script>
+</body>
+</html>

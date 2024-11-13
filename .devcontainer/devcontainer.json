@@ -1,0 +1,17 @@
+{
+	"name": "robotlearningblock",
+	"image": "espressif/idf:release-v5.3",
+
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash"
+	},
+
+	"runArgs": [ 	"--cap-add=SYS_PTRACE",
+					"--security-opt",
+					"seccomp=unconfined",
+					"--net=host",
+					"--privileged=true",
+					"-v", "/dev:/dev",
+					"-e", "DISPLAY=${env:DISPLAY}",
+					"-v", "/tmp/.X11-unix:/tmp/.X11-unix"]
+}
