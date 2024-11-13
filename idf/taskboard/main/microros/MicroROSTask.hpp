@@ -19,10 +19,21 @@
 #include <roboton_taskboard_msgs/msg/task_status.h>
 #include <roboton_taskboard_msgs/action/execute_task.h>
 
+/**
+ * @struct MicroROSTask
+ *
+ * @brief Implementation of SequentialTask that is received from a micro-ROS action goal
+ */
 struct MicroROSTask : public SequentialTask
 {
-    const char *TAG = "MicroROSTask";
+    const char *TAG = "MicroROSTask";       ///< Logging tag
 
+    /**
+     * @brief Constructs a new MicroROSTask object
+     *
+     * @param goal_handle Pointer to the micro-ROS action goal handle
+     * @param task_board_driver Reference to the task board driver
+     */
     MicroROSTask(const rclc_action_goal_handle_t * goal_handle, TaskBoardDriver & task_board_driver)
      : SequentialTask(steps_, "MicroROS Task")
      , goal_handle_(goal_handle)
@@ -77,11 +88,9 @@ struct MicroROSTask : public SequentialTask
 
     }
 
-    bool is_valid()
-    {
-        return steps_.size() > 0;
-    }
-
+    /**
+     * @brief Virtual destructor
+     */
     virtual ~MicroROSTask()
     {
         for (auto step : steps_)
@@ -90,12 +99,28 @@ struct MicroROSTask : public SequentialTask
         }
     }
 
+    /**
+     * @brief Gets the micro-ROS action goal handle associated with this task
+     *
+     * @return Pointer to the goal handle
+     */
     const rclc_action_goal_handle_t * goal_handle() const
     {
         return goal_handle_;
     }
 
+    /**
+     * @brief Checks if the task is valid
+     *
+     * @return true if the task has at least one step, false otherwise
+     */
+    bool is_valid()
+    {
+        return steps_.size() > 0;
+    }
+
 private:
-    rclc_action_goal_handle_t const * const goal_handle_;
-    std::vector<const TaskStep*> steps_;
+
+    rclc_action_goal_handle_t const * const goal_handle_;   ///< Pointer to the micro-ROS action goal handle
+    std::vector<const TaskStep*> steps_;                    ///< List of task steps
 };

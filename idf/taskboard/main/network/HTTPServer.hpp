@@ -17,10 +17,23 @@
 
 #include <network/webpages/web_index.h>
 
+/**
+ * @struct HTTPServer
+ *
+ * @brief HTTP server for handling task board API, web interfaces
+ */
 struct HTTPServer
 {
-    const char *TAG = "HTTPServer";
+    const char *TAG = "HTTPServer";     ///< Logging tag
 
+    /**
+     * @brief Constructs a new HTTPServer object
+     *
+     * @param task_board_driver Reference to the task board driver
+     * @param task_executor Reference to the task executor
+     * @param micro_ros_controller Reference to the micro-ROS controller
+     * @param non_volatile_storage Reference to the non-volatile storage
+     */
     HTTPServer(TaskBoardDriver & task_board_driver, TaskExecutor & task_executor, MicroROSController & micro_ros_controller, NonVolatileStorage & non_volatile_storage)
     : task_board_driver_(task_board_driver)
     , task_executor_(task_executor)
@@ -37,11 +50,19 @@ struct HTTPServer
         }
     }
 
+    /**
+     * @brief Gets the HTTP server handle
+     *
+     * @return HTTP server handle
+     */
     httpd_handle_t & get_handle()
     {
         return server_;
     }
 
+    /**
+     * @brief Initializes the task board API
+     */
     void initialize_taskboard_api()
     {
         httpd_uri_t get_index_uri = {
@@ -50,7 +71,6 @@ struct HTTPServer
             .handler  = HTTPServer::index_handler,
             .user_ctx = this
         };
-
 
         httpd_uri_t get_taskboard_status_uri = {
             .uri      = "/taskboard_status",
@@ -121,6 +141,13 @@ struct HTTPServer
         ESP_LOGI(TAG, "Taskboard API initialized");
     }
 
+private:
+
+    /**
+     * @brief Handler index
+     *
+     * @param req HTTP request
+     */
     static esp_err_t index_handler(httpd_req_t *req)
     {
         // Add CORS headers
@@ -134,6 +161,11 @@ struct HTTPServer
         return ESP_OK;
     }
 
+    /**
+     * @brief Handler for logs
+     *
+     * @param req HTTP request
+     */
     static esp_err_t logs_handler(httpd_req_t *req)
     {
         // Add CORS headers
@@ -164,6 +196,11 @@ struct HTTPServer
         return ESP_OK;
     }
 
+    /**
+     * @brief Handler for task board status
+     *
+     * @param req HTTP request
+     */
     static esp_err_t taskboard_status(httpd_req_t *req)
     {
          // Add CORS headers
@@ -199,6 +236,11 @@ struct HTTPServer
         return ESP_OK;
     }
 
+    /**
+     * @brief Handler for task status
+     *
+     * @param req HTTP request
+     */
     static esp_err_t task_status(httpd_req_t *req)
     {
          // Add CORS headers
@@ -225,6 +267,11 @@ struct HTTPServer
         return ESP_OK;
     }
 
+    /**
+     * @brief Handler for options requests
+     *
+     * @param req HTTP request
+     */
     static esp_err_t options_handler(httpd_req_t *req)
     {
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
@@ -239,6 +286,11 @@ struct HTTPServer
         return ESP_OK;
     }
 
+    /**
+     * @brief Handler for setting micro-ROS agent address
+     *
+     * @param req HTTP request
+     */
     static esp_err_t microros_handler(httpd_req_t *req)
     {
         // Set CORS headers consistently
@@ -300,6 +352,11 @@ struct HTTPServer
         return ESP_OK;
     }
 
+    /**
+     * @brief Handler for clearing logs
+     *
+     * @param req HTTP request
+     */
     static esp_err_t clear_logs(httpd_req_t *req)
     {
         // Set CORS headers consistently
@@ -317,9 +374,10 @@ struct HTTPServer
     }
 
 private:
-    httpd_handle_t server_;
-    TaskBoardDriver & task_board_driver_;
-    TaskExecutor & task_executor_;
-    MicroROSController & micro_ros_controller_;
-    NonVolatileStorage & non_volatile_storage_;
+
+    httpd_handle_t server_;                         ///< HTTP server handle
+    TaskBoardDriver & task_board_driver_;           ///< Reference to the task board driver
+    TaskExecutor & task_executor_;                  ///< Reference to the task executor
+    MicroROSController & micro_ros_controller_;     ///< Reference to the micro-ROS controller
+    NonVolatileStorage & non_volatile_storage_;     ///< Reference to the non-volatile storage
 };

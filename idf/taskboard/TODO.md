@@ -1,9 +1,7 @@
 - Document build procedure
-- Split APIs and document them
 - Document architecture with diagrams Mermaid
 - Add JSON/Kaa/MQTT API
 - Uncrustify
 - Github CI
-- Report current task on API
 - OTA updates
 - Perform a dinamic memory analisys and remove usages, i.e.: MicroROSTaskRepresentation or JSONHandler

@@ -16,9 +16,20 @@
 
 #include <esp_log.h>
 
+// TODO(pgarrido): This can be highly optimized by mantaining a single cJSON object and updating it
+
+/**
+ * @struct JSONHandler
+ *
+ * @brief Helper class for creating JSON objects
+ */
 struct JSONHandler
 {
-    // TODO(pgarrido): This can be highly optimized by mantaining a single cJSON object and updating it
+    /**
+     * @brief Constructs a new JSONHandler object
+     *
+     * @param unique_id Unique ID of the device
+     */
     JSONHandler(const std::string & unique_id)
     {
         root_ = cJSON_CreateObject();
@@ -26,6 +37,22 @@ struct JSONHandler
         cJSON_AddStringToObject(root_, "device_id", unique_id.c_str());
     }
 
+    /**
+     * @brief Destructor
+     */
+    ~JSONHandler()
+    {
+        cJSON_Delete(root_);
+
+        if (json_string_ != nullptr)
+        {
+            cJSON_free(json_string_);
+        }
+    }
+
+    /**
+     * @brief Adds FreeRTOS summary to the JSON object
+     */
     void add_freertos_summary()
     {
         // Add freertos task list with stack consumption
@@ -55,6 +82,12 @@ struct JSONHandler
         cJSON_AddNumberToObject(root_, "total_time", total_run_time);
     }
 
+    /**
+     * @brief Adds sensor measurement to the JSON object
+     *
+     * @param id Sensor ID
+     * @param measurement Sensor measurement
+     */
     void add_sensor_measure(const std::string& id, const SensorMeasurement& measurement)
     {
         if (sensors_ == nullptr)
@@ -87,6 +120,11 @@ struct JSONHandler
         cJSON_AddItemToArray(sensors_, sensor);
     }
 
+    /**
+     * @brief Adds micro-ROS information to the JSON object
+     *
+     * @param micro_ros_node Reference to the micro-ROS controller
+     */
     void add_microros_info(const MicroROSController & micro_ros_node)
     {
         cJSON * microros = cJSON_CreateObject();
@@ -97,6 +135,11 @@ struct JSONHandler
         cJSON_AddItemToObject(root_, "microros", microros);
     }
 
+    /**
+     * @brief Adds current task status to the JSON object
+     *
+     * @param task Task to add
+     */
     void add_task_status(const Task & task)
     {
         cJSON * current_task = cJSON_CreateObject();
@@ -123,6 +166,11 @@ struct JSONHandler
         cJSON_AddItemToObject(root_, "current_task", current_task);
     }
 
+    /**
+     * @brief Gets the JSON string
+     *
+     * @return JSON string
+     */
     char * get_json_string()
     {
         if (json_string_ == nullptr)
@@ -133,18 +181,8 @@ struct JSONHandler
         return json_string_;
     }
 
-    ~JSONHandler()
-    {
-        cJSON_Delete(root_);
-
-        if (json_string_ != nullptr)
-        {
-            cJSON_free(json_string_);
-        }
-    }
-
 private:
-    cJSON * root_;
-    cJSON * sensors_ = nullptr;
-    char * json_string_ = nullptr;
+    cJSON * root_ = nullptr;            ///< Root JSON object
+    cJSON * sensors_ = nullptr;         ///< Sensors array
+    char * json_string_ = nullptr;      ///< JSON string
 };

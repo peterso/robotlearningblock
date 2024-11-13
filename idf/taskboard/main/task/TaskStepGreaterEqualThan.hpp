@@ -8,8 +8,22 @@
 
 #include <esp_log.h>
 
+/**
+ * @struct TaskStepGreaterEqualThan
+ *
+ * @brief Implementation of TaskStep that checks if sensor reading is greater than or equal to target value
+ *
+ * @details Performs comparison to verify if the current sensor measurement meets or exceeds
+ *          a specified threshold value
+ */
 struct TaskStepGreaterEqualThan : public TaskStep
 {
+    /**
+     * @brief Constructs a new TaskStepGreaterEqualThan object
+     *
+     * @param sensor Reference to the sensor to monitor
+     * @param expected_value Minimum threshold value that sensor should meet or exceed
+     */
     TaskStepGreaterEqualThan(const SensorReader & sensor, const SensorMeasurement & expected_value)
     : TaskStep(sensor)
     , expected_value_(expected_value)
@@ -17,17 +31,27 @@ struct TaskStepGreaterEqualThan : public TaskStep
         TaskStep::type_ = Type::GREATER_OR_EQUAL;
     }
 
+    /**
+     * @brief Checks if current sensor reading meets or exceeds the threshold value
+     *
+     * @return true if sensor reading is greater than or equal to threshold, false otherwise
+     */
     bool success() const override
     {
         return SensorMeasurement::greater_or_equal(sensor_.read(), expected_value_);
     }
 
+    /**
+     * @brief Gets the threshold value for this step
+     *
+     * @return Minimum expected sensor measurement value
+     */
     SensorMeasurement expected_value() const override
     {
         return expected_value_;
     }
 
 private:
-    const SensorMeasurement expected_value_;
-};
 
+    const SensorMeasurement expected_value_;    ///< Minimum threshold value for comparison
+};

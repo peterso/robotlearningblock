@@ -15,21 +15,31 @@
 
 #include <esp_mac.h>
 
+/**
+* @struct TaskBoardDriver_v1
+*
+* @brief Implementation of TaskBoardDriver for version 1 hardware
+*/
 struct TaskBoardDriver_v1 : public TaskBoardDriver
 {
-    const char * TAG = "TaskBoardDriver_v1";
+   const char * TAG = "TaskBoardDriver_v1";    ///< Logging tag
 
-    TaskBoardDriver_v1(HardwareLowLevelController & hardware_low_level_controller)
-    : hardware_low_level_controller_(hardware_low_level_controller)
-    {
-        // Fill unique id
-        uint8_t mac[6];
-        esp_read_mac(mac, ESP_MAC_WIFI_STA);
-        char mac_str[18];
-        sprintf(mac_str, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-        unique_id_ = mac_str;
+   /**
+    * @brief Constructs a new TaskBoardDriver_v1 object
+    *
+    * @param hardware_low_level_controller Reference to hardware interface
+    */
+   TaskBoardDriver_v1(HardwareLowLevelController & hardware_low_level_controller)
+   : hardware_low_level_controller_(hardware_low_level_controller)
+   {
+       // Fill unique id
+       uint8_t mac[6];
+       esp_read_mac(mac, ESP_MAC_WIFI_STA);
+       char mac_str[18];
+       sprintf(mac_str, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+       unique_id_ = mac_str;
 
-        // Create sensors
+        // Initialize sensors
         Sensor * blue_button = new Sensor("BLUE_BUTTON", [&](){
             bool value = hardware_low_level_controller_.pb_hub_controller.read_digital_IO0(PbHubController::Channel::CHANNEL_0);
             return SensorMeasurement(!value); // Button is inverted
@@ -116,7 +126,7 @@ struct TaskBoardDriver_v1 : public TaskBoardDriver
             return SensorMeasurement(value);
         });
 
-        // Aggregated sensors
+        // Initialize aggregated sensors
         Sensor * door_status = new Sensor("DOOR_OPEN", [=](){
             bool is_open = true;
             if (door_angle->read().get_type() == SensorMeasurement::Type::ANALOG)
@@ -190,84 +200,117 @@ struct TaskBoardDriver_v1 : public TaskBoardDriver
         };
 
         default_main_task_ = new SequentialTask(*main_steps, "Main Task");
-    }
+   }
 
-    ~TaskBoardDriver_v1()
-    {
-        // If this is going to be deleted, free all used memory
-    }
+   /**
+    * @brief Virtual destructor for cleanup
+    */
+   ~TaskBoardDriver_v1()
+   {
+       // TODO(pgarrido): If this is going to be deleted, free all used memory
+   }
 
-    Task & get_default_task()
-    {
-        return *default_main_task_;
-    }
+   /**
+    * @brief Gets the main task sequence
+    * @return Reference to the default main task
+    */
+   Task & get_default_task()
+   {
+       return *default_main_task_;
+   }
 
-    Task & get_default_task_precondition()
-    {
-        return *default_precondition_task_;
-    }
+   /**
+    * @brief Gets the precondition task sequence
+    * @return Reference to the default precondition task
+    */
+   Task & get_default_task_precondition()
+   {
+       return *default_precondition_task_;
+   }
 
-    const std::string & get_unique_id() const override
-    {
-        return unique_id_;
-    }
+   /**
+    * @brief Gets the board's unique identifier
+    * @return Reference to unique ID string
+    */
+   const std::string & get_unique_id() const override
+   {
+       return unique_id_;
+   }
 
-    void update() override
-    {
-        hardware_low_level_controller_.m5_unified.update();
-        hardware_low_level_controller_.m5_unified.Imu.update();
+   /**
+    * @brief Updates all sensor readings
+    * @details Updates M5Stack hardware state, IMU readings, and all sensor values
+    */
+   void update() override
+   {
+       hardware_low_level_controller_.m5_unified.update();
+       hardware_low_level_controller_.m5_unified.Imu.update();
 
-        // Handle floating values at PbHubController
-        // TODO(pgarrido): Handle this with Peter
-        hardware_low_level_controller_.pb_hub_controller.write_digital_IO0(PbHubController::Channel::CHANNEL_3, true);
-        hardware_low_level_controller_.pb_hub_controller.write_digital_IO1(PbHubController::Channel::CHANNEL_3, true);
+       // Handle floating values at PbHubController
+       // TODO(pgarrido): Handle this with Peter
+       hardware_low_level_controller_.pb_hub_controller.write_digital_IO0(PbHubController::Channel::CHANNEL_3, true);
+       hardware_low_level_controller_.pb_hub_controller.write_digital_IO1(PbHubController::Channel::CHANNEL_3, true);
 
-        for (auto & item : sensors_)
-        {
-            item->update();
-        }
-    }
+       for (auto & item : sensors_)
+       {
+           item->update();
+       }
+   }
 
-    uint32_t get_sensor_count() const
-    {
-        return sensors_.size();
-    }
+   /**
+    * @brief Gets the total number of sensors
+    * @return Count of all sensors (physical and virtual)
+    */
+   uint32_t get_sensor_count() const
+   {
+       return sensors_.size();
+   }
 
-    const SensorReader * get_sensor(const size_t & index) const
-    {
-        const Sensor * sensor = nullptr;
+   /**
+    * @brief Gets a sensor by index
+    * @param index Zero-based index of sensor to retrieve
+    * @return Pointer to sensor reader interface, or nullptr if index invalid
+    */
+   const SensorReader * get_sensor(const size_t & index) const
+   {
+       const Sensor * sensor = nullptr;
 
-        if (index < sensors_.size())
-        {
-            sensor = sensors_[index];
-        }
+       if (index < sensors_.size())
+       {
+           sensor = sensors_[index];
+       }
 
-        return sensor;
-    }
+       return sensor;
+   }
 
-    const SensorReader * get_sensor_by_name(const std::string & sensor_name) const
-    {
-        const Sensor * sensor = nullptr;
+   /**
+    * @brief Gets a sensor by name
+    * @param sensor_name Name identifier of sensor to retrieve
+    * @return Pointer to sensor reader interface, or nullptr if name not found
+    */
+   const SensorReader * get_sensor_by_name(const std::string & sensor_name) const
+   {
+       const Sensor * sensor = nullptr;
 
-        for(auto const & s : sensors_)
-        {
-            if (s->name() == sensor_name)
-            {
-                sensor = s;
-                break;
-            }
-        }
+       for(auto const & s : sensors_)
+       {
+           if (s->name() == sensor_name)
+           {
+               sensor = s;
+               break;
+           }
+       }
 
-        return sensor;
-    }
-
-
+       return sensor;
+   }
 
 private:
-    HardwareLowLevelController & hardware_low_level_controller_;
-    std::vector<Sensor*> sensors_;
-    std::string unique_id_ = "TaskBoard_v1";
 
-    Task * default_main_task_;
-    Task * default_precondition_task_;
+   HardwareLowLevelController & hardware_low_level_controller_;    ///< Reference to hardware interface
+   std::vector<Sensor*> sensors_;                                  ///< List of all board sensors
+   std::string unique_id_ = "TaskBoard_v1";                       ///< Board identifier
+
+   Task * default_main_task_;              ///< Default main task sequence
+   Task * default_precondition_task_;      ///< Default precondition task sequence
+
 };

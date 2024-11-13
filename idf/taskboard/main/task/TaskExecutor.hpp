@@ -41,7 +41,7 @@ struct TaskExecutor
                 force_screen_update_ = false;
 
                 // Print clue
-                screen_controller_.print_task_clue(precondition_->get_clue());
+                screen_controller_.print_task_clue(precondition_->get_clue_string());
             }
 
             // Update analog clue
@@ -70,7 +70,7 @@ struct TaskExecutor
                 force_screen_update_ = false;
 
                 // Print clue
-                screen_controller_.print_task_clue(current_task_->get_clue());
+                screen_controller_.print_task_clue(current_task_->get_clue_string());
             }
 
             // Update analog clue
@@ -142,11 +142,13 @@ private:
         // Check if analog clue is available
         if(last_analog_update_ + ANALOG_UPDATE_INTERVAL < esp_timer_get_time())
         {
-            float current_value = 0.0f;
-            float target_value = 0.0f;
-            if(task.get_analog_clue(current_value, target_value))
+            SensorMeasurement current_measurement(false);
+            SensorMeasurement target_measurement(false);
+            if(task.get_clue(current_measurement, target_measurement) &&
+                current_measurement.get_type() == SensorMeasurement::Type::ANALOG &&
+                target_measurement.get_type() == SensorMeasurement::Type::ANALOG)
             {
-                screen_controller_.print_task_clue_analog(current_value, target_value);
+                screen_controller_.print_task_clue_analog(current_measurement.get_analog(), target_measurement.get_analog());
             }
             last_analog_update_ = esp_timer_get_time();
         }

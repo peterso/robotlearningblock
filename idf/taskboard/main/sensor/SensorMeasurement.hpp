@@ -8,47 +8,83 @@
 
 #include <string>
 
+/**
+ * @struct SensorMeasurement
+ *
+ * @brief A union-based class for handling different types of sensor measurements
+ */
 struct SensorMeasurement
 {
-    // Allowed types
+    /**
+     * @struct Vector3
+     * @brief Structure representing a 3D vector measurement
+     */
     struct Vector3
     {
-        float x;
-        float y;
-        float z;
+        float x;    ///< X component of the vector
+        float y;    ///< Y component of the vector
+        float z;    ///< Z component of the vector
     };
 
-    using Vector3Type = Vector3;
-    using AnalogType = float;
-    using BooleanType = bool;
+    // Type aliases for measurement types
+    using BooleanType = bool;         ///< Type alias for boolean measurements
+    using AnalogType = float;         ///< Type alias for analog (float) measurements
+    using Vector3Type = Vector3;      ///< Type alias for 3D vector measurements
 
+    /**
+     * @enum Type
+     * @brief Enumeration of supported measurement types
+     */
     enum class Type
     {
-        BOOLEAN,
-        ANALOG,
-        VECTOR3
+        BOOLEAN,    ///< Boolean measurement type
+        ANALOG,     ///< Analog (float) measurement type
+        VECTOR3     ///< 3D vector measurement type
     };
 
+    /**
+     * @brief Constructs a new boolean SensorMeasurement
+     *
+     * @param boolean_value Boolean value to store
+     */
     SensorMeasurement(const BooleanType& boolean_value)
     : type_(Type::BOOLEAN),
       boolean_value(boolean_value)
     {}
 
+    /**
+     * @brief Constructs a new analog SensorMeasurement
+     *
+     * @param analog_value Float value to store
+     */
     SensorMeasurement(const AnalogType& analog_value)
     : type_(Type::ANALOG),
       analog_value(analog_value)
     {}
 
+    /**
+     * @brief Constructs a new vector SensorMeasurement
+     *
+     * @param vector3 3D vector value to store
+     */
     SensorMeasurement(const Vector3Type& vector3)
     : type_(Type::VECTOR3),
       vector3(vector3)
     {}
 
+    /**
+     * @brief Gets the type of measurement stored
+     * @return Type enum indicating measurement type
+     */
     Type get_type() const
     {
         return type_;
     }
 
+    /**
+     * @brief Converts the measurement to a string representation
+     * @return String representing the stored value
+     */
     std::string to_string() const
     {
         switch(type_)
@@ -67,7 +103,15 @@ struct SensorMeasurement
         return "unknown";
     }
 
-    // Comparators
+    /**
+     * @brief Compares two measurements for equality within tolerance
+     *
+     * @param a First measurement to compare
+     * @param b Second measurement to compare
+     * @param tolerance Maximum allowed difference for floating point comparisons
+     *
+     * @return true if measurements are equal within tolerance, false otherwise
+     */
     static bool equal(const SensorMeasurement & a, const SensorMeasurement & b, const float tolerance = 0.00)
     {
         bool ret = false;
@@ -93,6 +137,14 @@ struct SensorMeasurement
         return ret;
     }
 
+    /**
+     * @brief Compares if first measurement is greater than or equal to second
+     *
+     * @param a First measurement to compare
+     * @param b Second measurement to compare
+     *
+     * @return true if a >= b component-wise, false otherwise
+     */
     static bool greater_or_equal(const SensorMeasurement & a, const SensorMeasurement & b)
     {
         bool ret = false;
@@ -118,41 +170,70 @@ struct SensorMeasurement
         return ret;
     }
 
-    // Operator equal to compare with boolean
+    /**
+     * @brief Equality comparison operator with boolean values
+     *
+     * @param b Boolean value to compare against
+     *
+     * @return true if measurement is boolean and equals b, false otherwise
+     */
     bool operator==(const bool & b) const
     {
         return type_ == Type::BOOLEAN && boolean_value == b;
     }
 
-    // Getters
+    /**
+     * @brief Gets the stored boolean value
+     *
+     * @return Reference to the stored boolean value
+     */
     const BooleanType& get_boolean() const
     {
         return boolean_value;
     }
 
+    /**
+     * @brief Gets the stored analog value
+     *
+     * @return Reference to the stored analog value
+     */
     const AnalogType& get_analog() const
     {
         return analog_value;
     }
 
+    /**
+     * @brief Gets the stored vector value
+     *
+     * @return Reference to the stored vector value
+     */
     const Vector3Type& get_vector3() const
     {
         return vector3;
     }
 
 private:
-
-    Type type_;
-
-    union
-    {
-        BooleanType boolean_value;
-        AnalogType analog_value;
-        Vector3Type vector3;
-    };
-
+    /**
+     * @brief Compares two float values within tolerance
+     * @param a First float to compare
+     * @param b Second float to compare
+     * @param tolerance Maximum allowed difference
+     * @return true if |a-b| < tolerance, false otherwise
+     */
     static bool compare_floats(float a, float b, float tolerance)
     {
         return std::abs(a - b) < tolerance;
     }
+
+    Type type_;    ///< Type of measurement currently stored
+
+    /**
+     * @brief Union storing the actual measurement value
+     */
+    union
+    {
+        BooleanType boolean_value;    ///< Boolean measurement storage
+        AnalogType analog_value;      ///< Analog measurement storage
+        Vector3Type vector3;          ///< Vector measurement storage
+    };
 };

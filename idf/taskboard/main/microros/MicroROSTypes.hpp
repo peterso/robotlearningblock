@@ -12,12 +12,30 @@
 #include <roboton_taskboard_msgs/msg/task_status.h>
 #include <roboton_taskboard_msgs/action/execute_task.h>
 
+/**
+ * @struct MicroROSTypes
+ *
+ * @brief Helper class for converting between micro-ROS and data model types
+ */
 struct MicroROSTypes
 {
+    /**
+     * @struct TaskStep
+     *
+     * @brief Helper class for converting between micro-ROS and data model TaskStep
+     */
     struct TaskStep
     {
+        // By now, this class cannot be instantiated
         TaskStep() = delete;
 
+        /**
+         * @brief Converts a TaskStep type to a micro-ROS type
+         *
+         * @param type TaskStep type
+         *
+         * @return micro-ROS type
+         */
         static uint8_t get_microros_type(const ::TaskStep::Type & type)
         {
             uint8_t ret = roboton_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_UNKNOWN;
@@ -42,8 +60,19 @@ struct MicroROSTypes
         }
     };
 
+    /**
+     * @struct TaskStatus
+     *
+     * @brief Helper class for converting between micro-ROS and data model TaskStatus
+     */
     struct TaskStatus
     {
+        /**
+         * @brief Constructs a new TaskStatus object from a Task
+         *
+         * @param task Task to convert
+         * @param unique_id Unique ID of the task board
+         */
         TaskStatus(const Task & task, const std::string & unique_id)
         {
             microros_msg_.header.stamp = usec_to_microros(esp_timer_get_time());
@@ -109,6 +138,11 @@ struct MicroROSTypes
             }
         }
 
+        /**
+         * @brief Constructs a new TaskStatus object with an empty task name
+         *
+         * @param unique_id Unique ID of the task board
+         */
         TaskStatus(const std::string & unique_id)
         {
             microros_msg_.header.stamp = usec_to_microros(esp_timer_get_time());
@@ -131,6 +165,9 @@ struct MicroROSTypes
             microros_msg_.status.capacity = 0;
         }
 
+        /**
+         * @brief Destructor
+         */
         ~TaskStatus()
         {
             for (size_t i = 0; i < microros_msg_.status.size; i++)
@@ -162,22 +199,40 @@ struct MicroROSTypes
             }
         }
 
+        /**
+         * @brief Sets the waiting precondition flag
+         *
+         * @param waiting_precondition Flag to set
+         */
         void set_waiting_precondition(const bool & waiting_precondition)
         {
             microros_msg_.waiting_precondition = waiting_precondition;
         }
 
+        /**
+         * @brief Gets the micro-ROS message
+         */
         const roboton_taskboard_msgs__msg__TaskStatus & get_microros_msg() const
         {
             return microros_msg_;
         }
 
     private:
-        roboton_taskboard_msgs__msg__TaskStatus microros_msg_;
+        roboton_taskboard_msgs__msg__TaskStatus microros_msg_ = {};      ///< micro-ROS message
     };
 
+    /**
+     * @struct SensorMeasurement
+     *
+     * @brief Helper class for converting between micro-ROS and data model SensorMeasurement
+     */
     struct SensorMeasurement
     {
+        /**
+         * @brief Constructs a new SensorMeasurement object from a SensorMeasurement
+         *
+         * @param sensor_measurement SensorMeasurement to convert
+         */
         SensorMeasurement(const ::SensorMeasurement & sensor_measurement)
         {
             microros_msg_ = {};
@@ -212,6 +267,35 @@ struct MicroROSTypes
             }
         }
 
+
+        /**
+         * @brief Destructor
+         */
+        ~SensorMeasurement()
+        {
+            switch (microros_msg_.type)
+            {
+            case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL:
+                delete microros_msg_.bool_value.data;
+                break;
+            case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG:
+                delete microros_msg_.analog_value.data;
+                break;
+            case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
+                delete microros_msg_.vector3_value.data;
+                break;
+            default:
+                break;
+            }
+        }
+
+        /**
+         * @brief Converts a SensorMeasurement type to a micro-ROS type
+         *
+         * @param sensor_measurement_type SensorMeasurement type
+         *
+         * @return micro-ROS type
+         */
         static uint8_t get_microros_type(const ::SensorMeasurement::Type & sensor_measurement_type)
         {
             uint8_t ret = roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_UNKNOWN;
@@ -235,6 +319,13 @@ struct MicroROSTypes
             return ret;
         }
 
+        /**
+         * @brief Converts a micro-ROS type to a SensorMeasurement type
+         *
+         * @param type micro-ROS type
+         *
+         * @return SensorMeasurement type
+         */
         static ::SensorMeasurement::Type get_type_from_microros(const uint8_t & type)
         {
             ::SensorMeasurement::Type ret = ::SensorMeasurement::Type::BOOLEAN;
@@ -258,6 +349,13 @@ struct MicroROSTypes
             return ret;
         }
 
+        /**
+         * @brief Converts a micro-ROS message to a SensorMeasurement
+         *
+         * @param msg micro-ROS message
+         *
+         * @return SensorMeasurement
+         */
         static ::SensorMeasurement from_microros(const roboton_taskboard_msgs__msg__SensorMeasurement & msg)
         {
             ::SensorMeasurement ret(0.0f);
@@ -293,35 +391,30 @@ struct MicroROSTypes
             return ret;
         }
 
-        ~SensorMeasurement()
-        {
-            switch (microros_msg_.type)
-            {
-            case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL:
-                delete microros_msg_.bool_value.data;
-                break;
-            case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG:
-                delete microros_msg_.analog_value.data;
-                break;
-            case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
-                delete microros_msg_.vector3_value.data;
-                break;
-            default:
-                break;
-            }
-        }
-
+        /**
+         * @brief Gets the micro-ROS message
+         */
         const roboton_taskboard_msgs__msg__SensorMeasurement & get_microros_msg() const
         {
             return microros_msg_;
         }
 
     private:
-        roboton_taskboard_msgs__msg__SensorMeasurement microros_msg_;
+        roboton_taskboard_msgs__msg__SensorMeasurement microros_msg_ = {};   ///< micro-ROS message
     };
 
+    /**
+     * @struct TaskBoardStatus
+     *
+     * @brief Helper class for converting between micro-ROS and data model TaskBoardStatus
+     */
     struct TaskBoardStatus
     {
+        /**
+         * @brief Constructs a new TaskBoardStatus object from a TaskBoardDriver
+         *
+         * @param task_board_driver TaskBoardDriver to convert
+         */
         TaskBoardStatus(const TaskBoardDriver & task_board_driver)
         {
             // Fill header
@@ -376,6 +469,9 @@ struct MicroROSTypes
 
         }
 
+        /**
+         * @brief Destructor
+         */
         ~TaskBoardStatus()
         {
             // Free sensors
@@ -399,18 +495,33 @@ struct MicroROSTypes
             delete microros_msg_.sensors.data;
         }
 
+        /**
+         * @brief Gets the micro-ROS message
+         */
         const roboton_taskboard_msgs__msg__TaskBoardStatus & get_microros_msg() const
         {
             return microros_msg_;
         }
 
         private:
-            roboton_taskboard_msgs__msg__TaskBoardStatus microros_msg_;
+            roboton_taskboard_msgs__msg__TaskBoardStatus microros_msg_ = {};     ///< micro-ROS message
     };
 
+    /**
+     * @struct SendGoalRequest
+     *
+     * @brief Helper class for converting between micro-ROS and data model SendGoalRequest
+     */
     struct SendGoalRequest
     {
-
+        /**
+         * @brief Constructs a new SendGoalRequest object from a Task
+         *
+         * @param task Task to convert
+         * @param max_task_name_size Maximum size of the task name
+         * @param max_sensor_name_size Maximum size of the sensor name
+         * @param max_steps_per_task Maximum number of steps per task
+         */
         SendGoalRequest(const size_t max_task_name_size, const size_t max_sensor_name_size, const size_t max_steps_per_task)
         {
             // Initialize goal memory
@@ -443,6 +554,9 @@ struct MicroROSTypes
             }
         }
 
+        /**
+         * @brief Destructor
+         */
         ~SendGoalRequest()
         {
             if (microros_msg_.goal.task.name.data != nullptr)
@@ -479,6 +593,9 @@ struct MicroROSTypes
             }
         }
 
+        /**
+         * @brief Gets the micro-ROS message
+         */
         const roboton_taskboard_msgs__action__ExecuteTask_SendGoal_Request & get_microros_msg() const
         {
             return microros_msg_;
@@ -486,45 +603,74 @@ struct MicroROSTypes
 
     private:
 
-        roboton_taskboard_msgs__action__ExecuteTask_SendGoal_Request microros_msg_;
+        roboton_taskboard_msgs__action__ExecuteTask_SendGoal_Request microros_msg_ = {};     ///< micro-ROS message
     };
 
+    /**
+     * @struct FeedbackMessage
+     *
+     * @brief Helper class for converting between micro-ROS and data model FeedbackMessage
+     */
     struct FeedbackMessage
     {
+        /**
+         * @brief Constructs a new FeedbackMessage object from a Task
+         *
+         * @param task Task to convert
+         */
         FeedbackMessage(const Task& task)
         {
             microros_msg_.feedback.elapsed_time = usec_to_microros(task.elapsed_time());
         }
 
+        /**
+         * @brief Gets the micro-ROS message
+         */
         const roboton_taskboard_msgs__action__ExecuteTask_FeedbackMessage & get_microros_msg() const
         {
             return microros_msg_;
         }
 
         private:
-            roboton_taskboard_msgs__action__ExecuteTask_FeedbackMessage microros_msg_;
+            roboton_taskboard_msgs__action__ExecuteTask_FeedbackMessage microros_msg_ = {};      ///< micro-ROS message
     };
 
+    /**
+     * @struct ResultMessage
+     *
+     * @brief Helper class for converting between micro-ROS and data model ResultMessage
+     */
     struct ResultMessage
     {
 
+        /**
+         * @brief Constructs a new ResultMessage object from a Task
+         *
+         * @param task Task to convert
+         */
         ResultMessage(const Task & task)
         {
             microros_msg_.result.finish_time = usec_to_microros(task.elapsed_time());
         }
 
+        /**
+         * @brief Constructs a new ResultMessage object with an empty finish time
+         */
         ResultMessage()
         {
             microros_msg_.result.finish_time = {};
         }
 
+        /**
+         * @brief Gets the micro-ROS message
+         */
         const roboton_taskboard_msgs__action__ExecuteTask_GetResult_Response & get_microros_msg() const
         {
             return microros_msg_;
         }
 
     private:
-        roboton_taskboard_msgs__action__ExecuteTask_GetResult_Response microros_msg_;
+        roboton_taskboard_msgs__action__ExecuteTask_GetResult_Response microros_msg_ = {};    ///< micro-ROS message
     };
 };
 

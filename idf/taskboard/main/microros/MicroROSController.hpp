@@ -22,13 +22,28 @@
 #include <cstdint>
 #include <functional>
 
+// Ping operation configuration
+constexpr uint32_t PING_AGENT_TIMEOUT_MS = 200;
+constexpr uint32_t PING_AGENT_RETRIES = 10;
+
+/**
+* @struct MicroROSController
+*
+* @brief Controller for managing micro-ROS communication with ROS2
+*/
 struct MicroROSController
 {
-    const char * TAG = "MicroROSController";
+    const char * TAG = "MicroROSController";        ///< Logging tag
 
+    /// @brief Function pointer for handling incoming action goals
     using HandleGoal = std::function<rcl_ret_t(rclc_action_goal_handle_t *)>;
+
+    /// @brief Function pointer for handling incoming action goal cancellations
     using HandleCancel = std::function<bool(rclc_action_goal_handle_t *)>;
 
+    /**
+     * @brief Constructs a new MicroROSController object
+     */
     MicroROSController()
     {
         allocator_ = rcl_get_default_allocator();
@@ -40,7 +55,7 @@ struct MicroROSController
         }
         rwm_options_ = rcl_init_options_get_rmw_init_options(&init_options_);
 
-        // Open NVM
+        // Open NVM for agent address storage
         if(ESP_OK != nvs_open("microros", NVS_READWRITE, &nvm_handle_))
         {
             ESP_LOGE(TAG, "Failed to open NVM");
@@ -59,6 +74,9 @@ struct MicroROSController
 
     }
 
+    /**
+     * @brief Destroys the MicroROSController object
+     */
     ~MicroROSController()
     {
         nvs_close(nvm_handle_);
@@ -66,6 +84,12 @@ struct MicroROSController
         // TODO(pgarrido): Free memory if this object is destroyed somehow
     }
 
+    /**
+     * @brief Sets the agent address for micro-ROS communication
+     *
+     * @param ip IP address of the agent
+     * @param port Port of the agent
+     */
     void set_agent_ip(const char * ip, const char * port)
     {
         ESP_LOGI(TAG, "Setting agent address to %s:%s", ip, port);
@@ -78,32 +102,124 @@ struct MicroROSController
         rmw_uros_options_set_udp_address(agent_ip_.c_str(), agent_port_.c_str(), rwm_options_);
     }
 
+    /**
+     * @brief Gets the agent address for micro-ROS communication
+     *
+     * @return IP address of the agent
+     */
     const std::string & get_agent_ip() const
     {
         return agent_ip_;
     }
 
+    /**
+     * @brief Gets the agent port for micro-ROS communication
+     *
+     * @return Port of the agent
+     */
     const std::string & get_agent_port() const
     {
         return agent_port_;
     }
 
+    /**
+     * @brief Checks the status of the micro-ROS agent
+     *
+     * @return true if agent is available, false otherwise
+     */
     bool is_agent_connected() const
     {
         return state_ == State::AGENT_CONNECTED;
     }
 
-    void publish_board_status(const MicroROSTypes::TaskBoardStatus & status)
+    /**
+     * @brief Publish the current task board status to ROS
+     *
+     * @param status Task board status message
+     */
+    void publish_taskboard_status(const MicroROSTypes::TaskBoardStatus & status)
     {
         if(state_ == State::AGENT_CONNECTED)
         {
-            if(RCL_RET_OK != rcl_publish(&publisher_, &status.get_microros_msg(), NULL))
+            if(RCL_RET_OK != rcl_publish(&taskboard_status_publisher_, &status.get_microros_msg(), NULL))
             {
                 ESP_LOGE(TAG, "Failed to publish");
             }
         }
     }
 
+    /**
+     * @brief Publish the current task status to ROS
+     *
+     * @param task_status Task status message
+     */
+    void publish_task_status(const MicroROSTypes::TaskStatus & task_status)
+    {
+        if(state_ == State::AGENT_CONNECTED)
+        {
+            if(RCL_RET_OK != rcl_publish(&task_status_publisher_, &task_status.get_microros_msg(), NULL))
+            {
+                ESP_LOGE(TAG, "Failed to publish task status");
+            }
+        }
+    }
+
+    /**
+     * @brief Sets the function pointer for handling incoming action goals
+     */
+    void set_handle_goal(HandleGoal handle_goal)
+    {
+        handle_goal_ = handle_goal;
+    }
+
+    /**
+     * @brief Sets the function pointer for handling incoming action goal cancellations
+     */
+    void set_handle_cancel(HandleCancel handle_cancel)
+    {
+        handle_cancel_ = handle_cancel;
+    }
+
+    /**
+     * @brief Publish feedback on a ROS 2 action goal
+     *
+     * @param feedback Feedback message to publish
+     * @param goal_handle Handle to the goal
+     */
+    void publish_feedback(const MicroROSTypes::FeedbackMessage & feedback, const rclc_action_goal_handle_t * goal_handle)
+    {
+        if(state_ == State::AGENT_CONNECTED)
+        {
+            if(RCL_RET_OK != rclc_action_publish_feedback((rclc_action_goal_handle_t*) goal_handle, (void*) &feedback.get_microros_msg()))
+            {
+                ESP_LOGE(TAG, "Failed to publish feedback");
+            }
+        }
+    }
+
+    /**
+     * @brief Publish result on a ROS 2 action goal
+     *
+     * @param result Result message to publish
+     * @param goal_handle Handle to the goal
+     * @param state Current goal state
+     */
+    void publish_goal_result(const MicroROSTypes::ResultMessage & result, const rclc_action_goal_handle_t * goal_handle, rcl_action_goal_state_t state)
+    {
+        if(state_ == State::AGENT_CONNECTED)
+        {
+            if(RCL_RET_OK != rclc_action_send_result((rclc_action_goal_handle_t*) goal_handle, state, (void*) &result.get_microros_msg()))
+            {
+                ESP_LOGE(TAG, "Failed to publish result");
+            }
+        }
+    }
+
+    /**
+     * @brief Updates the micro-ROS controller state
+     *
+     * @details This function should be called periodically to update the controller state
+     */
     void update()
     {
         switch (state_) {
@@ -134,53 +250,12 @@ struct MicroROSController
         ping_agent_operation_->update();
     }
 
-    void set_handle_goal(HandleGoal handle_goal)
-    {
-        handle_goal_ = handle_goal;
-    }
-
-    void set_handle_cancel(HandleCancel handle_cancel)
-    {
-        handle_cancel_ = handle_cancel;
-    }
-
-    void publish_feedback(const MicroROSTypes::FeedbackMessage & feedback, const rclc_action_goal_handle_t * goal_handle)
-    {
-        if(state_ == State::AGENT_CONNECTED)
-        {
-            if(RCL_RET_OK != rclc_action_publish_feedback((rclc_action_goal_handle_t*) goal_handle, (void*) &feedback.get_microros_msg()))
-            {
-                ESP_LOGE(TAG, "Failed to publish feedback");
-            }
-        }
-    }
-
-    void publish_goal_result(const MicroROSTypes::ResultMessage & result, const rclc_action_goal_handle_t * goal_handle, rcl_action_goal_state_t state)
-    {
-        if(state_ == State::AGENT_CONNECTED)
-        {
-            if(RCL_RET_OK != rclc_action_send_result((rclc_action_goal_handle_t*) goal_handle, state, (void*) &result.get_microros_msg()))
-            {
-                ESP_LOGE(TAG, "Failed to publish result");
-            }
-        }
-    }
-
-    void publish_task_status(const MicroROSTypes::TaskStatus & task_status)
-    {
-        if(state_ == State::AGENT_CONNECTED)
-        {
-            if(RCL_RET_OK != rcl_publish(&task_status_publisher_, &task_status.get_microros_msg(), NULL))
-            {
-                ESP_LOGE(TAG, "Failed to publish task status");
-            }
-        }
-    }
-
 private:
 
+    /// @brief Internall goal handling function reference
     HandleGoal handle_goal_;
 
+    /// @brief Handle goal function dispatcher
     static rcl_ret_t handle_goal(rclc_action_goal_handle_t * goal_handle, void * context)
     {
         MicroROSController * node = static_cast<MicroROSController*>(context);
@@ -191,14 +266,19 @@ private:
         return RCL_RET_ACTION_GOAL_REJECTED;
     }
 
+    /// @brief Internall goal cancellation function reference
     HandleCancel handle_cancel_;
 
+    /// @brief Handle goal cancellation function dispatcher
     static bool handle_cancel(rclc_action_goal_handle_t * goal_handle, void * context)
     {
         MicroROSController * node = static_cast<MicroROSController*>(context);
         return node->handle_cancel_(goal_handle);
     }
 
+    /**
+     * @brief Create micro-ROS entities
+     */
     bool create_entities()
     {
         // create init_options
@@ -217,7 +297,7 @@ private:
 
         // create publisher
         if(RCL_RET_OK != rclc_publisher_init_best_effort(
-            &publisher_,
+            &taskboard_status_publisher_,
             &node_,
             ROSIDL_GET_MSG_TYPE_SUPPORT(roboton_taskboard_msgs, msg, TaskBoardStatus),
             "roboton_taskboard_status"))
@@ -274,12 +354,15 @@ private:
         return true;
     }
 
+    /**
+     * @brief Destroy micro-ROS entities
+     */
     void destroy_entities()
     {
         rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support_.context);
         (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
-        if(RCL_RET_OK != rcl_publisher_fini(&publisher_, &node_))
+        if(RCL_RET_OK != rcl_publisher_fini(&taskboard_status_publisher_, &node_))
         {
             ESP_LOGE(TAG, "Failed to fini publisher");
         }
@@ -310,6 +393,9 @@ private:
         }
     }
 
+    /**
+     * @brief Load agent address from Non Volatile Memory
+     */
     void load_agent_address_from_nvm()
     {
         size_t agentaddress_len = 0;
@@ -336,6 +422,9 @@ private:
         }
     }
 
+    /**
+     * @brief Store agent address to Non Volatile Memory
+     */
     void store_agent_address_to_nvm()
     {
         if(ESP_OK != nvs_set_str(nvm_handle_, "agent", (agent_ip_ + ":" + agent_port_).c_str()))
@@ -351,49 +440,58 @@ private:
         }
     }
 
+    /**
+     * @brief Check the status of the micro-ROS agent by means of a ping operation
+     */
     void check_agent_status()
     {
         switch (state_)
         {
         case State::WAITING_AGENT:
-            state_ = (RMW_RET_OK == rmw_uros_ping_agent_options(100, 10, rwm_options_)) ? State::AGENT_AVAILABLE : State::WAITING_AGENT;
+            state_ = (RMW_RET_OK == rmw_uros_ping_agent_options(PING_AGENT_TIMEOUT_MS, PING_AGENT_RETRIES, rwm_options_)) ? State::AGENT_AVAILABLE : State::WAITING_AGENT;
             break;
         case State::AGENT_CONNECTED:
-            state_ = (RMW_RET_OK == rmw_uros_ping_agent(100, 10)) ? State::AGENT_CONNECTED : State::AGENT_DISCONNECTED;
+            state_ = (RMW_RET_OK == rmw_uros_ping_agent(PING_AGENT_TIMEOUT_MS, PING_AGENT_RETRIES)) ? State::AGENT_CONNECTED : State::AGENT_DISCONNECTED;
         default:
             break;
         }
     }
 
-    std::string agent_ip_ = CONFIG_MICRO_ROS_AGENT_IP;
-    std::string agent_port_ = CONFIG_MICRO_ROS_AGENT_PORT;
+    std::string agent_ip_ = CONFIG_MICRO_ROS_AGENT_IP;              ///< IP address of the micro-ROS agent
+    std::string agent_port_ = CONFIG_MICRO_ROS_AGENT_PORT;          ///< Port of the micro-ROS agent
 
-    nvs_handle_t nvm_handle_;
+    nvs_handle_t nvm_handle_;                                       ///< Non Volatile Memory handle
 
-    rcl_allocator_t allocator_;
-    rclc_support_t support_;
-    rcl_node_t node_;
-    rcl_publisher_t publisher_;
-    rcl_publisher_t task_status_publisher_;
-    rclc_action_server_t action_server_;
-    rclc_executor_t executor_;
+    // micro-ROS entities
+    rcl_init_options_t init_options_;                               ///< Initialization options for micro-ROS entities
+    rmw_init_options_t * rwm_options_;                              ///< RMW initialization options for micro-ROS entities
+    rcl_allocator_t allocator_;                                     ///< Allocator for micro-ROS entities
+    rclc_support_t support_;                                        ///< Support structure for micro-ROS entities
+    rcl_node_t node_;                                               ///< micro-ROS node
+    rcl_publisher_t taskboard_status_publisher_;                    ///< Task board status publisher
+    rcl_publisher_t task_status_publisher_;                         ///< Task status publisher
+    rclc_action_server_t action_server_;                            ///< Action server for task execution
+    rclc_executor_t executor_;                                      ///< micro-ROS executor
 
-    static constexpr size_t MAX_TASK_NAME_SIZE = 64;
-    static constexpr size_t MAX_SENSOR_NAME_SIZE = 64;
-    static constexpr size_t MAX_STEPS_PER_TASK = 15;
+    // Action goal request memory
+    static constexpr size_t MAX_TASK_NAME_SIZE = 64;                ///< Maximum size of received a task name
+    static constexpr size_t MAX_SENSOR_NAME_SIZE = 64;              ///< Maximum size of a received sensor name
+    static constexpr size_t MAX_STEPS_PER_TASK = 15;                ///< Maximum number of steps per task
+
+    /// @brief Action goal request structure
     MicroROSTypes::SendGoalRequest action_goal_request_ = {MAX_TASK_NAME_SIZE, MAX_SENSOR_NAME_SIZE, MAX_STEPS_PER_TASK};
 
+    /**
+     * @brief Enumeration representing the possible states of the MicroROSController.
+     */
     enum class State {
-        WAITING_AGENT,
-        AGENT_AVAILABLE,
-        AGENT_CONNECTED,
-        AGENT_DISCONNECTED
+        WAITING_AGENT,          ///< Waiting for the agent to be available
+        AGENT_AVAILABLE,        ///< Agent is available
+        AGENT_CONNECTED,        ///< Agent is connected
+        AGENT_DISCONNECTED      ///< Agent is disconnected
     };
 
-    State state_ = State::WAITING_AGENT;
+    State state_ = State::WAITING_AGENT;        ///< Current state of the controller
 
-    rcl_init_options_t init_options_;
-    rmw_init_options_t * rwm_options_;
-
-    TimedOperation * ping_agent_operation_;
+    TimedOperation * ping_agent_operation_;     ///< Timed operation for pinging the agent
 };

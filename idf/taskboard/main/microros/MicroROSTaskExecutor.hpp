@@ -11,11 +11,22 @@
 #include <microros/MicroROSTypes.hpp>
 #include <util/Timing.hpp>
 
-
+/**
+ * @struct MicroROSTaskExecutor
+ *
+ * @brief Task executor for handling micro-ROS task execution
+ */
 struct MicroROSTaskExecutor
 {
-    const char * TAG = "MicroROSTaskExecutor";
+    const char * TAG = "MicroROSTaskExecutor";      ///< Logging tag
 
+    /**
+     * @brief Constructs a new MicroROSTaskExecutor object
+     *
+     * @param task_executor Reference to the task executor
+     * @param microros_controller Reference to the micro-ROS controller
+     * @param task_board_driver Reference to the task board driver
+     */
     MicroROSTaskExecutor(TaskExecutor & task_executor, MicroROSController & microros_controller, TaskBoardDriver & task_board_driver)
     : task_executor_(task_executor)
     , microros_controller_(microros_controller)
@@ -30,6 +41,11 @@ struct MicroROSTaskExecutor
         });
     }
 
+    /**
+     * @brief Updates the task executor
+     *
+     * @details This function should be called periodically to update the task executor
+     */
     void update()
     {
         publish_feedback_.update();
@@ -44,6 +60,9 @@ struct MicroROSTaskExecutor
         }
     }
 
+    /**
+     * @brief Cancels the current task
+     */
     void cancel_task()
     {
         if (nullptr != micro_ros_task_)
@@ -59,6 +78,9 @@ struct MicroROSTaskExecutor
 
 private:
 
+    /**
+     * @brief Publishes feedback on the current task
+     */
     void publish_feedback()
     {
         if (nullptr != micro_ros_task_)
@@ -68,6 +90,13 @@ private:
         }
     }
 
+    /**
+     * @brief Handles a new goal request within the main task executor
+     *
+     * @param goal_handle Pointer to the goal handle
+     *
+     * @return Return Code
+     */
     rcl_ret_t handle_goal(rclc_action_goal_handle_t * goal_handle)
     {
         if (task_executor_.running())
@@ -91,6 +120,13 @@ private:
         return RCL_RET_ACTION_GOAL_ACCEPTED;
     }
 
+    /**
+     * @brief Handles a goal cancellation request within the main task executor
+     *
+     * @param goal_handle Pointer to the goal handle
+     *
+     * @return True if the goal was successfully cancelled
+     */
     bool handle_cancel(rclc_action_goal_handle_t * goal_handle)
     {
         if (nullptr != micro_ros_task_ && micro_ros_task_->goal_handle() == goal_handle)
@@ -107,13 +143,16 @@ private:
         return true;
     }
 
+    /**
+     * @brief Periodic operation for publishing feedback on a running task from ROS 2
+     */
     TimedOperation publish_feedback_ = {250, [this](){
         this->publish_feedback();
     }};
 
-    MicroROSTask * micro_ros_task_ = nullptr;
+    MicroROSTask * micro_ros_task_ = nullptr;       ///< Pointer to the current micro-ROS task
 
-    TaskExecutor & task_executor_;
-    MicroROSController & microros_controller_;
-    TaskBoardDriver & task_board_driver_;
+    TaskExecutor & task_executor_;                  ///< Reference to the task executor
+    MicroROSController & microros_controller_;      ///< Reference to the micro-ROS controller
+    TaskBoardDriver & task_board_driver_;           ///< Reference to the task board driver
 };

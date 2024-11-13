@@ -17,12 +17,28 @@
 
 #include <network/webpages/web_wifiprovisioning.h>
 
+// Maximum number of Wi-Fi connection retries
+constexpr int WIFI_CONNECTION_MAX_RETRIES = 3;
+
+/**
+ * @struct WifiManager
+ *
+ * @brief Manages Wi-Fi provisioning and connection
+ */
 struct WifiManager
 {
-    const char *TAG = "WifiManager";
-    static constexpr int WIFI_CONNECTED_EVENT = BIT0;
-    static constexpr int WIFI_CONNECTION_MAX_RETRIES = 3;
+    const char *TAG = "WifiManager";                    ///< Logging tag
 
+    /// @brief Event group for Wi-Fi events
+    static constexpr int WIFI_CONNECTED_EVENT = BIT0;
+
+    /**
+     * @brief Constructs a new WifiManager object
+     *
+     * @param server HTTP server
+     * @param provisioning_ssid SSID for provisioning
+     * @param reset_provisioning Reset provisioning
+     */
     WifiManager(HTTPServer & server, const std::string & provisioning_ssid ,bool reset_provisioning = false)
         : server_(server)
         , provisioning_ssid_(provisioning_ssid)
@@ -91,6 +107,9 @@ struct WifiManager
         }
     }
 
+    /**
+     * @brief Waits for connection to the AP
+     */
     void wait_for_connection()
     {
         ESP_LOGI(TAG, "Waiting for connection to the AP");
@@ -114,21 +133,41 @@ struct WifiManager
         httpd_unregister_uri_handler(server_.get_handle(), "/", HTTP_GET);
     }
 
+    /**
+     * @brief Gets the IP address
+     *
+     * @return IP address
+     */
     const std::string & get_ip() const
     {
         return ip_;
     }
 
+    /**
+     * @brief Gets the SSID
+     *
+     * @return SSID
+     */
     const std::string & get_ssid() const
     {
         return ssid_;
     }
 
+    /**
+     * @brief Gets the provisioning SSID
+     *
+     * @return Provisioning SSID
+     */
     const std::string & get_provisioning_ssid() const
     {
         return provisioning_ssid_;
     }
 
+    /**
+     * @brief Checks if the device is provisioned
+     *
+     * @return true if provisioned, false otherwise
+     */
     bool is_provisioned() const
     {
         return provisioned_;
@@ -136,14 +175,12 @@ struct WifiManager
 
 private:
 
-    EventGroupHandle_t wifi_event_group_;
-    bool provisioned_;
-    uint32_t retries_ = 0;
-    HTTPServer & server_;
-    std::string ssid_;
-    std::string ip_;
-    std::string provisioning_ssid_;
-
+    /**
+     * @brief Serves the provisioning page
+     *
+     * @param req HTTP request
+     * @return ESP_OK
+     */
     static esp_err_t serve_provisioning_page(httpd_req_t *req)
     {
         // Ensure that this becomes other thing when provisioned
@@ -151,6 +188,14 @@ private:
         return ESP_OK;
     }
 
+    /**
+     * @brief Event handler for Wi-Fi, IP and Provisioning related events
+     *
+     * @param arg Argument
+     * @param event_base Event base
+     * @param event_id Event ID
+     * @param event_data Event data
+     */
     static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
     {
         WifiManager * wifi_manager = (WifiManager *)arg;
@@ -228,4 +273,11 @@ private:
         }
     }
 
+    EventGroupHandle_t wifi_event_group_;        ///< Event group for Wi-Fi events
+    bool provisioned_;                           ///< Provisioned flag
+    uint32_t retries_ = 0;                       ///< Number of retries
+    HTTPServer & server_;                        ///< HTTP server
+    std::string ssid_;                           ///< SSID
+    std::string ip_;                             ///< IP address
+    std::string provisioning_ssid_;              ///< Provisioning SSID
 };
