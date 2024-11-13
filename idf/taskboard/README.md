@@ -270,7 +270,7 @@ By means of these buttons, the following basic configuration actions can be perf
 
 | Action                            | Trigger                                                           |
 | --------------------------------- | ----------------------------------------------------------------- |
-| Reset Wifi and start provisioning | Press `RED_BUTTON` and `BLUE_BUTTON` at the same time during boot |
+| Reset WiFi and start provisioning | Press `RED_BUTTON` and `BLUE_BUTTON` at the same time during boot |
 | Start in local mode (No Wifi)     | Press `BUTTON_A` during boot                                      |
 | Start default task                | Press `BUTTON_B`                                                  |
 | Start default task (human mode)   | Press `BUTTON_B` and `BUTTON_PWR` at the same time                |
