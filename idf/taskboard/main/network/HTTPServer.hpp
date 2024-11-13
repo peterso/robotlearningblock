@@ -301,7 +301,7 @@ private:
 
         if (nullptr != current_task)
         {
-            json_handler.add_task_status(*current_task);
+            json_handler.add_task_status(*current_task, server->task_executor_.current_precondition());
         }
 
         char* status = json_handler.get_json_string();

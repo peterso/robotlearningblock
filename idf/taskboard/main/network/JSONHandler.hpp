@@ -145,12 +145,16 @@ struct JSONHandler
      * @param task Task to add
      */
     void add_task_status(
-            const Task& task)
+            const Task& task,
+            const Task* precondition)
     {
         cJSON* current_task = cJSON_CreateObject();
 
         cJSON_AddStringToObject(current_task, "name", task.name().c_str());
         cJSON_AddNumberToObject(current_task, "time", task.elapsed_time() / 1e6);
+
+        cJSON* waiting_precondition = nullptr == precondition ? cJSON_CreateFalse() : cJSON_CreateTrue();
+        cJSON_AddItemToObject(current_task, "waiting_precondition", waiting_precondition);
 
         cJSON* finished = task.done() ? cJSON_CreateTrue() : cJSON_CreateFalse();
         cJSON_AddItemToObject(current_task, "finished", finished);
@@ -163,6 +167,12 @@ struct JSONHandler
             cJSON_AddStringToObject(step, "sensor", task.step(i).sensor().name().c_str());
             cJSON* done = task.step_done(i) ? cJSON_CreateTrue() : cJSON_CreateFalse();
             cJSON_AddItemToObject(step, "done", done);
+
+            if (task.step_done(i))
+            {
+                cJSON_AddNumberToObject(step, "finish_time", task.step_done_time(i) / 1e6);
+            }
+
             cJSON_AddItemToArray(steps, step);
         }
 

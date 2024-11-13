@@ -29,6 +29,7 @@ struct ParallelTask :
         : Task(steps, task_name, false)
     {
         steps_status_.resize(steps.size(), false);
+        steps_finish_time_.resize(steps.size(), -1);
     }
 
     /**
@@ -105,6 +106,7 @@ struct ParallelTask :
             if (!steps_status_[i] && steps_[i]->success())
             {
                 steps_status_[i] = true;
+                steps_finish_time_[i] = elapsed_time();
                 ret = true;
             }
         }
@@ -144,6 +146,19 @@ struct ParallelTask :
     }
 
     /**
+     * @brief Gets step done time
+     *
+     * @param step Index of the step to check
+     *
+     * @return Step done time in microseconds, -1 if step is not done
+     */
+    int64_t step_done_time(
+            size_t step) const
+    {
+        return steps_finish_time_[step];
+    }
+
+    /**
      * @brief Resets all steps to incomplete status
      */
     void restart() override
@@ -154,5 +169,6 @@ struct ParallelTask :
 
 protected:
 
-    std::vector<bool> steps_status_;    ///< Completion status for each step
+    std::vector<bool> steps_status_;            ///< Completion status for each step
+    std::vector<int64_t> steps_finish_time_;    ///< Completion status for each step
 };

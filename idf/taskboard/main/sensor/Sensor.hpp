@@ -96,6 +96,7 @@ struct Sensor :
         : SensorUpdater(read_function)
         , name_(name)
     {
+        update();
     }
 
     /**

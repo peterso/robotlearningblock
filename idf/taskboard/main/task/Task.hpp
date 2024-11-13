@@ -55,6 +55,16 @@ struct Task
             size_t step) const = 0;
 
     /**
+     * @brief Gets step done time
+     *
+     * @param step Index of the step to check
+     *
+     * @return Step done time in microseconds, -1 if step is not done
+     */
+    virtual int64_t step_done_time(
+            size_t step) const = 0;
+
+    /**
      * @brief Gets a text hint or instruction for the next step
      *
      * @return string

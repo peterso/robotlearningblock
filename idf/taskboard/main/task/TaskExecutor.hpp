@@ -35,7 +35,7 @@ struct TaskExecutor
             if (precondition_->update() || force_screen_update_)
             {
                 screen_controller_.print_task_status(
-                    "Configure " + current_task_->name(),
+                    "Conf " + current_task_->name(),
                     *precondition_,
                     TFT_BLACK,
                     TFT_ORANGE);

@@ -54,10 +54,18 @@ struct SimultaneousConditionTask :
             {
                 steps_status_[i] = state;
                 ret = true;
+
+                if (!state)
+                {
+                    steps_finish_time_[i] = -1;
+                }
+                else
+                {
+                    steps_finish_time_[i] = elapsed_time();
+                }
             }
         }
 
         return ret;
     }
-
 };

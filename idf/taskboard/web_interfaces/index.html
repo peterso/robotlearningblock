@@ -223,6 +223,7 @@
             height: 20px;
             margin-bottom: 5px;
             overflow: hidden;
+            position: relative; /* Added */
         }
         .progress {
             background: #2196f3;
@@ -230,8 +231,16 @@
             transition: width 0.3s ease;
         }
         .progress-text {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: center;
+            color: #000; /* Changed from #666 for better visibility */
             font-size: 0.9em;
-            color: #666;
+            z-index: 1; /* Ensure text stays on top */
+            mix-blend-mode: difference; /* Makes text visible on both light and dark backgrounds */
         }
         .task-time {
             margin-bottom: 15px;
@@ -239,7 +248,7 @@
         }
         .task-steps {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 10px;
         }
         .step {
@@ -404,10 +413,30 @@
             cursor: pointer;
             transition: background-color 0.2s;
             font-size: 60%;
+            font-weight: bold;
         }
 
         .clear-button:hover {
             background: #d32f2f;
+        }
+
+        .top-card h2
+        {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .waiting-precond-button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 60%;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -417,7 +446,7 @@
 
     <div class="dashboard">
         <div class="card top-card">
-            <h2>Top Section</h2>
+            <h2></h2>
         </div>
         <div class="card sensors-card">
             <h2>Sensors</h2>
@@ -1087,13 +1116,14 @@
                 );
 
                 topCard.innerHTML = `
-                    <h2>Current Task: ${data.current_task.name}</h2>
+                    <h2>${data.current_task.name}
+                        ${data.current_task.waiting_precondition ? '<span class="waiting-precond-button"> Waiting for Precondition </span>' : ''}
+                    </h2>
                     <div class="task-info">
                         <div class="task-progress">
                             <div class="progress-bar">
                                 <div class="progress" style="width: ${progressPercentage}%"></div>
                             </div>
-                            <span class="progress-text">${progressPercentage}% Complete</span>
                         </div>
                         <div class="task-time">Time: ${data.current_task.time.toFixed(2)}s</div>
                         <div class="task-steps">
@@ -1101,6 +1131,7 @@
                                 <div class="step ${step.done ? 'done' : 'pending'}">
                                     <span class="step-status">${step.done ? '✓' : '○'}</span>
                                     <span class="step-name">${step.sensor}</span>
+                                    ${step.finish_time || step.finish_time == 0.0 ? '<span class="step-time">' + step.finish_time.toFixed(2) + ' s</span>' : ''}
                                 </div>
                             `).join('')}
                         </div>

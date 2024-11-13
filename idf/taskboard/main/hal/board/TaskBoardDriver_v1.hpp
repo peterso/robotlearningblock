@@ -98,22 +98,14 @@ struct TaskBoardDriver_v1 :
                             return SensorMeasurement(value);
                         });
 
-        Sensor* probe_start = new Sensor("PROBE_START", [&]()
+        Sensor* probe_goal_analog = new Sensor("PROBE_GOAL_ANALOG", [&]()
                         {
-                            bool value =
-                            hardware_low_level_controller_.pb_hub_controller.read_digital_IO0(PbHubController::Channel::
-                                    CHANNEL_3);
+                            uint16_t value =
+                            hardware_low_level_controller_.pb_hub_controller.read_analog_IO0(
+                                PbHubController::Channel::CHANNEL_3);
+                            float float_value = static_cast<float>(value) / 4095.0f;
 
-                            return SensorMeasurement(value);
-                        });
-
-        Sensor* probe_goal = new Sensor("PROBE_GOAL", [&]()
-                        {
-                            bool value =
-                            hardware_low_level_controller_.pb_hub_controller.read_digital_IO1(PbHubController::Channel::
-                                    CHANNEL_3);
-
-                            return SensorMeasurement(value);
+                            return SensorMeasurement(float_value);
                         });
 
         Sensor* on_board_button_a = new Sensor("ON_BOARD_BUTTON_A", [&]()
@@ -194,7 +186,7 @@ struct TaskBoardDriver_v1 :
 
         Sensor* free_cable = new Sensor("FREE_CABLE", [=]()
                         {
-                            bool is_cable_free =
+                            const bool is_cable_free =
                             !light_right->read().get_boolean() &&
                             !light_left->read().get_boolean();
 
@@ -203,11 +195,20 @@ struct TaskBoardDriver_v1 :
 
         Sensor* attached_cable = new Sensor("ATTACHED_CABLE", [=]()
                         {
-                            bool is_cable_attached =
+                            const bool is_cable_attached =
                             light_right->read().get_boolean() &&
                             light_left->read().get_boolean();
 
                             return SensorMeasurement(is_cable_attached);
+                        });
+
+        Sensor* probe_goal = new Sensor("PROBE_GOAL", [=]()
+                        {
+                            auto analog_measure = probe_goal_analog->read();
+
+                            const bool is_touching_goal = analog_measure.get_analog() < 0.1;
+
+                            return SensorMeasurement(is_touching_goal);
                         });
 
         // Store sensors
@@ -217,8 +218,7 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(door_angle);
         sensors_.push_back(light_right);
         sensors_.push_back(light_left);
-        sensors_.push_back(probe_start);
-        sensors_.push_back(probe_goal);
+        sensors_.push_back(probe_goal_analog);
         sensors_.push_back(on_board_button_a);
         sensors_.push_back(on_board_button_b);
         sensors_.push_back(on_board_button_c);
@@ -230,6 +230,7 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(door_status);
         sensors_.push_back(free_cable);
         sensors_.push_back(attached_cable);
+        sensors_.push_back(probe_goal);
 
         // Initial update
         update();
@@ -239,7 +240,8 @@ struct TaskBoardDriver_v1 :
         {
             new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.0f), 0.1f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(false)),
-            new TaskStepEqual(*get_sensor_by_name("ATTACHED_CABLE"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(false)),
+            new TaskStepEqual(*get_sensor_by_name("FREE_CABLE"), SensorMeasurement(true)),
         };
 
         default_precondition_task_ = new SimultaneousConditionTask(*precondition_steps, "Precondition Task");
@@ -250,7 +252,9 @@ struct TaskBoardDriver_v1 :
             new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.8f), 0.05f),
             new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.2f), 0.05f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),
-            new TaskStepEqual(*get_sensor_by_name("FREE_CABLE"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("ATTACHED_CABLE"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("RED_BUTTON"), SensorMeasurement(true)),
         };
 
         default_task_ = new SequentialTask(*main_steps, "Default Task");

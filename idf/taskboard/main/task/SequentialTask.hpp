@@ -29,6 +29,7 @@ struct SequentialTask :
             bool first_task_init_timer = true)
         : Task(steps, task_name, first_task_init_timer)
     {
+        steps_finish_time_.resize(steps.size(), -1);
     }
 
     /**
@@ -95,6 +96,7 @@ struct SequentialTask :
         {
             if (steps_[current_step_]->success())
             {
+                steps_finish_time_[current_step_] = elapsed_time();
                 current_step_++;
                 ret = true;
             }
@@ -127,6 +129,19 @@ struct SequentialTask :
     }
 
     /**
+     * @brief Gets step done time
+     *
+     * @param step Index of the step to check
+     *
+     * @return Step done time in microseconds, -1 if step is not done
+     */
+    int64_t step_done_time(
+            size_t step) const
+    {
+        return steps_finish_time_[step];
+    }
+
+    /**
      * @brief Resets task to start from first step
      */
     void restart() override
@@ -137,5 +152,6 @@ struct SequentialTask :
 
 private:
 
-    size_t current_step_ = 0;    ///< Index of current step being executed
+    size_t current_step_ = 0;                   ///< Index of current step being executed
+    std::vector<int64_t> steps_finish_time_;    ///< Completion status for each step
 };
