@@ -34,21 +34,13 @@ struct TaskStepGreaterEqualThan :
         TaskStep::type_ = Type::GREATER_OR_EQUAL;
     }
 
-    /**
-     * @brief Checks if current sensor reading meets or exceeds the threshold value
-     *
-     * @return true if sensor reading is greater than or equal to threshold, false otherwise
-     */
+    /// Virtual method implementation
     bool success() const override
     {
         return SensorMeasurement::greater_or_equal(sensor_.read(), expected_value_);
     }
 
-    /**
-     * @brief Gets the threshold value for this step
-     *
-     * @return Minimum expected sensor measurement value
-     */
+    /// Virtual method implementation
     SensorMeasurement expected_value() const override
     {
         return expected_value_;

@@ -104,21 +104,13 @@ struct Sensor :
      */
     virtual ~Sensor() = default;
 
-    /**
-     * @brief Gets the sensor name
-     *
-     * @return Reference to sensor name string
-     */
+    /// Virtual method implementation
     const std::string& name() const override
     {
         return name_;
     }
 
-    /**
-     * @brief Gets the last read sensor measurement
-     *
-     * @return Last stored sensor value
-     */
+    /// Virtual method implementation
     virtual const SensorMeasurement read() const override
     {
         return last_value_;

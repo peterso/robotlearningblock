@@ -127,6 +127,7 @@ extern "C" void app_main(
 
     // Check if system should start in local mode (Button A pressed during boot)
     const bool start_local_mode = BUTTON_A.read() == true;
+
     if (start_local_mode)
     {
         ESP_LOGI("app_main", "Starting in local mode");
@@ -227,10 +228,12 @@ extern "C" void app_main(
             // Update screen with cancellation message
             screen_controller.clear();
             screen_controller.print("-> Task cancelled");
+
             if (!start_local_mode)
             {
-                screen_controller.print("-> IP: " + micro_ros_controller.get_agent_ip());
+                screen_controller.print("-> IP: " + wifi_manager.get_ip());
             }
+
             screen_controller.print("-> Press button B for default task");
 
             // Notify Micro-ROS task if it's waiting for a goal

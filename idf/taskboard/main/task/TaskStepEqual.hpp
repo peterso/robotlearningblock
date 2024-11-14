@@ -38,21 +38,13 @@ struct TaskStepEqual :
         TaskStep::type_ = Type::EQUAL;
     }
 
-    /**
-     * @brief Checks if current sensor reading matches expected value within tolerance
-     *
-     * @return true if sensor reading matches target within tolerance, false otherwise
-     */
+    /// Virtual method implementation
     bool success() const override
     {
         return SensorMeasurement::equal(sensor_.read(), expected_value_, tolerance_);
     }
 
-    /**
-     * @brief Gets the target value for this step
-     *
-     * @return Expected sensor measurement value
-     */
+    /// Virtual method implementation
     SensorMeasurement expected_value() const override
     {
         return expected_value_;

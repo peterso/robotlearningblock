@@ -268,41 +268,25 @@ struct TaskBoardDriver_v1 :
         // TODO(pgarrido): If this is going to be deleted, free all used memory
     }
 
-    /**
-     * @brief Gets the default task
-     *
-     * @return Reference to the default task
-     */
-    Task& get_default_task()
+    /// Virtual method implementation
+    Task& get_default_task() override
     {
         return *default_task_;
     }
 
-    /**
-     * @brief Gets the precondition task
-     *
-     * @return Reference to the default precondition task
-     */
-    Task& get_default_task_precondition()
+    /// Virtual method implementation
+    Task& get_default_task_precondition() override
     {
         return *default_precondition_task_;
     }
 
-    /**
-     * @brief Gets the board's unique identifier
-     *
-     * @return Reference to unique ID string
-     */
+    /// Virtual method implementation
     const std::string& get_unique_id() const override
     {
         return unique_id_;
     }
 
-    /**
-     * @brief Updates all sensor readings
-     *
-     * @details Updates M5Stack hardware state, IMU readings, and all sensor values
-     */
+    /// Virtual method implementation
     void update() override
     {
         hardware_low_level_controller_.m5_unified.update();
@@ -319,25 +303,15 @@ struct TaskBoardDriver_v1 :
         }
     }
 
-    /**
-     * @brief Gets the total number of sensors
-     *
-     * @return Count of all sensors (physical and virtual)
-     */
-    uint32_t get_sensor_count() const
+    /// Virtual method implementation
+    uint32_t get_sensor_count() const override
     {
         return sensors_.size();
     }
 
-    /**
-     * @brief Gets a sensor by index
-     *
-     * @param index Zero-based index of sensor to retrieve
-     *
-     * @return Pointer to sensor reader interface, or nullptr if index invalid
-     */
+    /// Virtual method implementation
     const SensorReader* get_sensor(
-            const size_t& index) const
+            const size_t& index) const override
     {
         const Sensor* sensor = nullptr;
 
@@ -349,15 +323,9 @@ struct TaskBoardDriver_v1 :
         return sensor;
     }
 
-    /**
-     * @brief Gets a sensor by name
-     *
-     * @param sensor_name Name identifier of sensor to retrieve
-     *
-     * @return Pointer to sensor reader interface, or nullptr if name not found
-     */
+    /// Virtual method implementation
     const SensorReader* get_sensor_by_name(
-            const std::string& sensor_name) const
+            const std::string& sensor_name) const override
     {
         const Sensor* sensor = nullptr;
 

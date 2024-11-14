@@ -37,11 +37,7 @@ struct SequentialTask :
      */
     virtual ~SequentialTask() = default;
 
-    /**
-     * @brief Gets a text hint for the current step
-     *
-     * @return string
-     */
+    /// Virtual method implementation
     std::string get_clue_string() override
     {
         std::string clue = "";
@@ -58,14 +54,7 @@ struct SequentialTask :
         return clue;
     }
 
-    /**
-     * @brief Gets feedback values for the current step
-     *
-     * @param[out] current_value Current sensor measurement
-     * @param[out] target_value Expected sensor measurement
-     *
-     * @return true if values were retrieved, false if not
-     */
+    /// Virtual method implementation
     bool get_clue(
             SensorMeasurement& current_value,
             SensorMeasurement& target_value) const override
@@ -83,11 +72,7 @@ struct SequentialTask :
         return ret;
     }
 
-    /**
-     * @brief Updates completion status and advances to next step if current is complete
-     *
-     * @return true if current step was completed, false otherwise
-     */
+    /// Virtual method implementation
     bool update() override
     {
         bool ret = Task::update();
@@ -105,45 +90,27 @@ struct SequentialTask :
         return ret;
     }
 
-    /**
-     * @brief Checks if all steps have been completed
-     *
-     * @return true if all steps are done, false otherwise
-     */
+    /// Virtual method implementation
     bool done() const override
     {
         return current_step_ == steps_.size();
     }
 
-    /**
-     * @brief Checks if a specific step has been completed
-     *
-     * @param step Index of the step to check
-     *
-     * @return true if specified step is done (previous to current), false otherwise
-     */
+    /// Virtual method implementation
     bool step_done(
             size_t step) const override
     {
         return step < current_step_;
     }
 
-    /**
-     * @brief Gets step done time
-     *
-     * @param step Index of the step to check
-     *
-     * @return Step done time in microseconds, -1 if step is not done
-     */
+    /// Virtual method implementation
     int64_t step_done_time(
-            size_t step) const
+            size_t step) const override
     {
         return steps_finish_time_[step];
     }
 
-    /**
-     * @brief Resets task to start from first step
-     */
+    /// Virtual method implementation
     void restart() override
     {
         current_step_ = 0;

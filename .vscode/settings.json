@@ -60,6 +60,16 @@
         "regex": "cpp",
         "variant": "cpp",
         "any": "cpp",
-        "*.in": "cpp"
+        "*.in": "cpp",
+        "codecvt": "cpp",
+        "condition_variable": "cpp",
+        "cstring": "cpp",
+        "forward_list": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp",
+        "optional": "cpp",
+        "future": "cpp",
+        "iomanip": "cpp",
+        "mutex": "cpp"
     }
 }

@@ -47,13 +47,7 @@ struct AnalogFilteredSensor :
      */
     virtual ~AnalogFilteredSensor() = default;
 
-    /**
-     * @brief Updates the sensor value with optional filtering
-     *
-     * @details If the measurement is analog and filtering is enabled (filter_size > 1),
-     *          applies a moving average filter to the reading. Non-analog measurements
-     *          or cases where filter_size <= 1 pass through unmodified.
-     */
+    /// Virtual method implementation
     void update() override
     {
         Sensor::update();

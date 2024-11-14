@@ -32,11 +32,7 @@ struct ParallelTask :
         steps_finish_time_.resize(steps.size(), -1);
     }
 
-    /**
-     * @brief Gets a text hint for the next incomplete step
-     *
-     * @return string
-     */
+    /// Virtual method implementation
     std::string get_clue_string() override
     {
         std::string clue = "";
@@ -63,14 +59,7 @@ struct ParallelTask :
         return clue;
     }
 
-    /**
-     * @brief Gets feedback values for the first incomplete step
-     *
-     * @param[out] current_value Current sensor measurement
-     * @param[out] target_value Expected sensor measurement
-     *
-     * @return true if values were retrieved, false otherwise
-     */
+    /// Virtual method implementation
     bool get_clue(
             SensorMeasurement& current_value,
             SensorMeasurement& target_value) const override
@@ -92,11 +81,7 @@ struct ParallelTask :
         return ret;
     }
 
-    /**
-     * @brief Updates completion status of all steps
-     *
-     * @return true if any step's status changed, false otherwise
-     */
+    /// Virtual method implementation
     bool update() override
     {
         bool ret = Task::update();
@@ -114,11 +99,7 @@ struct ParallelTask :
         return ret;
     }
 
-    /**
-     * @brief Checks if all steps have been completed
-     *
-     * @return true if all steps are done, false otherwise
-     */
+    /// Virtual method implementation
     bool done() const override
     {
         for (size_t i = 0; i < steps_.size(); i++)
@@ -132,35 +113,21 @@ struct ParallelTask :
         return true;
     }
 
-    /**
-     * @brief Checks if a specific step is completed
-     *
-     * @param step Index of the step to check
-     *
-     * @return true if specified step is done, false otherwise
-     */
+    /// Virtual method implementation
     bool step_done(
             size_t step) const override
     {
         return steps_status_[step];
     }
 
-    /**
-     * @brief Gets step done time
-     *
-     * @param step Index of the step to check
-     *
-     * @return Step done time in microseconds, -1 if step is not done
-     */
+    /// Virtual method implementation
     int64_t step_done_time(
-            size_t step) const
+            size_t step) const override
     {
         return steps_finish_time_[step];
     }
 
-    /**
-     * @brief Resets all steps to incomplete status
-     */
+    /// Virtual method implementation
     void restart() override
     {
         std::fill(steps_status_.begin(), steps_status_.end(), false);

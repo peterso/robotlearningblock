@@ -484,7 +484,7 @@ CONFIG_TWAI_ERRATA_FIX_LISTEN_ONLY_DOM=y
 # Legacy ADC Driver Configuration
 #
 CONFIG_ADC_DISABLE_DAC=y
-# CONFIG_ADC_SUPPRESS_DEPRECATE_WARN is not set
+CONFIG_ADC_SUPPRESS_DEPRECATE_WARN=y
 
 #
 # Legacy ADC Calibration Configuration
@@ -499,7 +499,7 @@ CONFIG_ADC_CAL_LUT_ENABLE=y
 #
 # Legacy DAC Driver Configurations
 #
-# CONFIG_DAC_SUPPRESS_DEPRECATE_WARN is not set
+CONFIG_DAC_SUPPRESS_DEPRECATE_WARN=y
 # end of Legacy DAC Driver Configurations
 
 #
@@ -523,7 +523,7 @@ CONFIG_ADC_CAL_LUT_ENABLE=y
 #
 # Legacy I2S Driver Configurations
 #
-# CONFIG_I2S_SUPPRESS_DEPRECATE_WARN is not set
+CONFIG_I2S_SUPPRESS_DEPRECATE_WARN=y
 # end of Legacy I2S Driver Configurations
 
 #

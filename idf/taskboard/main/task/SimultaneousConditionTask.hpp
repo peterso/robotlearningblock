@@ -34,14 +34,7 @@ struct SimultaneousConditionTask :
         steps_status_.resize(steps.size(), false);
     }
 
-    /**
-     * @brief Updates all step conditions and their completion states
-     *
-     * @details Checks all steps' conditions simultaneously. If any previously satisfied
-     *          condition becomes unsatisfied, that step's status is reset to incomplete.
-     *
-     * @return true if any step's status changed, false otherwise
-     */
+    /// Virtual method implementation
     bool update() override
     {
         bool ret = Task::update();
@@ -68,4 +61,5 @@ struct SimultaneousConditionTask :
 
         return ret;
     }
+
 };

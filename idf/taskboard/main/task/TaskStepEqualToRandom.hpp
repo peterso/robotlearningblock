@@ -35,11 +35,7 @@ struct TaskStepEqualToRandom :
         random_expected_value_ = SensorMeasurement((float) esp_random() / (float) UINT32_MAX);
     }
 
-    /**
-     * @brief Checks if current sensor reading matches random value and generates new target if matched
-     *
-     * @return true if sensor reading matches current random target within tolerance, false otherwise
-     */
+    /// Virtual method implementation
     bool success() const override
     {
         const bool ret = SensorMeasurement::equal(sensor_.read(), random_expected_value_, tolerance_);
