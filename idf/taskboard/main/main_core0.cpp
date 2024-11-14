@@ -127,11 +127,13 @@ extern "C" void app_main(
 
     // Check if system should start in local mode (Button A pressed during boot)
     const bool start_local_mode = BUTTON_A.read() == true;
+    std::string ip_string = "";
 
     if (start_local_mode)
     {
         ESP_LOGI("app_main", "Starting in local mode");
         screen_controller.print("-> Starting in local mode");
+        ip_string = "Local mode";
     }
     // Otherwise, initialize WiFi provisioning
     else
@@ -167,6 +169,7 @@ extern "C" void app_main(
         // Display connection info
         screen_controller.print("-> Connected to " + wifi_manager.get_ssid());
         screen_controller.print("-> IP: " + wifi_manager.get_ip());
+        ip_string = wifi_manager.get_ip();
     }
 
     // ------------------------
@@ -180,8 +183,16 @@ extern "C" void app_main(
     MicroROSMainArgs micro_ros_args = {micro_ros_controller, task_board_driver, task_executor};
     TaskHandle_t microros_task_handle;
     constexpr uint8_t MICROROS_THREAD_CORE_AFFINITY = 1;
-    xTaskCreatePinnedToCore(microros_main, "microros", 20000, &micro_ros_args, 4, &microros_task_handle,
-            MICROROS_THREAD_CORE_AFFINITY);
+    constexpr uint32_t MICROROS_STACK_SIZE = 15000;
+    constexpr uint8_t MICROROS_THREAD_PRIORITY = 4;
+    xTaskCreatePinnedToCore(
+        microros_main,
+        "microros",
+        MICROROS_STACK_SIZE,
+        &micro_ros_args,
+        MICROROS_THREAD_PRIORITY,
+        &microros_task_handle,
+        MICROROS_THREAD_CORE_AFFINITY);
 
     // Wait for tasks
     screen_controller.print("-> Waiting tasks to start");
@@ -231,7 +242,7 @@ extern "C" void app_main(
 
             if (!start_local_mode)
             {
-                screen_controller.print("-> IP: " + wifi_manager.get_ip());
+                screen_controller.print("-> IP: " + ip_string);
             }
 
             screen_controller.print("-> Press button B for default task");

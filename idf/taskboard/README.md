@@ -288,5 +288,4 @@ And the IP address and port of the micro-ROS Agent can be configured using the W
 
 - [ ] Add JSON/Kaa/MQTT API
 - [ ] OTA updates
-- [ ] Perform a dinamic memory analisys and remove critical usages, i.e.: MicroROSTaskRepresentation or JSONHandler
 - [ ] Randomize task steps

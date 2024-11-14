@@ -16,7 +16,7 @@
 
 #include <esp_log.h>
 
-// TODO(pgarrido): This can be highly optimized by mantaining a single cJSON object and updating it
+constexpr size_t JSON_BUFFER_SIZE = 15 * 1024;   ///< JSON buffer size
 
 /**
  * @struct JSONHandler
@@ -33,6 +33,10 @@ struct JSONHandler
     JSONHandler(
             const std::string& unique_id)
     {
+        // Let's assume that this class is not going to be used in a multi-threaded environment
+        cJSON_Hooks hooks = {custom_malloc, custom_free};
+        cJSON_InitHooks(&hooks);
+
         root_ = cJSON_CreateObject();
 
         cJSON_AddStringToObject(root_, "device_id", unique_id.c_str());
@@ -43,12 +47,16 @@ struct JSONHandler
      */
     ~JSONHandler()
     {
+        // cJSON Free will not do anything but let's call it anyway
         cJSON_Delete(root_);
 
         if (json_string_ != nullptr)
         {
             cJSON_free(json_string_);
         }
+
+        // Reset memory buffer index
+        memory_buffer_index_ = 0;
     }
 
     /**
@@ -201,4 +209,47 @@ private:
     cJSON* root_ = nullptr;             ///< Root JSON object
     cJSON* sensors_ = nullptr;          ///< Sensors array
     char* json_string_ = nullptr;       ///< JSON string
+
+private:
+
+    static uint8_t memory_buffer_[JSON_BUFFER_SIZE];   ///< Memory buffer for cJSON
+    static uint32_t memory_buffer_index_;       ///< Memory buffer index
+
+    /**
+     * @brief cJSON memory allocation
+     *
+     * @param size Size of the memory to allocate
+     *
+     * @return Pointer to the allocated memory
+     */
+    static void* custom_malloc(
+            size_t size)
+    {
+        uint8_t* ptr = &memory_buffer_[memory_buffer_index_];
+        size = (size + 3) & ~3;
+
+        // Ensure bounds
+        if (memory_buffer_index_ + size > JSON_BUFFER_SIZE)
+        {
+            ESP_LOGE("JSONHandler", "Memory buffer overflow");
+
+            return nullptr;
+        }
+
+        memory_buffer_index_ += size;
+
+        return ptr;
+    }
+
+    /**
+     * @brief cJSON memory deallocation
+     *
+     * @param ptr Pointer to the memory to deallocate
+     */
+    static void custom_free(
+            void* /* ptr */)
+    {
+        // Do nothing
+    }
+
 };
