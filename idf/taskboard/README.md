@@ -36,6 +36,8 @@ Noteworthy features:
       - [Gerring status from ROS 2](#gerring-status-from-ros-2)
       - [Triggering a new Task from ROS 2](#triggering-a-new-task-from-ros-2)
   - [Common actions](#common-actions)
+    - [Connecting to a Wi-Fi network](#connecting-to-a-wi-fi-network)
+    - [Connecting to a micro-ROS Agent](#connecting-to-a-micro-ros-agent)
   - [To Do](#to-do)
 
 ## Build firmware
@@ -276,6 +278,18 @@ By means of these buttons, the following basic configuration actions can be perf
 | Start default task (human mode)   | Press `BUTTON_B` and `BUTTON_PWR` at the same time                |
 | Cancel current task               | Press `BUTTON_A`                                                  |
 
+### Connecting to a Wi-Fi network
+
+After the Task Board is started in provisioning mode, it will create a Wi-Fi network.
+
+The board will notify in its screen the SSID of the new network and the IP address of the board.
+
+By reaching the IP address of the board in a web browser, the Web Interface will be shown:
+
+![WiFi Provisioning](images/wifiprovisioning.png "Roboton Task Board WiFi Provisioning")
+
+### Connecting to a micro-ROS Agent
+
 In order to **connect to a micro-ROS Agent** to start the ROS 2 integration, an micro-ROS Agent can be instantiated using docker:
 
 ```bash
@@ -283,6 +297,8 @@ docker run -it --rm -v /dev:/dev --privileged --net=host microros/micro-ros-agen
 ```
 
 And the IP address and port of the micro-ROS Agent can be configured using the Web Interface or the REST API.
+
+![Web Interface](images/webinterface.png "Roboton Task Board Web Interface")
 
 ## To Do
 
