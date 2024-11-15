@@ -214,9 +214,9 @@ This two interfaces exposes access and control over the system and the data mode
 
 | Action                            | REST API            | ROS 2                                                                    |
 | --------------------------------- | ------------------- | ------------------------------------------------------------------------ |
-| Task Board Status                 | `/taskboard_status` | `/roboton_taskboard_status` [roboton_taskboard_msgs/msg/TaskBoardStatus] |
-| Current Task Status               | `/task_status`      | `/roboton_task_status` [roboton_task_msgs/msg/TaskStatus]                |
-| Execute a new Task                | Not available       | `/taskboard_execute_task` [roboton_taskboard_msgs/action/ExecuteTask]    |
+| Task Board Status                 | `/taskboard_status` | `/roboton_taskboard_status [roboton_taskboard_msgs/msg/TaskBoardStatus]` |
+| Current Task Status               | `/task_status`      | `/roboton_task_status [roboton_task_msgs/msg/TaskStatus]`                |
+| Execute a new Task                | Not available       | `/taskboard_execute_task [roboton_taskboard_msgs/action/ExecuteTask]`    |
 | Leaderboard                       | `/leaderboard`      | Not available                                                            |
 | System Status                     | `/system_status`    | Not available                                                            |
 | Configure micro-ROS Agent address | `/microros`         | Not available                                                            |
