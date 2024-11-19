@@ -1,5 +1,5 @@
 /**
- * Roboton Task Board Firmware
+ * Robothon Task Board Firmware
  */
 
 #pragma once
@@ -25,7 +25,7 @@ struct ScreenController
         : display_(hardware_low_level_controller.m5_unified.Display)
     {
         clear();
-        print("Roboton Task Board");
+        print("Robothon Task Board");
     }
 
     /**
@@ -170,7 +170,7 @@ private:
     {
         display_.setCursor(5, 0);
         display_.setTextSize(2);
-        display_.print("Roboton Task Board");
+        display_.print("Robothon Task Board");
         display_.setTextSize(1);
         current_line_++;
     }

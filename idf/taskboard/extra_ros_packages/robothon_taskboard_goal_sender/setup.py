@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'roboton_taskboard_goal_sender'
+package_name = 'robothon_taskboard_goal_sender'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'goal_sender = roboton_taskboard_goal_sender.goal_sender:main'
+            'goal_sender = robothon_taskboard_goal_sender.goal_sender:main'
         ],
     },
 )

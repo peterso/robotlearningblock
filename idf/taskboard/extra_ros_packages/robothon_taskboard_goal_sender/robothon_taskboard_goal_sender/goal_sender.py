@@ -1,8 +1,8 @@
 from action_msgs.msg import GoalStatus
-from roboton_taskboard_msgs.action import ExecuteTask
-from roboton_taskboard_msgs.msg import Task
-from roboton_taskboard_msgs.msg import TaskStep
-from roboton_taskboard_msgs.msg import SensorMeasurement
+from robothon_taskboard_msgs.action import ExecuteTask
+from robothon_taskboard_msgs.msg import Task
+from robothon_taskboard_msgs.msg import TaskStep
+from robothon_taskboard_msgs.msg import SensorMeasurement
 
 import rclpy
 from rclpy.action import ActionClient
@@ -10,7 +10,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 
 
-class RobotonTaskBoardGoalSender(Node):
+class RobothonTaskBoardGoalSender(Node):
 
     def __init__(self):
         super().__init__('minimal_action_client')
@@ -95,7 +95,7 @@ def main(args=None):
     try:
         rclpy.init(args=args)
 
-        goal_sender = RobotonTaskBoardGoalSender()
+        goal_sender = RobothonTaskBoardGoalSender()
 
         goal_sender.send_goal()
 

@@ -1,5 +1,5 @@
 /**
- * Roboton Task Board Firmware
+ * Robothon Task Board Firmware
  */
 
 #pragma once
@@ -16,8 +16,8 @@
 
 #include <esp_log.h>
 
-#include <roboton_taskboard_msgs/msg/task_status.h>
-#include <roboton_taskboard_msgs/action/execute_task.h>
+#include <robothon_taskboard_msgs/msg/task_status.h>
+#include <robothon_taskboard_msgs/action/execute_task.h>
 
 /**
  * @struct MicroROSTask
@@ -41,8 +41,8 @@ struct MicroROSTask :
         : SequentialTask(steps_, "MicroROS Task")
         , goal_handle_(goal_handle)
     {
-        const roboton_taskboard_msgs__action__ExecuteTask_SendGoal_Request* goal_request =
-                (const roboton_taskboard_msgs__action__ExecuteTask_SendGoal_Request*) goal_handle->ros_goal_request;
+        const robothon_taskboard_msgs__action__ExecuteTask_SendGoal_Request* goal_request =
+                (const robothon_taskboard_msgs__action__ExecuteTask_SendGoal_Request*) goal_handle->ros_goal_request;
 
         this->set_human_task(goal_request->goal.human_task);
 
@@ -69,13 +69,13 @@ struct MicroROSTask :
 
             switch (msg_step.type)
             {
-                case roboton_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_EQUAL:
+                case robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_EQUAL:
                     step = new TaskStepEqual(*sensor, target, msg_step.tolerance);
                     break;
-                case roboton_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_EQUAL_RANDOM:
+                case robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_EQUAL_RANDOM:
                     step = new TaskStepEqualToRandom(*sensor, msg_step.tolerance);
                     break;
-                case roboton_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_GREATER_EQUAL:
+                case robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_GREATER_EQUAL:
                     step = new TaskStepGreaterEqualThan(*sensor, target);
                     break;
                 default:

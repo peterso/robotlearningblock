@@ -1,5 +1,5 @@
 /**
- * Roboton Task Board Firmware
+ * Robothon Task Board Firmware
  */
 
 #include <hal/board/TaskBoardDriver_v1.hpp>
@@ -149,7 +149,7 @@ extern "C" void app_main(
         }
 
         // Initialize WiFi manager
-        WifiManager wifi_manager(http_server, "Roboton Task Board", reset_provisioning);
+        WifiManager wifi_manager(http_server, "Robothon Task Board", reset_provisioning);
 
         // Display appropriate connection instructions based on provisioning state
         if (wifi_manager.is_provisioned())

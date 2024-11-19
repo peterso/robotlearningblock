@@ -1,6 +1,6 @@
-# Roboton Task Board Firmware
+# Robothon Task Board Firmware
 
-A flexible and extensible firmware for Roboton Task Board.
+A flexible and extensible firmware for Robothon Task Board.
 
 Noteworthy features:
 
@@ -12,7 +12,7 @@ Noteworthy features:
 
 ## Table of Contents
 
-- [Roboton Task Board Firmware](#roboton-task-board-firmware)
+- [Robothon Task Board Firmware](#robothon-task-board-firmware)
   - [Table of Contents](#table-of-contents)
   - [Build firmware](#build-firmware)
   - [Data Model Overview](#data-model-overview)
@@ -42,7 +42,7 @@ Noteworthy features:
 
 ## Build firmware
 
-The Roboton Task Board firmware is built on top of the ESP-IDF framework.
+The Robothon Task Board Firmware is built on top of the ESP-IDF framework.
 
 The easiest way to get started is to use the ESP-IDF Docker image:
 
@@ -69,7 +69,7 @@ idf.py build flash monitor
 
 ## Data Model Overview
 
-The Roboton Task Board firmware is built around a hierarchical data model where **Tasks** is the main component.
+The Robothon Task Board Firmware is built around a hierarchical data model where **Tasks** is the main component.
 
 A **Task** is a named group of **TaskSteps** that must be completed in an specific order.
 
@@ -146,7 +146,7 @@ Three types of `Task` are provided:
 
 ## Controller Architecture Overview
 
-The Roboton Task Board firmware implements a set of modular controllers that manage different aspects of the system and interacts with the data model.
+The Robothon Task Board Firmware implements a set of modular controllers that manage different aspects of the system and interacts with the data model.
 
 ### TaskBoardDriver
 
@@ -192,20 +192,20 @@ The **WifiManager** is an object that handles the network connectivity of the Ta
 
 ### micro-ROS controllers
 
-The Roboton Task Board firmware provides a ROS 2 integration that allows the system to communicate with other ROS 2 nodes by means of micro-ROS.
+The Robothon Task Board Firmware provides a ROS 2 integration that allows the system to communicate with other ROS 2 nodes by means of micro-ROS.
 
 In order to implement the ROS 2 integration the following classes are provided:
 
-- `MicroROSTypes`: Conversions between micro-ROS and Roboton Task Board data types.
+- `MicroROSTypes`: Conversions between micro-ROS and Robothon Task Board data types.
 - `MicroROSController`: Handles micro-ROS Client status, micro-ROS Agent connection, and creation and destruction of micro-ROS entities.
 - `MicroROSTask`: An specialization of `Task` that allows to create a `Task` from a ROS 2 action.
 - `MicroROSTaskExecutor`: Coordinates the interaction between the `TaskExecutor` and the `MicroROSController` by means of handling the `MicroROSTask` lifecycle.
 
-Beyond that classes, a comprehensive translation of the Task Board data model to ROS 2 messages is provided in `extra_ros_packages/roboton_taskboard_msgs` package.
+Beyond that classes, a comprehensive translation of the Task Board data model to ROS 2 messages is provided in `extra_ros_packages/robothon_taskboard_msgs` package.
 
 ## Accessing the data model
 
-The Roboton Task Board firmware exposes two primary interfaces for accessing the data model:
+The Robothon Task Board Firmware exposes two primary interfaces for accessing the data model:
 
 - **REST API**: Provides a set of endpoints for interacting with the system via HTTP requests.
 - **ROS 2 Integration**: Allows the system to communicate with other ROS 2 nodes.
@@ -214,9 +214,9 @@ This two interfaces exposes access and control over the system and the data mode
 
 | Action                            | REST API            | ROS 2                                                                    |
 | --------------------------------- | ------------------- | ------------------------------------------------------------------------ |
-| Task Board Status                 | `/taskboard_status` | `/roboton_taskboard_status [roboton_taskboard_msgs/msg/TaskBoardStatus]` |
-| Current Task Status               | `/task_status`      | `/roboton_task_status [roboton_task_msgs/msg/TaskStatus]`                |
-| Execute a new Task                | Not available       | `/taskboard_execute_task [roboton_taskboard_msgs/action/ExecuteTask]`    |
+| Task Board Status                 | `/taskboard_status` | `/robothon_taskboard_status [robothon_taskboard_msgs/msg/TaskBoardStatus]` |
+| Current Task Status               | `/task_status`      | `/robothon_task_status [robothon_task_msgs/msg/TaskStatus]`                |
+| Execute a new Task                | Not available       | `/taskboard_execute_task [robothon_taskboard_msgs/action/ExecuteTask]`    |
 | Leaderboard                       | `/leaderboard`      | Not available                                                            |
 | System Status                     | `/system_status`    | Not available                                                            |
 | Configure micro-ROS Agent address | `/microros`         | Not available                                                            |
@@ -235,18 +235,18 @@ This webpage is also served by the **HTTPServer** controller in the endpoint `/`
 For subscribing to the Task Board status, you can use the following command:
 
 ```bash
-ros2 topic echo /roboton_taskboard_status
+ros2 topic echo /robothon_taskboard_status
 ```
 
 or
 
 ```bash
-ros2 topic echo /roboton_task_status
+ros2 topic echo /robothon_task_status
 ```
 
 #### Triggering a new Task from ROS 2
 
-An example of a ROS 2 application that sends a new Task to the Task Board can be found in `extra_ros_packages/roboton_taskboard_goal_sender` folder.
+An example of a ROS 2 application that sends a new Task to the Task Board can be found in `extra_ros_packages/robothon_taskboard_goal_sender` folder.
 
 This example application can be built as a normal ROS 2 package and run as a node:
 
@@ -254,13 +254,13 @@ This example application can be built as a normal ROS 2 package and run as a nod
 cd extra_ros_packages
 colcon build
 
-ros2 run roboton_taskboard_goal_sender roboton_taskboard_goal_sender
-ros2 run roboton_taskboard_goal_sender goal_sender
+ros2 run robothon_taskboard_goal_sender robothon_taskboard_goal_sender
+ros2 run robothon_taskboard_goal_sender goal_sender
 ```
 
 ## Common actions
 
-Roboton Task Board firmware assummes that every **TaskBoardDriver** implementation will have the following buttons registered as sensors:
+Robothon Task Board Firmware assummes that every **TaskBoardDriver** implementation will have the following buttons registered as sensors:
 
 - `BUTTON_A`: M5Stack button A
 - `BUTTON_B`: M5Stack button B
@@ -286,7 +286,7 @@ The board will notify in its screen the SSID of the new network and the IP addre
 
 By reaching the IP address of the board in a web browser, the Web Interface will be shown:
 
-![WiFi Provisioning](images/wifiprovisioning.png "Roboton Task Board WiFi Provisioning")
+![WiFi Provisioning](images/wifiprovisioning.png "Robothon Task Board WiFi Provisioning")
 
 ### Connecting to a micro-ROS Agent
 
@@ -298,7 +298,7 @@ docker run -it --rm --privileged --net=host --ipc host microros/micro-ros-agent:
 
 And the IP address and port of the micro-ROS Agent can be configured using the Web Interface or the REST API.
 
-![Web Interface](images/webinterface.png "Roboton Task Board Web Interface")
+![Web Interface](images/webinterface.png "Robothon Task Board Web Interface")
 
 ### Recording a ROS 2 session
 

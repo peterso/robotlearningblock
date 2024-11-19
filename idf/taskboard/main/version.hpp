@@ -1,5 +1,5 @@
 /**
- * Roboton Task Board Firmware
+ * Robothon Task Board Firmware
  */
 
 #include <cstdint>

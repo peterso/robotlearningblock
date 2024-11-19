@@ -1,5 +1,5 @@
 /**
- * Roboton Task Board Firmware
+ * Robothon Task Board Firmware
  */
 
 #pragma once
@@ -8,9 +8,9 @@
 #include <sensor/SensorMeasurement.hpp>
 #include <util/Timing.hpp>
 
-#include <roboton_taskboard_msgs/msg/task_board_status.h>
-#include <roboton_taskboard_msgs/msg/task_status.h>
-#include <roboton_taskboard_msgs/action/execute_task.h>
+#include <robothon_taskboard_msgs/msg/task_board_status.h>
+#include <robothon_taskboard_msgs/msg/task_status.h>
+#include <robothon_taskboard_msgs/action/execute_task.h>
 
 /**
  * @struct MicroROSTypes
@@ -39,21 +39,21 @@ struct MicroROSTypes
         static uint8_t get_microros_type(
                 const ::TaskStep::Type& type)
         {
-            uint8_t ret = roboton_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_UNKNOWN;
+            uint8_t ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_UNKNOWN;
 
             switch (type)
             {
                 case ::TaskStep::Type::EQUAL:
-                    ret = roboton_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_EQUAL;
+                    ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_EQUAL;
                     break;
                 case ::TaskStep::Type::EQUAL_TO_RANDOM:
-                    ret = roboton_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_EQUAL_RANDOM;
+                    ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_EQUAL_RANDOM;
                     break;
                 case ::TaskStep::Type::GREATER_OR_EQUAL:
-                    ret = roboton_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_GREATER_EQUAL;
+                    ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_GREATER_EQUAL;
                     break;
                 default:
-                    ret = roboton_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_UNKNOWN;
+                    ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_UNKNOWN;
                     break;
             }
 
@@ -95,7 +95,7 @@ struct MicroROSTypes
 
             microros_msg_.elapsed_time = usec_to_microros(task.elapsed_time());
 
-            microros_msg_.steps.data = new roboton_taskboard_msgs__msg__TaskStep[task.total_steps()];
+            microros_msg_.steps.data = new robothon_taskboard_msgs__msg__TaskStep[task.total_steps()];
             microros_msg_.steps.size = task.total_steps();
             microros_msg_.steps.capacity = task.total_steps();
 
@@ -111,7 +111,7 @@ struct MicroROSTypes
             {
                 const ::TaskStep& step = task.step(i);
 
-                roboton_taskboard_msgs__msg__TaskStep& msg_step = microros_msg_.steps.data[i];
+                robothon_taskboard_msgs__msg__TaskStep& msg_step = microros_msg_.steps.data[i];
                 msg_step.sensor_name.data = (char*)step.sensor().name().c_str();
                 msg_step.sensor_name.size = step.sensor().name().size();
                 msg_step.sensor_name.capacity = step.sensor().name().size() + 1;
@@ -201,13 +201,13 @@ struct MicroROSTypes
             {
                 switch (microros_msg_.steps.data[i].target.type)
                 {
-                    case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL:
+                    case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL:
                         delete microros_msg_.steps.data[i].target.bool_value.data;
                         break;
-                    case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG:
+                    case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG:
                         delete microros_msg_.steps.data[i].target.analog_value.data;
                         break;
-                    case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
+                    case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
                         delete microros_msg_.steps.data[i].target.vector3_value.data;
                         break;
                     default:
@@ -245,14 +245,14 @@ struct MicroROSTypes
         /**
          * @brief Gets the micro-ROS message
          */
-        const roboton_taskboard_msgs__msg__TaskStatus& get_microros_msg() const
+        const robothon_taskboard_msgs__msg__TaskStatus& get_microros_msg() const
         {
             return microros_msg_;
         }
 
     private:
 
-        roboton_taskboard_msgs__msg__TaskStatus microros_msg_ = {};      ///< micro-ROS message
+        robothon_taskboard_msgs__msg__TaskStatus microros_msg_ = {};      ///< micro-ROS message
     };
 
     /**
@@ -298,7 +298,7 @@ struct MicroROSTypes
                     microros_msg_.vector3_value.data[0].z = sensor_measurement.get_vector3().z;
                 default:
                     microros_msg_.type =
-                            roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_UNKNOWN;
+                            robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_UNKNOWN;
                     break;
             }
         }
@@ -310,13 +310,13 @@ struct MicroROSTypes
         {
             switch (microros_msg_.type)
             {
-                case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL:
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL:
                     delete microros_msg_.bool_value.data;
                     break;
-                case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG:
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG:
                     delete microros_msg_.analog_value.data;
                     break;
-                case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
                     delete microros_msg_.vector3_value.data;
                     break;
                 default:
@@ -334,21 +334,21 @@ struct MicroROSTypes
         static uint8_t get_microros_type(
                 const ::SensorMeasurement::Type& sensor_measurement_type)
         {
-            uint8_t ret = roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_UNKNOWN;
+            uint8_t ret = robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_UNKNOWN;
 
             switch (sensor_measurement_type)
             {
                 case ::SensorMeasurement::Type::BOOLEAN:
-                    ret = roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL;
+                    ret = robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL;
                     break;
                 case ::SensorMeasurement::Type::ANALOG:
-                    ret = roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG;
+                    ret = robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG;
                     break;
                 case ::SensorMeasurement::Type::VECTOR3:
-                    ret = roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3;
+                    ret = robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3;
                     break;
                 default:
-                    ret = roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_UNKNOWN;
+                    ret = robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_UNKNOWN;
                     break;
             }
 
@@ -369,13 +369,13 @@ struct MicroROSTypes
 
             switch (type)
             {
-                case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL:
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL:
                     ret = ::SensorMeasurement::Type::BOOLEAN;
                     break;
-                case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG:
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG:
                     ret = ::SensorMeasurement::Type::ANALOG;
                     break;
-                case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
                     ret = ::SensorMeasurement::Type::VECTOR3;
                     break;
                 default:
@@ -394,13 +394,13 @@ struct MicroROSTypes
          * @return SensorMeasurement
          */
         static ::SensorMeasurement from_microros(
-                const roboton_taskboard_msgs__msg__SensorMeasurement& msg)
+                const robothon_taskboard_msgs__msg__SensorMeasurement& msg)
         {
             ::SensorMeasurement ret(0.0f);
 
             switch (msg.type)
             {
-                case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL:
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_BOOL:
 
                     if (msg.bool_value.size > 0)
                     {
@@ -408,7 +408,7 @@ struct MicroROSTypes
                     }
 
                     break;
-                case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG:
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_ANALOG:
 
                     if (msg.analog_value.size > 0)
                     {
@@ -416,7 +416,7 @@ struct MicroROSTypes
                     }
 
                     break;
-                case roboton_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
 
                     if (msg.vector3_value.size > 0)
                     {
@@ -438,14 +438,14 @@ struct MicroROSTypes
         /**
          * @brief Gets the micro-ROS message
          */
-        const roboton_taskboard_msgs__msg__SensorMeasurement& get_microros_msg() const
+        const robothon_taskboard_msgs__msg__SensorMeasurement& get_microros_msg() const
         {
             return microros_msg_;
         }
 
     private:
 
-        roboton_taskboard_msgs__msg__SensorMeasurement microros_msg_ = {};   ///< micro-ROS message
+        robothon_taskboard_msgs__msg__SensorMeasurement microros_msg_ = {};   ///< micro-ROS message
     };
 
     /**
@@ -470,7 +470,7 @@ struct MicroROSTypes
             microros_msg_.header.frame_id.capacity = task_board_driver.get_unique_id().size() + 1;
 
             // Fill sensors
-            microros_msg_.sensors.data = new roboton_taskboard_msgs__msg__Sensor[task_board_driver.get_sensor_count()];
+            microros_msg_.sensors.data = new robothon_taskboard_msgs__msg__Sensor[task_board_driver.get_sensor_count()];
             microros_msg_.sensors.size = task_board_driver.get_sensor_count();
             microros_msg_.sensors.capacity = task_board_driver.get_sensor_count();
 
@@ -545,14 +545,14 @@ struct MicroROSTypes
         /**
          * @brief Gets the micro-ROS message
          */
-        const roboton_taskboard_msgs__msg__TaskBoardStatus& get_microros_msg() const
+        const robothon_taskboard_msgs__msg__TaskBoardStatus& get_microros_msg() const
         {
             return microros_msg_;
         }
 
     private:
 
-        roboton_taskboard_msgs__msg__TaskBoardStatus microros_msg_ = {};         ///< micro-ROS message
+        robothon_taskboard_msgs__msg__TaskBoardStatus microros_msg_ = {};         ///< micro-ROS message
     };
 
     /**
@@ -580,7 +580,7 @@ struct MicroROSTypes
             microros_msg_.goal.task.name.size = 0;
             microros_msg_.goal.task.name.capacity = max_task_name_size;
 
-            microros_msg_.goal.task.steps.data = new roboton_taskboard_msgs__msg__TaskStep[max_steps_per_task];
+            microros_msg_.goal.task.steps.data = new robothon_taskboard_msgs__msg__TaskStep[max_steps_per_task];
             microros_msg_.goal.task.steps.size = 0;
             microros_msg_.goal.task.steps.capacity = max_steps_per_task;
 
@@ -647,14 +647,14 @@ struct MicroROSTypes
         /**
          * @brief Gets the micro-ROS message
          */
-        const roboton_taskboard_msgs__action__ExecuteTask_SendGoal_Request& get_microros_msg() const
+        const robothon_taskboard_msgs__action__ExecuteTask_SendGoal_Request& get_microros_msg() const
         {
             return microros_msg_;
         }
 
     private:
 
-        roboton_taskboard_msgs__action__ExecuteTask_SendGoal_Request microros_msg_ = {};     ///< micro-ROS message
+        robothon_taskboard_msgs__action__ExecuteTask_SendGoal_Request microros_msg_ = {};     ///< micro-ROS message
     };
 
     /**
@@ -678,14 +678,14 @@ struct MicroROSTypes
         /**
          * @brief Gets the micro-ROS message
          */
-        const roboton_taskboard_msgs__action__ExecuteTask_FeedbackMessage& get_microros_msg() const
+        const robothon_taskboard_msgs__action__ExecuteTask_FeedbackMessage& get_microros_msg() const
         {
             return microros_msg_;
         }
 
     private:
 
-        roboton_taskboard_msgs__action__ExecuteTask_FeedbackMessage microros_msg_ = {};          ///< micro-ROS message
+        robothon_taskboard_msgs__action__ExecuteTask_FeedbackMessage microros_msg_ = {};          ///< micro-ROS message
     };
 
     /**
@@ -718,13 +718,13 @@ struct MicroROSTypes
         /**
          * @brief Gets the micro-ROS message
          */
-        const roboton_taskboard_msgs__action__ExecuteTask_GetResult_Response& get_microros_msg() const
+        const robothon_taskboard_msgs__action__ExecuteTask_GetResult_Response& get_microros_msg() const
         {
             return microros_msg_;
         }
 
     private:
 
-        roboton_taskboard_msgs__action__ExecuteTask_GetResult_Response microros_msg_ = {};    ///< micro-ROS message
+        robothon_taskboard_msgs__action__ExecuteTask_GetResult_Response microros_msg_ = {};    ///< micro-ROS message
     };
 };

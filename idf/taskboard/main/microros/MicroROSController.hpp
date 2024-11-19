@@ -1,5 +1,5 @@
 /**
- * Roboton Task Board Firmware
+ * Robothon Task Board Firmware
  */
 
 #pragma once
@@ -319,7 +319,7 @@ private:
         }
 
         // create node
-        if (RCL_RET_OK != rclc_node_init_default(&node_, "roboton_taskboard", "", &support_))
+        if (RCL_RET_OK != rclc_node_init_default(&node_, "robothon_taskboard", "", &support_))
         {
             ESP_LOGI(TAG, "Failed to init node");
 
@@ -330,8 +330,8 @@ private:
         if (RCL_RET_OK != rclc_publisher_init_best_effort(
                     &taskboard_status_publisher_,
                     &node_,
-                    ROSIDL_GET_MSG_TYPE_SUPPORT(roboton_taskboard_msgs, msg, TaskBoardStatus),
-                    "roboton_taskboard_status"))
+                    ROSIDL_GET_MSG_TYPE_SUPPORT(robothon_taskboard_msgs, msg, TaskBoardStatus),
+                    "robothon_taskboard_status"))
         {
             ESP_LOGI(TAG, "Failed to init publisher");
 
@@ -342,8 +342,8 @@ private:
         if (RCL_RET_OK != rclc_publisher_init_best_effort(
                     &task_status_publisher_,
                     &node_,
-                    ROSIDL_GET_MSG_TYPE_SUPPORT(roboton_taskboard_msgs, msg, TaskStatus),
-                    "roboton_task_status"))
+                    ROSIDL_GET_MSG_TYPE_SUPPORT(robothon_taskboard_msgs, msg, TaskStatus),
+                    "robothon_task_status"))
         {
             ESP_LOGI(TAG, "Failed to init task status publisher");
 
@@ -355,7 +355,7 @@ private:
                     &action_server_,
                     &node_,
                     &support_,
-                    ROSIDL_GET_ACTION_TYPE_SUPPORT(roboton_taskboard_msgs, ExecuteTask),
+                    ROSIDL_GET_ACTION_TYPE_SUPPORT(robothon_taskboard_msgs, ExecuteTask),
                     "taskboard_execute_task"))
         {
             ESP_LOGI(TAG, "Failed to init action server");
@@ -376,7 +376,7 @@ private:
                     &action_server_,
                     1,
                     const_cast<void*>(static_cast<const void*>(&action_goal_request_.get_microros_msg())),
-                    sizeof(roboton_taskboard_msgs__action__ExecuteTask_SendGoal_Request),
+                    sizeof(robothon_taskboard_msgs__action__ExecuteTask_SendGoal_Request),
                     handle_goal,
                     handle_cancel,
                     this))
