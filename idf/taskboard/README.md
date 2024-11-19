@@ -38,6 +38,7 @@ Noteworthy features:
   - [Common actions](#common-actions)
     - [Connecting to a Wi-Fi network](#connecting-to-a-wi-fi-network)
     - [Connecting to a micro-ROS Agent](#connecting-to-a-micro-ros-agent)
+    - [Recording a ROS 2 session](#recording-a-ros-2-session)
 
 ## Build firmware
 
@@ -292,9 +293,30 @@ By reaching the IP address of the board in a web browser, the Web Interface will
 In order to **connect to a micro-ROS Agent** to start the ROS 2 integration, an micro-ROS Agent can be instantiated using docker:
 
 ```bash
-docker run -it --rm -v /dev:/dev --privileged --net=host microros/micro-ros-agent:jazzy udp4 --port 8888 -v5
+docker run -it --rm --privileged --net=host --ipc host microros/micro-ros-agent:jazzy udp4 --port 8888 -v5
 ```
 
 And the IP address and port of the micro-ROS Agent can be configured using the Web Interface or the REST API.
 
 ![Web Interface](images/webinterface.png "Roboton Task Board Web Interface")
+
+### Recording a ROS 2 session
+
+To record a ROS 2 session the usage of [Vulcanexus Recorder & Replay](https://docs.vulcanexus.org/en/jazzy/rst/introduction/tools/recordreplay.html).
+
+To use the recorder, the easiest way is using docker:
+
+```bash
+cd robotlearningblock/idf/taskboard
+docker run -it --rm --privileged --net host --ipc host  -v $(pwd)/extra_ros_packages/record_replay_session:/shared_folder eprosima/vulcanexus:jazzy-desktop ddsrecorder -c /shared_folder/config.yml
+```
+
+Former command will generate a .mcap file in the `extra_ros_packages/record_replay_session` folder.
+
+In order to replay the session, the following command can be used:
+
+```bash
+docker run -it --rm --privileged --net host --ipc host  -v $(pwd)/extra_ros_packages/record_replay_session:/shared_folder eprosima/vulcanexus:jazzy-desktop ddsreplayer -i /shared_folder/[session_name]
+```
+
+**Remember to add extra topics to `extra_ros_packages/record_replay_session/config.yml` if they need to be recorded**

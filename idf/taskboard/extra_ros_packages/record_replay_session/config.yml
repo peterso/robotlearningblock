@@ -1,0 +1,15 @@
+version: v5.0
+
+dds:
+  domain: 0
+
+  allowlist:
+    - name: "*/roboton*"
+      type: "*"
+
+recorder:
+  output:
+    filename: "roboton_session"
+    path: "/shared_folder"
+    timestamp-format: "%Y-%m-%d_%H-%M-%S_%Z"
+    local-timestamp: true
