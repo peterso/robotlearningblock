@@ -5,6 +5,7 @@
 #pragma once
 
 #include <task/TaskStep.hpp>
+#include <util/UUID.hpp>
 
 #include <esp_timer.h>
 #include <esp_log.h>
@@ -19,6 +20,9 @@
  */
 struct Task
 {
+    //! @brief TaskUniqueIdentifier type
+    using TaskUniqueIdentifier = uint8_t[16];
+
     /**
      * @brief Constructs a new Task object
      *
@@ -35,6 +39,8 @@ struct Task
         , task_name_(task_name)
         , first_task_init_timer_(first_task_init_timer)
     {
+        uuid_generate(unique_id_);
+        unique_id_str_ = uuid_to_string(unique_id_);
     }
 
     /**
@@ -190,6 +196,11 @@ struct Task
         is_human_task_ = is_human_task;
     }
 
+    const std::string & unique_id() const
+    {
+        return unique_id_str_;
+    }
+
 protected:
 
     /**
@@ -205,6 +216,9 @@ protected:
     const std::vector<const TaskStep*>& steps_;     ///< Sequence of steps in the task
 
 private:
+
+    TaskUniqueIdentifier unique_id_;                ///< Unique identifier for the task
+    std::string unique_id_str_;                     ///< Unique identifier as string
 
     int64_t init_time_ = 0;                         ///< Task start time in microseconds
     int64_t task_time_;                             ///< Current task time in microseconds

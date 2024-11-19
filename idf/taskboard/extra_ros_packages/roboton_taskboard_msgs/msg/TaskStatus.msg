@@ -1,5 +1,6 @@
 std_msgs/Header header
 string task_name
+string unique_id
 bool waiting_precondition
 builtin_interfaces/Time elapsed_time
 TaskStep[] steps

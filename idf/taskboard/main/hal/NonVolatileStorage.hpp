@@ -104,10 +104,11 @@ struct NonVolatileStorage
         }
 
         // Write CSV line: timestamp, task name, is_human
-        fprintf(file, "%s,%lld,%d\n",
+        fprintf(file, "%s,%lld,%d,%s\n",
                 task.name().c_str(),
                 task.elapsed_time(),
-                is_human ? 1 : 0);
+                is_human ? 1 : 0,
+                task.unique_id().c_str());
 
         // Ensure data is written to file
         fflush(file);

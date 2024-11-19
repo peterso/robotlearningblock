@@ -89,6 +89,10 @@ struct MicroROSTypes
             microros_msg_.task_name.size = task.name().size();
             microros_msg_.task_name.capacity = task.name().size() + 1;
 
+            microros_msg_.unique_id.data = (char*)task.unique_id().c_str();
+            microros_msg_.unique_id.size = task.unique_id().size();
+            microros_msg_.unique_id.capacity = task.unique_id().size() + 1;
+
             microros_msg_.elapsed_time = usec_to_microros(task.elapsed_time());
 
             microros_msg_.steps.data = new roboton_taskboard_msgs__msg__TaskStep[task.total_steps()];

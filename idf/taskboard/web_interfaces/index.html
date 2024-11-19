@@ -246,6 +246,9 @@
             margin-bottom: 15px;
             font-weight: bold;
         }
+        .task-uuid {
+            margin-bottom: 15px;
+        }
         .task-steps {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -438,6 +441,28 @@
             font-size: 60%;
             font-weight: bold;
         }
+
+        .uuid-cell {
+            position: relative;
+            cursor: pointer;
+            }
+
+            .uuid-tooltip {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ddd;
+            padding: 4px 8px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+            }
+
+            .uuid-cell:hover .uuid-tooltip {
+            display: block;
+            }
     </style>
 </head>
 <body>
@@ -481,6 +506,7 @@
                             <th>Task</th>
                             <th>Time</th>
                             <th></th>
+                            <th>UUID</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboard-body"></tbody>
@@ -1126,6 +1152,7 @@
                             </div>
                         </div>
                         <div class="task-time">Time: ${data.current_task.time.toFixed(2)}s</div>
+                        <div class="task-uuid"> <small> Unique ID: <b>${data.current_task.unique_id} </b> </small> </div>
                         <div class="task-steps">
                             ${data.current_task.steps.map(step => `
                                 <div class="step ${step.done ? 'done' : 'pending'}">
@@ -1248,11 +1275,12 @@
                 const leaderboardData = lines
                     .filter(line => line.trim()) // Remove empty lines
                     .map(line => {
-                        const [taskName, timestamp, isHuman] = line.split(',');
+                        const [taskName, timestamp, isHuman, uniqueId] = line.split(',');
                         return {
                             taskName,
                             timestamp: parseInt(timestamp),
-                            isHuman: parseInt(isHuman) === 1
+                            isHuman: parseInt(isHuman) === 1,
+                            uniqueId
                         };
                     })
                     .sort((a, b) => a.timestamp - b.timestamp); // Sort by time
@@ -1264,9 +1292,14 @@
                     const row = document.createElement('tr');
                     row.className = 'leaderboard-row';
                     row.innerHTML = `
+
                         <td>${entry.taskName}</td>
                         <td class="time-cell">${(entry.timestamp / 1000000).toFixed(3)} s</td>
                         <td>${entry.isHuman ? '👤' : '🤖'}</td>
+                        <td class="uuid-cell">
+                            ${entry.uniqueId.substring(0, 8)}...
+                            <span class="uuid-tooltip">${entry.uniqueId}</span>
+                        </td>
                     `;
                     leaderboardBody.appendChild(row);
                 });
