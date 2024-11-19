@@ -49,7 +49,6 @@ struct MicroROSTask :
         this->set_task_name(goal_request->goal.task.name.data);
 
         const uint32_t num_steps = goal_request->goal.task.steps.size;
-        ESP_LOGI(TAG, "Received task with %ld steps", num_steps);
         steps_.reserve(num_steps);
 
         for (size_t i = 0; i < num_steps; i++)

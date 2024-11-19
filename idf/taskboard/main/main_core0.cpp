@@ -180,7 +180,8 @@ extern "C" void app_main(
     http_server.initialize_taskboard_api();
 
     // Create Micro-ROS task on core 1
-    MicroROSMainArgs micro_ros_args = {micro_ros_controller, task_board_driver, task_executor};
+    MicroROSMainArgs micro_ros_args = {micro_ros_controller, task_board_driver, task_executor, xTaskGetCurrentTaskHandle()};
+
     TaskHandle_t microros_task_handle;
     constexpr uint8_t MICROROS_THREAD_CORE_AFFINITY = 1;
     constexpr uint32_t MICROROS_STACK_SIZE = 15000;
@@ -255,6 +256,16 @@ extern "C" void app_main(
 
             // Button debounce delay
             vTaskDelay(pdMS_TO_TICKS(100));
+        }
+
+        // If notifed by Micro-ROS task, cancel current task
+        uint32_t value;
+
+        if (pdPASS == xTaskNotifyWait(pdFALSE, 0xFFFFFFFF, &value, pdMS_TO_TICKS(0)))
+        {
+            // Update screen with cancellation message
+            screen_controller.clear();
+            screen_controller.print("-> Task cancelled");
         }
 
         // Update task execution status

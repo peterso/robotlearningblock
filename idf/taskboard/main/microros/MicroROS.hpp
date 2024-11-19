@@ -20,10 +20,12 @@ struct MicroROSMainArgs
     MicroROSController& microros_controller;    ///< Reference to micro-ROS controller
     TaskBoardDriver& task_board_driver;         ///< Reference to task board hardware interface
     TaskExecutor& task_executor;                ///< Reference to task execution controller
+    TaskHandle_t main_task_handle;              ///< Handle to main task
 };
 
 /// Notification bit indicating manual task cancellation from Core 0
 constexpr uint8_t MANUALLY_CANCELLED_TASK = 0x01;
+constexpr uint8_t MICROROS_CANCELLED_TASK = 0x02;
 
 /**
  * @brief Main function for MicroROS task execution

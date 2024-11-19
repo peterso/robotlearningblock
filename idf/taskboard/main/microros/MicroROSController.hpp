@@ -283,11 +283,9 @@ private:
     {
         MicroROSController* node = static_cast<MicroROSController*>(context);
 
-        return node->handle_goal_(goal_handle);
-
         ESP_LOGI(node->TAG, "Received goal");
 
-        return RCL_RET_ACTION_GOAL_REJECTED;
+        return node->handle_goal_(goal_handle);
     }
 
     /// @brief Internall goal cancellation function reference
@@ -299,6 +297,8 @@ private:
             void* context)
     {
         MicroROSController* node = static_cast<MicroROSController*>(context);
+
+        ESP_LOGI(node->TAG, "Received cancel");
 
         return node->handle_cancel_(goal_handle);
     }

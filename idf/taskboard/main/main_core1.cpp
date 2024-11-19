@@ -33,9 +33,10 @@ void microros_main(
     MicroROSController& microros_controller = args->microros_controller;
     TaskBoardDriver& task_board_driver = args->task_board_driver;
     TaskExecutor& task_executor = args->task_executor;
+    TaskHandle_t main_task_handle = args->main_task_handle;
 
     // Initialize Micro-ROS task executor to handle ROS-based task execution
-    MicroROSTaskExecutor microros_task_executor(task_executor, microros_controller, task_board_driver);
+    MicroROSTaskExecutor microros_task_executor(task_executor, microros_controller, task_board_driver, main_task_handle);
 
     // ------------------------
     // Setup Periodic Publishers

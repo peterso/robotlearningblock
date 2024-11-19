@@ -87,6 +87,10 @@ class RobotonTaskBoardGoalSender(Node):
 
         self._send_goal_future.add_done_callback(self.goal_response_callback)
 
+    def cancel_goal(self):
+        self.get_logger().info('Cancelling goal')
+        self._send_goal_future.result().cancel_goal_async()
+
 def main(args=None):
     try:
         rclpy.init(args=args)
@@ -97,7 +101,7 @@ def main(args=None):
 
         rclpy.spin(goal_sender)
     except (KeyboardInterrupt, ExternalShutdownException):
-        pass
+        goal_sender.cancel_goal()
 
 
 if __name__ == '__main__':

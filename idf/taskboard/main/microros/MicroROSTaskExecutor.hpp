@@ -9,6 +9,7 @@
 #include <microros/MicroROSTask.hpp>
 #include <microros/MicroROSController.hpp>
 #include <microros/MicroROSTypes.hpp>
+#include <microros/MicroROS.hpp>
 #include <util/Timing.hpp>
 
 /**
@@ -30,10 +31,12 @@ struct MicroROSTaskExecutor
     MicroROSTaskExecutor(
             TaskExecutor& task_executor,
             MicroROSController& microros_controller,
-            TaskBoardDriver& task_board_driver)
+            TaskBoardDriver& task_board_driver,
+            TaskHandle_t main_task_handle)
         : task_executor_(task_executor)
         , microros_controller_(microros_controller)
         , task_board_driver_(task_board_driver)
+        , main_task_handle_(main_task_handle)
     {
         microros_controller_.set_handle_goal([this](rclc_action_goal_handle_t* goal_handle)
                 {
@@ -58,6 +61,8 @@ struct MicroROSTaskExecutor
         // Handle end of task
         if (nullptr != micro_ros_task_ && micro_ros_task_->done())
         {
+            task_executor_.cancel_task();
+
             MicroROSTypes::ResultMessage result_message(*micro_ros_task_);
             microros_controller_.publish_goal_result(result_message,
                     micro_ros_task_->goal_handle(), GOAL_STATE_SUCCEEDED);
@@ -73,7 +78,7 @@ struct MicroROSTaskExecutor
     {
         if (nullptr != micro_ros_task_)
         {
-            ESP_LOGI(TAG, "Cancelled task");
+            task_executor_.cancel_task();
 
             MicroROSTypes::ResultMessage result_message;
             microros_controller_.publish_goal_result(result_message, micro_ros_task_->goal_handle(),
@@ -144,6 +149,9 @@ private:
         {
             task_executor_.cancel_task();
 
+            // Notify main task of manual cancellation to clear the screen
+            xTaskNotify(main_task_handle_, MICROROS_CANCELLED_TASK, eSetBits);
+
             MicroROSTypes::ResultMessage result_message;
             microros_controller_.publish_goal_result(result_message, micro_ros_task_->goal_handle(),
                     GOAL_STATE_CANCELED);
@@ -169,4 +177,5 @@ private:
     TaskExecutor& task_executor_;                   ///< Reference to the task executor
     MicroROSController& microros_controller_;       ///< Reference to the micro-ROS controller
     TaskBoardDriver& task_board_driver_;            ///< Reference to the task board driver
+    TaskHandle_t main_task_handle_;                 ///< Handle to the main task
 };

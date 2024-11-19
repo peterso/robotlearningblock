@@ -117,6 +117,8 @@ struct TaskExecutor
 
     void cancel_task()
     {
+        ESP_LOGI(TAG, "Cancelling task");
+
         current_task_ = nullptr;
         precondition_ = nullptr;
         force_screen_update_ = true;
