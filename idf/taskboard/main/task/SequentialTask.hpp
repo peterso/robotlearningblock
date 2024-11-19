@@ -29,7 +29,6 @@ struct SequentialTask :
             bool first_task_init_timer = true)
         : Task(steps, task_name, first_task_init_timer)
     {
-        steps_finish_time_.resize(steps.size(), -1);
     }
 
     /**
@@ -77,6 +76,12 @@ struct SequentialTask :
     {
         bool ret = Task::update();
 
+        // Initialize step finish time if not done yet
+        if (steps_finish_time_.size() == 0)
+        {
+            steps_finish_time_.resize(steps_.size(), -1);
+        }
+
         if (current_step_ < steps_.size())
         {
             if (steps_[current_step_]->success())
@@ -107,6 +112,11 @@ struct SequentialTask :
     int64_t step_done_time(
             size_t step) const override
     {
+        if (step >= steps_finish_time_.size())
+        {
+            return -1;
+        }
+
         return steps_finish_time_[step];
     }
 

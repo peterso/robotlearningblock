@@ -1,10 +1,3 @@
-# def main():
-#     print('Hi from roboton_taskboard_goal_sender.')
-
-
-# if __name__ == '__main__':
-#     main()
-
 from action_msgs.msg import GoalStatus
 from roboton_taskboard_msgs.action import ExecuteTask
 from roboton_taskboard_msgs.msg import Task

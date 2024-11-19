@@ -38,7 +38,6 @@ Noteworthy features:
   - [Common actions](#common-actions)
     - [Connecting to a Wi-Fi network](#connecting-to-a-wi-fi-network)
     - [Connecting to a micro-ROS Agent](#connecting-to-a-micro-ros-agent)
-  - [To Do](#to-do)
 
 ## Build firmware
 
@@ -299,9 +298,3 @@ docker run -it --rm -v /dev:/dev --privileged --net=host microros/micro-ros-agen
 And the IP address and port of the micro-ROS Agent can be configured using the Web Interface or the REST API.
 
 ![Web Interface](images/webinterface.png "Roboton Task Board Web Interface")
-
-## To Do
-
-- [ ] Add JSON/Kaa/MQTT API
-- [ ] OTA updates
-- [ ] Randomize task steps
