@@ -6,6 +6,8 @@
 
 #include <builtin_interfaces/msg/time.h>
 
+#include <rmw_microros/time_sync.h>
+
 #include <esp_log.h>
 #include <esp_timer.h>
 
@@ -15,8 +17,6 @@
  * @details Converts a microsecond timestamp into a ROS2 builtin_interfaces Time message,
  *          splitting it into seconds and nanoseconds components
  *
- * @param usec Time in microseconds
- *
  * @return ROS Time message equivalent
  */
 inline builtin_interfaces__msg__Time usec_to_microros(
@@ -25,6 +25,21 @@ inline builtin_interfaces__msg__Time usec_to_microros(
     builtin_interfaces__msg__Time time;
     time.sec = usec / 1000000;
     time.nanosec = (usec % 1000000) * 1000;
+
+    return time;
+}
+
+/**
+ * @brief Get the synchronized time in ROS Time message format
+
+ * @return ROS Time message equivalent
+ */
+inline builtin_interfaces__msg__Time get_rmw_time()
+{
+    int64_t rmw_millis = rmw_uros_epoch_millis();
+    builtin_interfaces__msg__Time time;
+    time.sec = rmw_millis / 1000;
+    time.nanosec = (rmw_millis % 1000) * 1000000;
 
     return time;
 }

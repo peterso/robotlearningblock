@@ -14,6 +14,7 @@
 #include <rmw_microros/init_options.h>
 #include <rmw_microros/timing.h>
 #include <rmw_microros/ping.h>
+#include <rmw_microros/time_sync.h>
 
 #include <nvs_flash.h>
 #include <esp_log.h>
@@ -252,6 +253,7 @@ struct MicroROSController
                 else
                 {
                     ESP_LOGI(TAG, "Entities created");
+                    sync_time_from_agent();
                 }
 
                 break;
@@ -385,6 +387,17 @@ private:
         }
 
         return true;
+    }
+
+    /**
+     * @brief Syncronize time with the micro-ROS agent
+     */
+    void sync_time_from_agent()
+    {
+        if(RCL_RET_OK != rmw_uros_sync_session(500))
+        {
+            ESP_LOGE(TAG, "Failed to sync time");
+        }
     }
 
     /**

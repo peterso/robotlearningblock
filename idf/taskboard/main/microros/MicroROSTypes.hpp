@@ -79,7 +79,7 @@ struct MicroROSTypes
                 const Task& task,
                 const std::string& unique_id)
         {
-            microros_msg_.header.stamp = usec_to_microros(esp_timer_get_time());
+            microros_msg_.header.stamp = get_rmw_time();
 
             microros_msg_.header.frame_id.data = const_cast<char*>(unique_id.c_str());
             microros_msg_.header.frame_id.size = unique_id.size();
@@ -164,7 +164,7 @@ struct MicroROSTypes
         TaskStatus(
                 const std::string& unique_id)
         {
-            microros_msg_.header.stamp = usec_to_microros(esp_timer_get_time());
+            microros_msg_.header.stamp = get_rmw_time();
 
             microros_msg_.header.frame_id.data = const_cast<char*>(unique_id.c_str());
             microros_msg_.header.frame_id.size = unique_id.size();
@@ -460,7 +460,7 @@ struct MicroROSTypes
                 const TaskBoardDriver& task_board_driver)
         {
             // Fill header
-            microros_msg_.header.stamp = usec_to_microros(esp_timer_get_time());
+            microros_msg_.header.stamp = get_rmw_time();
             microros_msg_.header.frame_id.data = const_cast<char*>(task_board_driver.get_unique_id().c_str());
             microros_msg_.header.frame_id.size = task_board_driver.get_unique_id().size();
             microros_msg_.header.frame_id.capacity = task_board_driver.get_unique_id().size() + 1;
