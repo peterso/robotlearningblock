@@ -26,7 +26,7 @@ struct SequentialTask :
     SequentialTask(
             const std::vector<const TaskStep*>& steps,
             const std::string& task_name = "",
-            bool first_task_init_timer = true)
+            bool first_task_init_timer = false)
         : Task(steps, task_name, first_task_init_timer)
     {
     }

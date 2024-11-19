@@ -29,7 +29,7 @@ struct Task
     Task(
             const std::vector<const TaskStep*>& steps,
             const std::string& task_name = "",
-            bool first_task_init_timer = true)
+            bool first_task_init_timer = false)
         : steps_(steps)
         , init_time_(esp_timer_get_time())
         , task_name_(task_name)
