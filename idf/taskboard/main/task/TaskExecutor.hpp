@@ -9,14 +9,27 @@
 
 #include <esp_log.h>
 
+/**
+ * @struct TaskExecutor
+ *
+ * @brief Class for managing task execution and screen output
+ */
 struct TaskExecutor
 {
-    const char* TAG = "TaskExecutor";
+    const char* TAG = "TaskExecutor";  ///< Logging tag
 
+    //! Analog update interval in microseconds
     static constexpr int64_t ANALOG_UPDATE_INTERVAL = 5e4; // 100 ms
 
+    //! Callback type for task finish event
     using FinishTaskCallback = std::function<void (const Task&)>;
 
+    /**
+     * @brief Constructs a new TaskExecutor object
+     *
+     * @param screen_controller Reference to screen controller for output
+     * @param non_volatile_storage Reference to non-volatile storage for task logging
+     */
     TaskExecutor(
             ScreenController& screen_controller,
             NonVolatileStorage& non_volatile_storage)
@@ -26,6 +39,11 @@ struct TaskExecutor
     {
     }
 
+    /**
+     * @brief Updates the state of the task executor
+     *
+     * @details Should be called periodically to refresh sensor readings
+     */
     void update()
     {
         // Handle precondition first
@@ -98,6 +116,13 @@ struct TaskExecutor
         }
     }
 
+    /**
+     * @brief Runs a task
+     *
+     * @param task Task to run
+     *
+     * @return true if task was started, false if task is already running or done
+     */
     bool run_task(
             Task& task)
     {
@@ -106,6 +131,14 @@ struct TaskExecutor
         return run_task_inner(task, nullptr);
     }
 
+    /**
+     * @brief Runs a task with a precondition
+     *
+     * @param task Task to run
+     * @param precondition Precondition task
+     *
+     * @return true if task was started, false if task is already running or done
+     */
     bool run_task(
             Task& task,
             Task& precondition)
@@ -115,6 +148,9 @@ struct TaskExecutor
         return run_task_inner(task, &precondition);
     }
 
+    /**
+     * @brief Cancels the current task
+     */
     void cancel_task()
     {
         ESP_LOGI(TAG, "Cancelling task");
@@ -125,21 +161,41 @@ struct TaskExecutor
 
     }
 
+    /**
+     * @brief Checks if a task is currently running
+     *
+     * @return true if a task is running, false otherwise
+     */
     bool running() const
     {
         return current_task_ != nullptr;
     }
 
+    /**
+     * @brief Gets the current task
+     *
+     * @return Pointer to the current task, or nullptr if no task is running
+     */
     const Task* current_task() const
     {
         return current_task_;
     }
 
+    /**
+     * @brief Gets the current precondition task
+     *
+     * @return Pointer to the current precondition task, or nullptr if no task is running
+     */
     const Task* current_precondition() const
     {
         return precondition_;
     }
 
+    /**
+     * @brief Adds a callback for task finish events
+     *
+     * @param callback Callback function to be called when a task finishes
+     */
     void add_finish_task_callback(
             FinishTaskCallback callback)
     {
@@ -148,6 +204,11 @@ struct TaskExecutor
 
 private:
 
+    /**
+     * @brief Updates the analog clue display
+     *
+     * @param task Task to get the clue from
+     */
     void update_analog_clue(
             Task& task)
     {
@@ -169,6 +230,14 @@ private:
         }
     }
 
+    /**
+     * @brief Internal function to run a task
+     *
+     * @param task Task to run
+     * @param precondition Precondition task
+     *
+     * @return true if task was started, false if task is already running or done
+     */
     bool run_task_inner(
             Task& task,
             Task* precondition)
@@ -202,13 +271,13 @@ private:
         return ret;
     }
 
-    ScreenController& screen_controller_;
-    NonVolatileStorage& non_volatile_storage_;
+    ScreenController& screen_controller_;                       ///< Reference to screen controller
+    NonVolatileStorage& non_volatile_storage_;                  ///< Reference to non-volatile storage
 
-    Task* current_task_ = nullptr;
-    Task* precondition_ = nullptr;
-    bool force_screen_update_ = false;
-    int64_t last_analog_update_ = 0;
+    Task* current_task_ = nullptr;                              ///< Pointer to the current task
+    Task* precondition_ = nullptr;                              ///< Pointer to the current precondition task
+    bool force_screen_update_ = false;                          ///< Flag to force screen update
+    int64_t last_analog_update_ = 0;                            ///< Last analog update time
 
-    std::vector<FinishTaskCallback> finish_task_callbacks_;
+    std::vector<FinishTaskCallback> finish_task_callbacks_;     ///< Vector of task finish callbacks
 };
