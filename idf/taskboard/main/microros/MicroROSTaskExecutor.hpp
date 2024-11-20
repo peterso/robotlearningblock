@@ -69,6 +69,20 @@ struct MicroROSTaskExecutor
             delete micro_ros_task_;
             micro_ros_task_ = nullptr;
         }
+
+        // Handle task timeout
+        if (nullptr != micro_ros_task_ && micro_ros_task_->timeout())
+        {
+            task_executor_.cancel_task();
+
+            xTaskNotify(main_task_handle_, MICROROS_TIMEOUT_TASK, eSetBits);
+
+            MicroROSTypes::ResultMessage result_message(*micro_ros_task_);
+            microros_controller_.publish_goal_result(result_message,
+                    micro_ros_task_->goal_handle(), GOAL_STATE_ABORTED);
+            delete micro_ros_task_;
+            micro_ros_task_ = nullptr;
+        }
     }
 
     /**

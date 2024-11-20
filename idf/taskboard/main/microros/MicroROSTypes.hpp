@@ -243,6 +243,17 @@ struct MicroROSTypes
         }
 
         /**
+         * @brief Set task time
+         *
+         * @param time Task time in microseconds
+         */
+        void set_time(
+                const int64_t& time)
+        {
+            microros_msg_.elapsed_time = usec_to_microros(time);
+        }
+
+        /**
          * @brief Gets the micro-ROS message
          */
         const robothon_taskboard_msgs__msg__TaskStatus& get_microros_msg() const

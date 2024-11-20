@@ -63,6 +63,10 @@ void microros_main(
                     // If there's an active task, publish its status
                     MicroROSTypes::TaskStatus task_status(*current_task, task_board_driver.get_unique_id());
                     task_status.set_waiting_precondition(nullptr != task_executor.current_precondition());
+                    if(task_executor.current_precondition() != nullptr)
+                    {
+                        task_status.set_time(0);
+                    }
                     microros_controller.publish_task_status(task_status);
                 }
                 else

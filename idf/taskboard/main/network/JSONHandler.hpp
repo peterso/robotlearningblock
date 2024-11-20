@@ -160,7 +160,7 @@ struct JSONHandler
 
         cJSON_AddStringToObject(current_task, "name", task.name().c_str());
         cJSON_AddStringToObject(current_task, "unique_id", task.unique_id().c_str());
-        cJSON_AddNumberToObject(current_task, "time", task.elapsed_time() / 1e6);
+        cJSON_AddNumberToObject(current_task, "time", precondition ? 0 : task.elapsed_time() / 1e6);
 
         cJSON* waiting_precondition = nullptr == precondition ? cJSON_CreateFalse() : cJSON_CreateTrue();
         cJSON_AddItemToObject(current_task, "waiting_precondition", waiting_precondition);

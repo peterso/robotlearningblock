@@ -23,6 +23,9 @@ struct Task
     //! @brief TaskUniqueIdentifier type
     using TaskUniqueIdentifier = uint8_t[16];
 
+    //! @brief Task default timeout in seconds
+    static constexpr int64_t DEFAULT_TIMEOUT_S = 10 * 60 ; // 10 minutes
+
     /**
      * @brief Constructs a new Task object
      *
@@ -88,6 +91,16 @@ struct Task
     virtual bool get_clue(
             SensorMeasurement& current_value,
             SensorMeasurement& target_value) const = 0;
+
+    /**
+     * @brief Checks if the task has timed out
+     *
+     * @return true if task has timed out, false otherwise
+     */
+    bool timeout() const
+    {
+        return init_time_ + (DEFAULT_TIMEOUT_S * 1000000) < esp_timer_get_time();
+    }
 
     /**
      * @brief Resets the task to its initial state

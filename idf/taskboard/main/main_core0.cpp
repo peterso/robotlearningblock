@@ -208,6 +208,11 @@ extern "C" void app_main(
         // Update board sensor readings
         task_board_driver.update();
 
+        // Check timeout status of current task
+        const bool active_current_task = task_executor.current_task() != nullptr;
+        const bool active_current_precondition = task_executor.current_precondition() != nullptr;
+        const bool current_task_timeout = active_current_task && !active_current_precondition && task_executor.current_task()->timeout();
+
         // Handle Button B press - Start/Restart default task
         if (BUTTON_B.read() == true)
         {
@@ -217,10 +222,6 @@ extern "C" void app_main(
             // Get and configure default task
             Task& main_task = task_board_driver.get_default_task();
             Task& precondition_main_task = task_board_driver.get_default_task_precondition();
-
-            // Restart default tasks
-            main_task.restart();
-            precondition_main_task.restart();
 
             // Set this task as a human task if the power button is pressed
             main_task.set_human_task(BUTTON_PWR.read() == true);
@@ -232,14 +233,14 @@ extern "C" void app_main(
             vTaskDelay(pdMS_TO_TICKS(100));
         }
         // Handle Button A press - Cancel current task
-        else if (BUTTON_A.read() == true)
+        else if (BUTTON_A.read() == true || current_task_timeout)
         {
             ESP_LOGI("app_main", "Button A pressed, cancelling current task");
             task_executor.cancel_task();
 
             // Update screen with cancellation message
             screen_controller.clear();
-            screen_controller.print("-> Task cancelled");
+            screen_controller.print(current_task_timeout ? "-> Task timeout" : "-> Task cancelled");
 
             if (!start_local_mode)
             {
@@ -265,7 +266,7 @@ extern "C" void app_main(
         {
             // Update screen with cancellation message
             screen_controller.clear();
-            screen_controller.print("-> Task cancelled");
+            screen_controller.print(value == MICROROS_TIMEOUT_TASK ? "-> Task timeout" : "-> Task cancelled");
         }
 
         // Update task execution status

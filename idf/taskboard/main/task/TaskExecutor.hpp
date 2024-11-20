@@ -73,6 +73,9 @@ struct TaskExecutor
                 precondition_ = nullptr;
                 force_screen_update_ = true;
                 ESP_LOGI(TAG, "Precondition done, starting task %s", current_task_->name().c_str());
+
+                // Start task
+                current_task_->restart();
             }
         }
 
