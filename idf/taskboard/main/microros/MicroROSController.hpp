@@ -394,7 +394,7 @@ private:
      */
     void sync_time_from_agent()
     {
-        if(RCL_RET_OK != rmw_uros_sync_session(500))
+        if (RCL_RET_OK != rmw_uros_sync_session(500))
         {
             ESP_LOGE(TAG, "Failed to sync time");
         }

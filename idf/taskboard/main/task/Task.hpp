@@ -24,7 +24,7 @@ struct Task
     using TaskUniqueIdentifier = uint8_t[16];
 
     //! @brief Task default timeout in seconds
-    static constexpr int64_t DEFAULT_TIMEOUT_S = 10 * 60 ; // 10 minutes
+    static constexpr int64_t DEFAULT_TIMEOUT_S = 10 * 60;  // 10 minutes
 
     /**
      * @brief Constructs a new Task object
@@ -209,7 +209,7 @@ struct Task
         is_human_task_ = is_human_task;
     }
 
-    const std::string & unique_id() const
+    const std::string& unique_id() const
     {
         return unique_id_str_;
     }

@@ -180,7 +180,8 @@ extern "C" void app_main(
     http_server.initialize_taskboard_api();
 
     // Create Micro-ROS task on core 1
-    MicroROSMainArgs micro_ros_args = {micro_ros_controller, task_board_driver, task_executor, xTaskGetCurrentTaskHandle()};
+    MicroROSMainArgs micro_ros_args =
+    {micro_ros_controller, task_board_driver, task_executor, xTaskGetCurrentTaskHandle()};
 
     TaskHandle_t microros_task_handle;
     constexpr uint8_t MICROROS_THREAD_CORE_AFFINITY = 1;
@@ -211,7 +212,8 @@ extern "C" void app_main(
         // Check timeout status of current task
         const bool active_current_task = task_executor.current_task() != nullptr;
         const bool active_current_precondition = task_executor.current_precondition() != nullptr;
-        const bool current_task_timeout = active_current_task && !active_current_precondition && task_executor.current_task()->timeout();
+        const bool current_task_timeout = active_current_task && !active_current_precondition &&
+                task_executor.current_task()->timeout();
 
         // Handle Button B press - Start/Restart default task
         if (BUTTON_B.read() == true)
