@@ -8,6 +8,7 @@
 #include <hal/HardwareLowLevelController.hpp>
 #include <sensor/Sensor.hpp>
 #include <sensor/AnalogFilteredSensor.hpp>
+#include <sensor/TriggeredSensor.hpp>
 #include <task/TaskStepEqual.hpp>
 #include <task/SimultaneousConditionTask.hpp>
 #include <task/SequentialTask.hpp>
@@ -211,6 +212,11 @@ struct TaskBoardDriver_v1 :
                             return SensorMeasurement(is_touching_goal);
                         });
 
+        Sensor* fader_trigger_blue_button = new TriggeredSensor("FADER_ON_BLUE_BUTTON", *blue_button, [=]()
+                        {
+                            return fader->read();
+                        });
+
         // Store sensors
         sensors_.push_back(blue_button);
         sensors_.push_back(red_button);
@@ -231,6 +237,7 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(free_cable);
         sensors_.push_back(attached_cable);
         sensors_.push_back(probe_goal);
+        sensors_.push_back(fader_trigger_blue_button);
 
         // Initial update
         update();
@@ -250,7 +257,7 @@ struct TaskBoardDriver_v1 :
         {
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.8f), 0.05f),
-            new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.2f), 0.05f),
+            new TaskStepEqual(*get_sensor_by_name("FADER_ON_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("ATTACHED_CABLE"), SensorMeasurement(true)),
