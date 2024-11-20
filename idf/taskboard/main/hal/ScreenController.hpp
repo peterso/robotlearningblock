@@ -5,6 +5,7 @@
 #pragma once
 
 #include <hal/HardwareLowLevelController.hpp>
+#include <hal/ClueScreenController.hpp>
 #include <task/Task.hpp>
 
 #include <M5Unified.h>
@@ -14,7 +15,8 @@
 
  * @brief Controller for managing display output on M5Stack hardware
  */
-struct ScreenController
+struct ScreenController :
+    public ClueScreenController
 {
     /**
      * @brief Constructs a new ScreenController object
@@ -118,27 +120,18 @@ struct ScreenController
         display_.print(" s");
     }
 
-    /**
-     * @brief Displays a text clue for task guidance
-     *
-     * @param clue String containing guidance information
-     */
+    /// Virtual method implementation
     void print_task_clue(
-            const std::string& clue)
+            const std::string& clue) override
     {
         display_.setCursor(5, 70);
         display_.print(clue.c_str());
     }
 
-    /**
-     * @brief Displays analog feedback with visual indicators
-     *
-     * @param current_value Current analog sensor value (0.0 to 1.0)
-     * @param target_value Target analog value (0.0 to 1.0)
-     */
+    /// Virtual method implementation
     void print_task_clue_analog(
             const float& current_value,
-            const float& target_value)
+            const float& target_value) override
     {
         const int32_t w = display_.width();
         const int32_t h = display_.height();

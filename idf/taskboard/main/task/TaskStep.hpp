@@ -5,6 +5,7 @@
 #pragma once
 
 #include <sensor/Sensor.hpp>
+#include <hal/ClueScreenController.hpp>
 
 #include <esp_log.h>
 
@@ -61,6 +62,14 @@ struct TaskStep
      * @return Expected sensor measurement value
      */
     virtual SensorMeasurement expected_value() const = 0;
+
+    /**
+     * @brief Show clue on the screen controller
+     *
+     * @param screen_controller Reference to the screen controller
+     */
+    virtual void show_clue(
+            ClueScreenController& screen_controller) const = 0;
 
     /**
      * @brief Gets the associated sensor

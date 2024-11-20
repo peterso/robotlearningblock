@@ -33,52 +33,24 @@ struct ParallelTask :
     }
 
     /// Virtual method implementation
-    std::string get_clue_string() override
+    void show_clue(
+            ClueScreenController& screen_controller) override
     {
-        std::string clue = "";
-
-        if (done())
+        if (!done())
         {
-            clue = "Task Done";
-        }
-        else
-        {
-            // Get first step that is not done
-            clue = "Waiting sensor ";
-
             for (size_t i = 0; i < steps_.size(); i++)
             {
                 if (!steps_status_[i])
                 {
-                    clue += steps_[i]->sensor().name();
+                    steps_[i]->show_clue(screen_controller);
                     break;
                 }
             }
         }
-
-        return clue;
-    }
-
-    /// Virtual method implementation
-    bool get_clue(
-            SensorMeasurement& current_value,
-            SensorMeasurement& target_value) const override
-    {
-        bool ret = false;
-
-        for (size_t i = 0; i < steps_.size(); i++)
+        else
         {
-            if (!steps_status_[i])
-            {
-                const SensorMeasurement& sensor_value = steps_[i]->sensor().read();
-                current_value = sensor_value;
-                target_value = steps_[i]->expected_value();
-                ret = true;
-                break;
-            }
+            screen_controller.print_task_clue("Task Done");
         }
-
-        return ret;
     }
 
     /// Virtual method implementation

@@ -37,38 +37,17 @@ struct SequentialTask :
     virtual ~SequentialTask() = default;
 
     /// Virtual method implementation
-    std::string get_clue_string() override
+    void show_clue(
+            ClueScreenController& screen_controller) override
     {
-        std::string clue = "";
-
         if (current_step_ < steps_.size())
         {
-            clue = "Waiting " + steps_[current_step_]->sensor().name();
+            steps_[current_step_]->show_clue(screen_controller);
         }
         else
         {
-            clue = "Task Done";
+            screen_controller.print_task_clue("Task Done");
         }
-
-        return clue;
-    }
-
-    /// Virtual method implementation
-    bool get_clue(
-            SensorMeasurement& current_value,
-            SensorMeasurement& target_value) const override
-    {
-        bool ret = false;
-
-        if (current_step_ < steps_.size())
-        {
-            const SensorMeasurement& sensor_value = steps_[current_step_]->sensor().read();
-            current_value = sensor_value;
-            target_value = steps_[current_step_]->expected_value();
-            ret = true;
-        }
-
-        return ret;
     }
 
     /// Virtual method implementation

@@ -46,6 +46,16 @@ struct TaskStepGreaterEqualThan :
         return expected_value_;
     }
 
+    /// Virtual method implementation
+    void show_clue(
+            ClueScreenController& screen_controller) const override
+    {
+        if (!success())
+        {
+            screen_controller.print_task_clue(sensor_.name() + " != " + expected_value_.to_string());
+        }
+    }
+
 private:
 
     const SensorMeasurement expected_value_;    ///< Minimum threshold value for comparison

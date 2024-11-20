@@ -59,13 +59,10 @@ struct TaskExecutor
                     TFT_ORANGE);
 
                 force_screen_update_ = false;
-
-                // Print clue
-                screen_controller_.print_task_clue(precondition_->get_clue_string());
             }
 
-            // Update analog clue
-            update_analog_clue(*precondition_);
+            // Print clue
+            precondition_->show_clue(screen_controller_);
 
             // Get rid of precondition if done
             if (precondition_->done())
@@ -90,14 +87,12 @@ struct TaskExecutor
                     *current_task_,
                     TFT_WHITE,
                     current_task_->is_human_task() ? TFT_DARKGREY : TFT_BLACK);
-                force_screen_update_ = false;
 
-                // Print clue
-                screen_controller_.print_task_clue(current_task_->get_clue_string());
+                force_screen_update_ = false;
             }
 
-            // Update analog clue
-            update_analog_clue(*current_task_);
+            // Print clue
+            current_task_->show_clue(screen_controller_);
 
             // Print time
             screen_controller_.print_task_status_time(current_task_->elapsed_time() / 1e6);
@@ -208,32 +203,6 @@ struct TaskExecutor
 private:
 
     /**
-     * @brief Updates the analog clue display
-     *
-     * @param task Task to get the clue from
-     */
-    void update_analog_clue(
-            Task& task)
-    {
-        // Check if analog clue is available
-        if (last_analog_update_ + ANALOG_UPDATE_INTERVAL < esp_timer_get_time())
-        {
-            SensorMeasurement current_measurement(false);
-            SensorMeasurement target_measurement(false);
-
-            if (task.get_clue(current_measurement, target_measurement) &&
-                    current_measurement.get_type() == SensorMeasurement::Type::ANALOG &&
-                    target_measurement.get_type() == SensorMeasurement::Type::ANALOG)
-            {
-                screen_controller_.print_task_clue_analog(
-                    current_measurement.get_analog(), target_measurement.get_analog());
-            }
-
-            last_analog_update_ = esp_timer_get_time();
-        }
-    }
-
-    /**
      * @brief Internal function to run a task
      *
      * @param task Task to run
@@ -246,6 +215,9 @@ private:
             Task* precondition)
     {
         bool ret = false;
+
+        // Ensure task is restarted
+        task.restart();
 
         if (current_task_ == nullptr && !task.done())
         {

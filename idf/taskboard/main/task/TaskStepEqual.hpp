@@ -50,6 +50,23 @@ struct TaskStepEqual :
         return expected_value_;
     }
 
+    /// Virtual method implementation
+    void show_clue(
+            ClueScreenController& screen_controller) const override
+    {
+        if (!success())
+        {
+            screen_controller.print_task_clue(sensor_.name() + " != " + expected_value_.to_string());
+
+            const auto sensor_value = sensor_.read();
+
+            if (sensor_value.get_type() == SensorMeasurement::Type::ANALOG)
+            {
+                screen_controller.print_task_clue_analog(sensor_value.get_analog(), expected_value_.get_analog());
+            }
+        }
+    }
+
 protected:
 
     const SensorMeasurement expected_value_;    ///< Target value that sensor should match

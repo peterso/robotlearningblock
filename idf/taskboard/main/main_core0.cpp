@@ -232,7 +232,11 @@ extern "C" void app_main(
             task_executor.run_task(main_task, precondition_main_task);
 
             // Button debounce delay
-            vTaskDelay(pdMS_TO_TICKS(100));
+            while (BUTTON_B.read() == true)
+            {
+                vTaskDelay(pdMS_TO_TICKS(10));
+                task_board_driver.update();
+            }
         }
         // Handle Button A press - Cancel current task
         else if (BUTTON_A.read() == true || current_task_timeout)
@@ -258,7 +262,11 @@ extern "C" void app_main(
             }
 
             // Button debounce delay
-            vTaskDelay(pdMS_TO_TICKS(100));
+            while (BUTTON_A.read() == true)
+            {
+                vTaskDelay(pdMS_TO_TICKS(10));
+                task_board_driver.update();
+            }
         }
 
         // If notifed by Micro-ROS task, cancel current task

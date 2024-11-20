@@ -74,23 +74,12 @@ struct Task
             size_t step) const = 0;
 
     /**
-     * @brief Gets a text hint or instruction for the next step
+     * @brief Forwards screen controller to a task step
      *
-     * @return string
+     * @param screen_controller Reference to the screen controller
      */
-    virtual std::string get_clue_string() = 0;
-
-    /**
-     * @brief Gets feedback for the current expected sensor value
-     *
-     * @param[out] current_value Current sensor or state value
-     * @param[out] target_value Target value to achieve
-     *
-     * @return true if analog feedback is available, false otherwise
-     */
-    virtual bool get_clue(
-            SensorMeasurement& current_value,
-            SensorMeasurement& target_value) const = 0;
+    virtual void show_clue(
+            ClueScreenController& screen_controller) = 0;
 
     /**
      * @brief Checks if the task has timed out
