@@ -8,6 +8,7 @@
 #include <hal/HardwareLowLevelController.hpp>
 #include <sensor/Sensor.hpp>
 #include <sensor/AnalogFilteredSensor.hpp>
+#include <sensor/CounterSensor.hpp>
 #include <sensor/TriggeredSensor.hpp>
 #include <task/TaskStepEqual.hpp>
 #include <task/SimultaneousConditionTask.hpp>
@@ -217,6 +218,11 @@ struct TaskBoardDriver_v1 :
                             return fader->read();
                         });
 
+        Sensor* red_button_counter = new CounterSensor("RED_BUTTON_COUNTER", [=]()
+                        {
+                            return red_button->read();
+                        });
+
         // Store sensors
         sensors_.push_back(blue_button);
         sensors_.push_back(red_button);
@@ -238,6 +244,7 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(attached_cable);
         sensors_.push_back(probe_goal);
         sensors_.push_back(fader_trigger_blue_button);
+        sensors_.push_back(red_button_counter);
 
         // Initial update
         update();
