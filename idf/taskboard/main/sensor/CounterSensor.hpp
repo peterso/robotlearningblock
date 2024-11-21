@@ -7,6 +7,7 @@
 #include <sensor/Sensor.hpp>
 
 #include <esp_log.h>
+#include <esp_timer.h>
 
 #include <deque>
 

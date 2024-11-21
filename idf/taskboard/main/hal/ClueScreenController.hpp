@@ -31,4 +31,9 @@ struct ClueScreenController
     virtual void print_task_clue_analog(
             const float& current_value,
             const float& target_value) = 0;
+
+    /**
+     * @brief Clears the screen of any displayed clues
+     */
+    virtual void clear_all_task_clue() = 0;
 };

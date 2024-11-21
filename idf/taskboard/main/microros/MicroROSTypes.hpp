@@ -112,11 +112,21 @@ struct MicroROSTypes
                 const ::TaskStep& step = task.step(i);
 
                 robothon_taskboard_msgs__msg__TaskStep& msg_step = microros_msg_.steps.data[i];
+                msg_step = {};
+
                 msg_step.sensor_name.data = (char*)step.sensor().name().c_str();
                 msg_step.sensor_name.size = step.sensor().name().size();
                 msg_step.sensor_name.capacity = step.sensor().name().size() + 1;
 
-                // msg_step.type = step.to_microros_step_type();
+                if (step.clue_trigger() != nullptr)
+                {
+                    msg_step.clue_trigger_name.data = (char*)step.clue_trigger()->name().c_str();
+                    msg_step.clue_trigger_name.size = step.clue_trigger()->name().size();
+                    msg_step.clue_trigger_name.capacity = step.clue_trigger()->name().size() + 1;
+
+                    msg_step.clue_timeout = usec_to_microros(step.clue_timeout_us());
+                }
+
                 msg_step.type = MicroROSTypes::TaskStep::get_microros_type(step.type());
                 msg_step.target = {};
                 msg_step.target.type = MicroROSTypes::SensorMeasurement::get_microros_type(

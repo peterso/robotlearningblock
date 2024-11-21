@@ -79,7 +79,10 @@ struct SensorReader
      *
      * @note This method restart the read operation status and allows to prepare the sensor reader
      */
-    virtual void start_read() {}
+    virtual void start_read()
+    {
+    }
+
 };
 
 /**

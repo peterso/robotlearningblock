@@ -260,10 +260,14 @@ struct TaskBoardDriver_v1 :
 
         default_precondition_task_ = new SimultaneousConditionTask(*precondition_steps, "Precondition Task");
 
+        TaskStep* timed_fader_operation =
+                new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.8f), 0.05f);
+        timed_fader_operation->set_clue_timeout(*get_sensor_by_name("BLUE_BUTTON"), 3000);
+
         std::vector<const TaskStep*>* main_steps = new std::vector<const TaskStep*>
         {
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
-            new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.8f), 0.05f),
+            timed_fader_operation,
             new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(true)),

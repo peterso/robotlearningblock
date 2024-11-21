@@ -50,8 +50,10 @@ struct TaskStepEqual :
         return expected_value_;
     }
 
+protected:
+
     /// Virtual method implementation
-    void show_clue(
+    void show_clue_implementation(
             ClueScreenController& screen_controller) const override
     {
         if (!success())
@@ -65,9 +67,11 @@ struct TaskStepEqual :
                 screen_controller.print_task_clue_analog(sensor_value.get_analog(), expected_value_.get_analog());
             }
         }
+        else
+        {
+            reset_clue();
+        }
     }
-
-protected:
 
     const SensorMeasurement expected_value_;    ///< Target value that sensor should match
     const float tolerance_;                      ///< Allowed deviation from expected value

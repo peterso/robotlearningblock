@@ -8,6 +8,115 @@
 #include <hal/ClueScreenController.hpp>
 
 #include <esp_log.h>
+#include <esp_timer.h>
+
+/**
+ * @struct TaskStepClueHandler
+ *
+ * @brief Base class for task step handlers that show clues on the screen controller
+ */
+struct TaskStepClueHandler
+{
+    const char* TAG = "TaskStepClueHandler";    ///< Logging tag
+
+    /**
+     * @brief Sets a clue timeout and trigger
+     *
+     * @param clue_trigger Sensor that triggers the clue
+     * @param timeout_ms Timeout for showing the clue
+     */
+    void set_clue_timeout(
+            const SensorReader& clue_trigger,
+            uint64_t timeout_ms)
+    {
+        clue_trigger_ = &clue_trigger;
+        timeout_ = timeout_ms * 1000;
+    }
+
+    /**
+     * @brief Show clue on the screen controller handler
+     *
+     * @param screen_controller Reference to the screen controller
+     */
+    void show_clue(
+            ClueScreenController& screen_controller) const
+    {
+        // If no trigger is set, show the clue immediately
+        if (nullptr == clue_trigger_)
+        {
+            show_clue_implementation(screen_controller);
+        }
+        else
+        {
+            const auto trigger_value = clue_trigger_->read();
+
+            if (trigger_value.get_type() != SensorMeasurement::Type::BOOLEAN)
+            {
+                ESP_LOGE(TAG, "Clue trigger sensor must be a boolean sensor");
+
+                return;
+            }
+
+            if (first_time_)
+            {
+                clue_time_start_ = esp_timer_get_time();
+                first_time_ = false;
+            }
+
+            if (trigger_value.get_boolean() || (esp_timer_get_time() - clue_time_start_) < timeout_)
+            {
+                show_clue_implementation(screen_controller);
+            }
+            else
+            {
+                screen_controller.clear_all_task_clue();
+            }
+
+            // Relaunch the clue on trigger
+            if (trigger_value.get_boolean())
+            {
+                clue_time_start_ = esp_timer_get_time();
+            }
+        }
+    }
+
+    const SensorReader* clue_trigger() const
+    {
+        return clue_trigger_;
+    }
+
+    uint64_t clue_timeout_us() const
+    {
+        return timeout_;
+    }
+
+protected:
+
+    /**
+     * @brief Resets the clue trigger
+     *
+     * @return true if the clue is being shown for the first time
+     */
+    void reset_clue() const
+    {
+        first_time_ = true;
+    }
+
+    /**
+     * @brief Actual implementation of the clue showing
+     *
+     * @param screen_controller Reference to the screen controller
+     */
+    virtual void show_clue_implementation(
+            ClueScreenController& screen_controller) const = 0;
+
+private:
+
+    const SensorReader* clue_trigger_ = nullptr;    ///< Sensor that triggers the clue
+    uint64_t timeout_ = 0;                          ///< Timeout for showing the clue
+    mutable int64_t clue_time_start_ = 0;           ///< Time when the clue was shown
+    mutable bool first_time_ = true;                ///< Flag for first clue showing
+};
 
 /**
  * @struct TaskStep
@@ -18,7 +127,8 @@
  *          reading. It provides the interface for checking condition completion and
  *          accessing expected values.
  */
-struct TaskStep
+struct TaskStep :
+    public TaskStepClueHandler
 {
     /**
      * @enum Type
@@ -66,14 +176,6 @@ struct TaskStep
     virtual SensorMeasurement expected_value() const = 0;
 
     /**
-     * @brief Show clue on the screen controller
-     *
-     * @param screen_controller Reference to the screen controller
-     */
-    virtual void show_clue(
-            ClueScreenController& screen_controller) const = 0;
-
-    /**
      * @brief Gets the associated sensor
      *
      * @return Reference to the sensor being monitored
@@ -95,6 +197,6 @@ struct TaskStep
 
 protected:
 
-    SensorReader& sensor_;     ///< Reference to the monitored sensor
+    SensorReader& sensor_;           ///< Reference to the monitored sensor
     Type type_ = Type::UNKNOWN;      ///< Type of comparison for success evaluation
 };

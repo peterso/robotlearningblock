@@ -30,6 +30,21 @@ inline builtin_interfaces__msg__Time usec_to_microros(
 }
 
 /**
+ * @brief Converts a ROS Time message to microseconds
+ *
+ * @details Converts a ROS2 builtin_interfaces Time message into a microsecond timestamp
+ *
+ * @param time ROS Time message to convert
+ *
+ * @return Microsecond timestamp
+ */
+inline int64_t microros_to_usec(
+        const builtin_interfaces__msg__Time& time)
+{
+    return time.sec * 1000000 + time.nanosec / 1000;
+}
+
+/**
  * @brief Get the synchronized time in ROS Time message format
 
  * @return ROS Time message equivalent

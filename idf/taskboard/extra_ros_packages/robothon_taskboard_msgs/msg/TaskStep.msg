@@ -7,3 +7,5 @@ string sensor_name
 uint8 type
 SensorMeasurement target
 float32 tolerance
+string clue_trigger_name
+builtin_interfaces/Time clue_timeout

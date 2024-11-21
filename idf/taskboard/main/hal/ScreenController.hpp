@@ -154,6 +154,12 @@ struct ScreenController :
                 item_height_offset, cursor_width, item_height, TFT_BLUE);
     }
 
+    /// Virtual method implementation
+    void clear_all_task_clue() override
+    {
+        display_.fillRect(5, 70, display_.width(), display_.height(), TFT_BLACK);
+    }
+
 private:
 
     /**

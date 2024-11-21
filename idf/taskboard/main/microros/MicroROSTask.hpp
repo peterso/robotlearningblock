@@ -84,6 +84,18 @@ struct MicroROSTask :
 
             if (nullptr != step)
             {
+                // Configure clue timeout if required
+                if (msg_step.clue_trigger_name.data != nullptr)
+                {
+                    SensorReader* clue_timeout_sensor = task_board_driver.get_sensor_by_name(
+                        msg_step.clue_trigger_name.data);
+
+                    if (clue_timeout_sensor != nullptr)
+                    {
+                        step->set_clue_timeout(*clue_timeout_sensor, microros_to_usec(msg_step.clue_timeout));
+                    }
+                }
+
                 steps_.push_back(step);
             }
         }
