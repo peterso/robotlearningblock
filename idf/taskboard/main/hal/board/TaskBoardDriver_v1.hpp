@@ -213,7 +213,7 @@ struct TaskBoardDriver_v1 :
                             return SensorMeasurement(is_touching_goal);
                         });
 
-        Sensor* fader_trigger_blue_button = new TriggeredSensor("FADER_ON_BLUE_BUTTON", *blue_button, [=]()
+        Sensor* fader_trigger_blue_button = new TriggeredSensor("FADER_BLUE_BUTTON", *blue_button, [=]()
                         {
                             return fader->read();
                         });
@@ -264,11 +264,11 @@ struct TaskBoardDriver_v1 :
         {
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.8f), 0.05f),
-            new TaskStepEqual(*get_sensor_by_name("FADER_ON_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
+            new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("ATTACHED_CABLE"), SensorMeasurement(true)),
-            new TaskStepEqual(*get_sensor_by_name("RED_BUTTON"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("RED_BUTTON_COUNTER"), SensorMeasurement(3ll)),
         };
 
         default_task_ = new SequentialTask(*main_steps, "Default Task");
@@ -324,10 +324,10 @@ struct TaskBoardDriver_v1 :
     }
 
     /// Virtual method implementation
-    const SensorReader* get_sensor(
+    SensorReader* get_sensor(
             const size_t& index) const override
     {
-        const Sensor* sensor = nullptr;
+        Sensor* sensor = nullptr;
 
         if (index < sensors_.size())
         {
@@ -338,10 +338,10 @@ struct TaskBoardDriver_v1 :
     }
 
     /// Virtual method implementation
-    const SensorReader* get_sensor_by_name(
+    SensorReader* get_sensor_by_name(
             const std::string& sensor_name) const override
     {
-        const Sensor* sensor = nullptr;
+        Sensor* sensor = nullptr;
 
         for (auto const& s : sensors_)
         {

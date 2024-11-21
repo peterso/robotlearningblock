@@ -24,7 +24,7 @@ struct TaskStepEqualToRandom :
      * @param tolerance Allowable deviation from random value (default: 0.00)
      */
     TaskStepEqualToRandom(
-            const SensorReader& sensor,
+            SensorReader& sensor,
             const float tolerance = 0.00)
         : TaskStepEqual(sensor, SensorMeasurement(true), tolerance)
         , random_expected_value_(false)

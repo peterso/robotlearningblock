@@ -67,6 +67,13 @@ struct SequentialTask :
             {
                 steps_finish_time_[current_step_] = elapsed_time();
                 current_step_++;
+
+                // Restart status of the next step
+                if (current_step_ < steps_.size())
+                {
+                    steps_[current_step_]->sensor().start_read();
+                }
+
                 ret = true;
             }
         }

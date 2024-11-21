@@ -55,7 +55,7 @@ struct MicroROSTask :
         {
             auto& msg_step = goal_request->goal.task.steps.data[i];
 
-            const SensorReader* sensor = task_board_driver.get_sensor_by_name(msg_step.sensor_name.data);
+            SensorReader* sensor = task_board_driver.get_sensor_by_name(msg_step.sensor_name.data);
 
             if (sensor == nullptr)
             {

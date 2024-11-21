@@ -26,7 +26,7 @@ struct TaskStepGreaterEqualThan :
      * @param expected_value Minimum threshold value that sensor should meet or exceed
      */
     TaskStepGreaterEqualThan(
-            const SensorReader& sensor,
+            SensorReader& sensor,
             const SensorMeasurement& expected_value)
         : TaskStep(sensor)
         , expected_value_(expected_value)

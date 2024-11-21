@@ -30,7 +30,7 @@ struct TaskStep
         EQUAL,              ///< Sensor value must exactly match target
         EQUAL_TO_RANDOM,    ///< Sensor value must match a randomly generated target
         GREATER_OR_EQUAL,   ///< Sensor value must be greater or equal to target
-        UNKNOWN             ///< Undefined comparison type
+        UNKNOWN             ///< UndefOined comparison type
     };
 
     /**
@@ -39,9 +39,11 @@ struct TaskStep
      * @param sensor Reference to the sensor that will be monitored
      */
     TaskStep(
-            const SensorReader& sensor)
+            SensorReader& sensor)
         : sensor_(sensor)
     {
+        // By default a task step begins a read operation on the sensor
+        sensor.start_read();
     }
 
     /**
@@ -76,7 +78,7 @@ struct TaskStep
      *
      * @return Reference to the sensor being monitored
      */
-    const SensorReader& sensor() const
+    SensorReader& sensor() const
     {
         return sensor_;
     }
@@ -93,6 +95,6 @@ struct TaskStep
 
 protected:
 
-    const SensorReader& sensor_;     ///< Reference to the monitored sensor
+    SensorReader& sensor_;     ///< Reference to the monitored sensor
     Type type_ = Type::UNKNOWN;      ///< Type of comparison for success evaluation
 };

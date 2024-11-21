@@ -49,7 +49,7 @@ struct TaskBoardDriver
      *
      * @return Pointer to the sensor reader interface, or nullptr if index is invalid
      */
-    virtual const SensorReader* get_sensor(
+    virtual SensorReader* get_sensor(
             const size_t& index) const = 0;
 
     /**
@@ -59,7 +59,7 @@ struct TaskBoardDriver
      *
      * @return Pointer to the sensor reader interface, or nullptr if name not found
      */
-    virtual const SensorReader* get_sensor_by_name(
+    virtual SensorReader* get_sensor_by_name(
             const std::string& sensor_name) const = 0;
 
     /**

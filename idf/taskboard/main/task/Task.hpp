@@ -98,6 +98,12 @@ struct Task
     {
         init_time_ = esp_timer_get_time();
         previous_done_state_ = false;
+
+        // Restart all sensor reads
+        for (const TaskStep* step : steps_)
+        {
+            step->sensor().start_read();
+        }
     }
 
     /**

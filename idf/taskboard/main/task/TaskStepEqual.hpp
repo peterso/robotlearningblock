@@ -28,7 +28,7 @@ struct TaskStepEqual :
      * @param tolerance Allowable deviation from expected value (default: 0.00)
      */
     TaskStepEqual(
-            const SensorReader& sensor,
+            SensorReader& sensor,
             const SensorMeasurement& expected_value,
             const float tolerance = 0.00)
         : TaskStep(sensor)

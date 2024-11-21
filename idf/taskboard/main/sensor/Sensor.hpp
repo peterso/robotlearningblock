@@ -73,6 +73,13 @@ struct SensorReader
      * @return Current sensor value
      */
     virtual const SensorMeasurement read() const = 0;
+
+    /**
+     * @brief Start read
+     *
+     * @note This method restart the read operation status and allows to prepare the sensor reader
+     */
+    virtual void start_read() {}
 };
 
 /**

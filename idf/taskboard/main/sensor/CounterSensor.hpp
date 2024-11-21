@@ -28,7 +28,7 @@ struct CounterSensor :
     CounterSensor(
             const std::string& name,
             ReadFunction read_function,
-            uint64_t press_duration_ms = 1000)
+            uint64_t press_duration_ms = 0)
         : Sensor(name, read_function)
         , press_duration_ms_(press_duration_ms)
     {
@@ -65,16 +65,16 @@ struct CounterSensor :
     }
 
     /// Virtual method implementation
-    virtual const SensorMeasurement read() const override
+    const SensorMeasurement read() const override
     {
         return SensorMeasurement(count_);
     }
 
-    /**
-     * @brief Resets the sensor count
-     */
-    void reset()
+    /// Virtual method implementation
+    void start_read() override
     {
+        previous_state_ = false;
+        last_change_time_ = 0;
         count_ = 0;
     }
 
