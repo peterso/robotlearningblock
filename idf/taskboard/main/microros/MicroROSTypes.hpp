@@ -654,6 +654,10 @@ struct MicroROSTypes
                 microros_msg_.goal.task.steps.data[i].sensor_name.size = 0;
                 microros_msg_.goal.task.steps.data[i].sensor_name.capacity = max_sensor_name_size;
 
+                microros_msg_.goal.task.steps.data[i].clue_trigger_name.data = new char[max_sensor_name_size];
+                microros_msg_.goal.task.steps.data[i].clue_trigger_name.size = 0;
+                microros_msg_.goal.task.steps.data[i].clue_trigger_name.capacity = max_sensor_name_size;
+
                 microros_msg_.goal.task.steps.data[i].target.bool_value.data = new bool;
                 microros_msg_.goal.task.steps.data[i].target.bool_value.size = 0;
                 microros_msg_.goal.task.steps.data[i].target.bool_value.capacity = 1;
@@ -683,6 +687,11 @@ struct MicroROSTypes
                 if (microros_msg_.goal.task.steps.data[i].sensor_name.data != nullptr)
                 {
                     delete microros_msg_.goal.task.steps.data[i].sensor_name.data;
+                }
+
+                if (microros_msg_.goal.task.steps.data[i].clue_trigger_name.data != nullptr)
+                {
+                    delete microros_msg_.goal.task.steps.data[i].clue_trigger_name.data;
                 }
 
                 if (microros_msg_.goal.task.steps.data[i].target.bool_value.data != nullptr)
