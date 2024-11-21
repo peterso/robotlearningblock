@@ -147,6 +147,14 @@
             color: white;
             font-weight: bold;
         }
+        .integer-value {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            color: rgb(255, 255, 255);
+            font-weight: bold;
+            background: #2196f3;
+        }
         .true {
             background: #4caf50;
         }
@@ -1059,9 +1067,17 @@
                     `;
                 } else if (typeof sensor.value === 'boolean') {
                     valueHtml = `<span class="boolean-value ${sensor.value}">${sensor.value}</span>`;
-                } else if (typeof sensor.value === 'number') {
-                    valueHtml = sensor.value.toFixed(3);
-                    includeGraph = true;  // Only add graphs for numeric sensors
+                }
+                else if (typeof sensor.value === 'number') {
+                    const isInteger = sensor.is_integer;
+                    if (!isInteger) {
+                        valueHtml = sensor.value.toFixed(3);
+                        includeGraph = true;  // Only add graphs for numeric sensors
+                    }
+                    else {
+                        valueHtml = sensor.value;
+                        valueHtml = `<span class="integer-value ${sensor.value}">${sensor.value}</span>`;
+                    }
                 } else {
                     valueHtml = sensor.value;
                 }

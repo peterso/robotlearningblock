@@ -145,6 +145,12 @@ struct MicroROSTypes
                         msg_step.target.vector3_value.size = 1;
                         msg_step.target.vector3_value.capacity = 1;
                         break;
+                    case ::SensorMeasurement::Type::INTEGER:
+                        msg_step.target.integer_value.data = new int64_t;
+                        msg_step.target.integer_value.data[0] = step.expected_value().get_integer();
+                        msg_step.target.integer_value.size = 1;
+                        msg_step.target.integer_value.capacity = 1;
+                        break;
                 }
 
                 microros_msg_.status.data[i] = task.step_done(i);
@@ -209,6 +215,9 @@ struct MicroROSTypes
                         break;
                     case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
                         delete microros_msg_.steps.data[i].target.vector3_value.data;
+                        break;
+                    case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_INTEGER:
+                        delete microros_msg_.steps.data[i].target.integer_value.data;
                         break;
                     default:
                         break;
@@ -307,6 +316,13 @@ struct MicroROSTypes
                     microros_msg_.vector3_value.data[0].x = sensor_measurement.get_vector3().x;
                     microros_msg_.vector3_value.data[0].y = sensor_measurement.get_vector3().y;
                     microros_msg_.vector3_value.data[0].z = sensor_measurement.get_vector3().z;
+                    break;
+                case ::SensorMeasurement::Type::INTEGER:
+                    microros_msg_.integer_value.data = new int64_t;
+                    microros_msg_.integer_value.size = 1;
+                    microros_msg_.integer_value.capacity = 1;
+                    microros_msg_.integer_value.data[0] = sensor_measurement.get_integer();
+                    break;
                 default:
                     microros_msg_.type =
                             robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_UNKNOWN;
@@ -329,6 +345,9 @@ struct MicroROSTypes
                     break;
                 case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
                     delete microros_msg_.vector3_value.data;
+                    break;
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_INTEGER:
+                    delete microros_msg_.integer_value.data;
                     break;
                 default:
                     break;
@@ -357,6 +376,9 @@ struct MicroROSTypes
                     break;
                 case ::SensorMeasurement::Type::VECTOR3:
                     ret = robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3;
+                    break;
+                case ::SensorMeasurement::Type::INTEGER:
+                    ret = robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_INTEGER;
                     break;
                 default:
                     ret = robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_UNKNOWN;
@@ -388,6 +410,9 @@ struct MicroROSTypes
                     break;
                 case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_VECTOR3:
                     ret = ::SensorMeasurement::Type::VECTOR3;
+                    break;
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_INTEGER:
+                    ret = ::SensorMeasurement::Type::INTEGER;
                     break;
                 default:
                     ret = ::SensorMeasurement::Type::BOOLEAN;
@@ -436,6 +461,14 @@ struct MicroROSTypes
                         (float) msg.vector3_value.data[0].x,
                         (float) msg.vector3_value.data[0].y,
                         (float) msg.vector3_value.data[0].z});
+                    }
+
+                    break;
+                case robothon_taskboard_msgs__msg__SensorMeasurement__SENSOR_MEASUREMENT_TYPE_INTEGER:
+
+                    if (msg.integer_value.size > 0)
+                    {
+                        ret = ::SensorMeasurement(msg.integer_value.data[0]);
                     }
 
                     break;
@@ -521,6 +554,12 @@ struct MicroROSTypes
                         sensor_data.value.vector3_value.data[0].y = sensor_value.get_vector3().y;
                         sensor_data.value.vector3_value.data[0].z = sensor_value.get_vector3().z;
                         break;
+                    case ::SensorMeasurement::Type::INTEGER:
+                        sensor_data.value.integer_value.data = new int64_t;
+                        sensor_data.value.integer_value.size = 1;
+                        sensor_data.value.integer_value.capacity = 1;
+                        sensor_data.value.integer_value.data[0] = sensor_value.get_integer();
+                        break;
                 }
             }
 
@@ -546,6 +585,9 @@ struct MicroROSTypes
                         break;
                     case ::SensorMeasurement::Type::VECTOR3:
                         delete sensor_data.value.vector3_value.data;
+                        break;
+                    case ::SensorMeasurement::Type::INTEGER:
+                        delete sensor_data.value.integer_value.data;
                         break;
                 }
             }

@@ -120,12 +120,22 @@ struct JSONHandler
                 cJSON_AddNumberToObject(sensor, "value", measurement.get_analog());
                 break;
             case SensorMeasurement::Type::VECTOR3:
+            {
                 cJSON* vector = cJSON_CreateObject();
                 cJSON_AddNumberToObject(vector, "x", measurement.get_vector3().x);
                 cJSON_AddNumberToObject(vector, "y", measurement.get_vector3().y);
                 cJSON_AddNumberToObject(vector, "z", measurement.get_vector3().z);
                 cJSON_AddItemToObject(sensor, "value", vector);
                 break;
+            }
+            case SensorMeasurement::Type::INTEGER:
+            {
+                const double value = static_cast<double>(measurement.get_integer());
+                cJSON_AddNumberToObject(sensor, "value", value);
+                cJSON* is_integer = cJSON_CreateTrue();
+                cJSON_AddItemToObject(sensor, "is_integer", is_integer);
+                break;
+            }
         }
 
         cJSON_AddItemToArray(sensors_, sensor);

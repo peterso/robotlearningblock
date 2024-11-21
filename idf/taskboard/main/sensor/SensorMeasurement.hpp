@@ -30,7 +30,7 @@ struct SensorMeasurement
     using BooleanType = bool;         ///< Type alias for boolean measurements
     using AnalogType = float;         ///< Type alias for analog (float) measurements
     using Vector3Type = Vector3;      ///< Type alias for 3D vector measurements
-
+    using IntegerType = int64_t;      ///< Type alias for integer measurements
     /**
      * @enum Type
      * @brief Enumeration of supported measurement types
@@ -39,7 +39,8 @@ struct SensorMeasurement
     {
         BOOLEAN,    ///< Boolean measurement type
         ANALOG,     ///< Analog (float) measurement type
-        VECTOR3     ///< 3D vector measurement type
+        VECTOR3,    ///< 3D vector measurement type
+        INTEGER     ///< Integer measurement type
     };
 
     /**
@@ -79,6 +80,18 @@ struct SensorMeasurement
     }
 
     /**
+     * @brief Constructs a new integer SensorMeasurement
+     *
+     * @param integer_value Integer value to store
+     */
+    SensorMeasurement(
+            const IntegerType& integer_value)
+        : type_(Type::INTEGER)
+        , integer_value(integer_value)
+    {
+    }
+
+    /**
      * @brief Gets the type of measurement stored
      * @return Type enum indicating measurement type
      */
@@ -104,6 +117,9 @@ struct SensorMeasurement
             case Type::VECTOR3:
                 return "[" + std::to_string(vector3.x) + ", " + std::to_string(vector3.y) + ", " + std::to_string(
                     vector3.z) + "]";
+                break;
+            case Type::INTEGER:
+                return std::to_string(integer_value);
                 break;
         }
 
@@ -141,6 +157,9 @@ struct SensorMeasurement
                             compare_floats(a.vector3.y, b.vector3.y, tolerance) &&
                             compare_floats(a.vector3.z, b.vector3.z, tolerance);
                     break;
+                case Type::INTEGER:
+                    ret = a.integer_value == b.integer_value;
+                    break;
             }
         }
 
@@ -175,6 +194,9 @@ struct SensorMeasurement
                     ret = a.vector3.x >= b.vector3.x &&
                             a.vector3.y >= b.vector3.y &&
                             a.vector3.z >= b.vector3.z;
+                    break;
+                case Type::INTEGER:
+                    ret = a.integer_value >= b.integer_value;
                     break;
             }
         }
@@ -225,6 +247,16 @@ struct SensorMeasurement
         return vector3;
     }
 
+    /**
+     * @brief Gets the stored integer value
+     *
+     * @return Reference to the stored integer value
+     */
+    const IntegerType& get_integer() const
+    {
+        return integer_value;
+    }
+
 private:
 
     /**
@@ -252,5 +284,6 @@ private:
         BooleanType boolean_value;    ///< Boolean measurement storage
         AnalogType analog_value;      ///< Analog measurement storage
         Vector3Type vector3;          ///< Vector measurement storage
+        IntegerType integer_value;    ///< Integer measurement storage
     };
 };
