@@ -7,6 +7,7 @@
 #include <util/Timing.hpp>
 #include <network/HTTPServer.hpp>
 #include <network/WifiManager.hpp>
+#include <network/OTAUpdater.hpp>
 #include <hal/NonVolatileStorage.hpp>
 #include <hal/ScreenController.hpp>
 #include <hal/PbHubController.hpp>
@@ -68,6 +69,9 @@ extern "C" void app_main(
 
     // Create default event loop for system events
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+    // Disable Power Save modes for improved performance
+    esp_wifi_set_ps(WIFI_PS_NONE);
 
     // ------------------------
     // Hardware Initialization
@@ -170,6 +174,53 @@ extern "C" void app_main(
         screen_controller.print("-> Connected to " + wifi_manager.get_ssid());
         screen_controller.print("-> IP: " + wifi_manager.get_ip());
         ip_string = wifi_manager.get_ip();
+    }
+
+    // ------------------------
+    // Handle OTA Updates
+    // ------------------------
+    if (!start_local_mode)
+    {
+        OTAUpdater ota_updater;
+
+        // If can update, wait up to 3 seconds to red button press
+        if (ota_updater.can_update())
+        {
+            screen_controller.clear();
+
+            screen_controller.print("-> Red button to update to " + ota_updater.get_latest_version());
+
+            // Wait for red button press
+            for (uint32_t i = 0; i < 300; i++)
+            {
+                task_board_driver.update();
+
+                if (RED_BUTTON.read() == true)
+                {
+                    break;
+                }
+
+                vTaskDelay(pdMS_TO_TICKS(10));
+            }
+
+            // If red button pressed, start update
+            if (RED_BUTTON.read() == true)
+            {
+                screen_controller.print("-> Updating firmware");
+                ota_updater.update();
+            }
+
+            // Skipping update
+            else
+            {
+                screen_controller.clear();
+                screen_controller.print("-> IP: " + ip_string);
+            }
+        }
+        else
+        {
+            screen_controller.print("-> No updates available");
+        }
     }
 
     // ------------------------

@@ -65,7 +65,7 @@ struct MicroROSTask :
 
             SensorMeasurement target = MicroROSTypes::SensorMeasurement::from_microros(msg_step.target);
 
-            TaskStep* step;
+            TaskStep* step = nullptr;
 
             switch (msg_step.type)
             {

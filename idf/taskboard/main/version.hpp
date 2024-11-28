@@ -2,11 +2,13 @@
  * Robothon Task Board Firmware
  */
 
+#pragma once
+
 #include <cstdint>
 #include <string>
 
 // Firmware version
-constexpr uint32_t FW_VERSION_MAJOR = 1;
+constexpr uint32_t FW_VERSION_MAJOR = 2;
 constexpr uint32_t FW_VERSION_MINOR = 0;
 constexpr uint32_t FW_VERSION_PATCH = 0;
 
