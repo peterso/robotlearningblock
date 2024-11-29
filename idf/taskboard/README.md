@@ -35,6 +35,7 @@ Noteworthy features:
       - [REST API](#rest-api)
       - [Gerring status from ROS 2](#gerring-status-from-ros-2)
       - [Triggering a new Task from ROS 2](#triggering-a-new-task-from-ros-2)
+      - [Triggering Task Board default task from ROS 2](#triggering-task-board-default-task-from-ros-2)
   - [Common actions](#common-actions)
     - [Connecting to a Wi-Fi network](#connecting-to-a-wi-fi-network)
     - [Connecting to a micro-ROS Agent](#connecting-to-a-micro-ros-agent)
@@ -212,14 +213,17 @@ The Robothon Task Board Firmware exposes two primary interfaces for accessing th
 
 This two interfaces exposes access and control over the system and the data model in the following way:
 
-| Action                            | REST API            | ROS 2                                                                    |
-| --------------------------------- | ------------------- | ------------------------------------------------------------------------ |
+| Action                            | REST API            | ROS 2                                                                      |
+| --------------------------------- | ------------------- | -------------------------------------------------------------------------- |
 | Task Board Status                 | `/taskboard_status` | `/robothon_taskboard_status [robothon_taskboard_msgs/msg/TaskBoardStatus]` |
 | Current Task Status               | `/task_status`      | `/robothon_task_status [robothon_task_msgs/msg/TaskStatus]`                |
-| Execute a new Task                | Not available       | `/taskboard_execute_task [robothon_taskboard_msgs/action/ExecuteTask]`    |
-| Leaderboard                       | `/leaderboard`      | Not available                                                            |
-| System Status                     | `/system_status`    | Not available                                                            |
-| Configure micro-ROS Agent address | `/microros`         | Not available                                                            |
+| Execute a new Task <sup>1</sup>   | Not available       | `/taskboard_execute_task [robothon_taskboard_msgs/action/ExecuteTask]`     |
+| Leaderboard                       | `/leaderboard`      | Not available                                                              |
+| System Status                     | `/system_status`    | Not available                                                              |
+| Configure micro-ROS Agent address | `/microros`         | Not available                                                              |
+
+
+<sup>1</sup> An empty call to this interface will trigger the default task.
 
 ### Example applications
 
@@ -254,8 +258,20 @@ This example application can be built as a normal ROS 2 package and run as a nod
 cd extra_ros_packages
 colcon build
 
-ros2 run robothon_taskboard_goal_sender robothon_taskboard_goal_sender
 ros2 run robothon_taskboard_goal_sender goal_sender
+```
+
+#### Triggering Task Board default task from ROS 2
+
+An ROS 2 application that triggers the Task Board default task can be found in `extra_ros_packages/robothon_taskboard_default_task_sender` folder.
+
+This example application can be built as a normal ROS 2 package and run as a node:
+
+```bash
+cd extra_ros_packages
+colcon build
+
+ros2 run robothon_taskboard_default_task_sender goal_sender
 ```
 
 ## Common actions

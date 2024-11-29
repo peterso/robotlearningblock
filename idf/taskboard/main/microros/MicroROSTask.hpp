@@ -100,6 +100,16 @@ struct MicroROSTask :
             }
         }
 
+        if (steps_.size() == 0)
+        {
+            steps_from_default_task_ = true;
+
+            for (size_t i = 0; i < task_board_driver.get_default_task().total_steps(); i++)
+            {
+                steps_.push_back(&task_board_driver.get_default_task().step(i));
+            }
+        }
+
     }
 
     /**
@@ -107,9 +117,12 @@ struct MicroROSTask :
      */
     virtual ~MicroROSTask()
     {
-        for (auto step : steps_)
+        if (!steps_from_default_task_)
         {
-            delete step;
+            for (auto step : steps_)
+            {
+                delete step;
+            }
         }
     }
 
@@ -137,4 +150,5 @@ private:
 
     rclc_action_goal_handle_t const* const goal_handle_;    ///< Pointer to the micro-ROS action goal handle
     std::vector<const TaskStep*> steps_;                    ///< List of task steps
+    bool steps_from_default_task_ = false;                  ///< Flag to indicate if steps are from default task
 };
