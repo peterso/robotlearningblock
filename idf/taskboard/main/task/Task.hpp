@@ -104,6 +104,10 @@ struct Task
         {
             step->sensor().start_read();
         }
+
+        // Regenerate unique ID
+        uuid_generate(unique_id_);
+        unique_id_str_ = uuid_to_string(unique_id_);
     }
 
     /**
