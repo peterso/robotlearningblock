@@ -181,7 +181,7 @@ extern "C" void app_main(
     // ------------------------
     if (!start_local_mode)
     {
-        OTAUpdater ota_updater;
+        OTAUpdater ota_updater(screen_controller);
 
         // If can update, wait up to 3 seconds to red button press
         if (ota_updater.can_update())

@@ -26,8 +26,12 @@ struct OTAUpdater
 
     /**
      * @brief Constructs a new OTAUpdater object
+     *
+     * @param screen_controller Screen controller
      */
-    OTAUpdater()
+    OTAUpdater(
+            ScreenController& screen_controller)
+        : screen_controller_(screen_controller)
     {
         // Make HTTP request to get latest release
         esp_http_client_config_t config = {};
@@ -133,6 +137,11 @@ struct OTAUpdater
         return latest_version_;
     }
 
+    /**
+     * @brief Update firmware
+     *
+     * @note This function will restart the device
+     */
     void update()
     {
         if (!can_update())
@@ -144,7 +153,6 @@ struct OTAUpdater
         config.url = firmware_url_.c_str();
         config.crt_bundle_attach = esp_crt_bundle_attach;
         config.keep_alive_enable = true;
-        config.buffer_size = 10 * 1024;
         config.buffer_size_tx = 5 * 1024;
 
         esp_https_ota_config_t ota_config = {};
@@ -164,6 +172,7 @@ struct OTAUpdater
         {
             ESP_LOGE(TAG, "Firmware update failed");
             vTaskDelay(pdMS_TO_TICKS(1000));
+            esp_restart();
         }
     }
 
@@ -210,34 +219,46 @@ private:
 
         if (event_base == ESP_HTTPS_OTA_EVENT)
         {
+            updater->screen_controller_.clear();
+
             switch (event_id){
                 case ESP_HTTPS_OTA_START:
                     ESP_LOGI(updater->TAG, "OTA started");
+                    updater->screen_controller_.print("-> OTA started");
                     break;
                 case ESP_HTTPS_OTA_CONNECTED:
                     ESP_LOGI(updater->TAG, "Connected to server");
+                    updater->screen_controller_.print("-> Connected to server");
                     break;
                 case ESP_HTTPS_OTA_GET_IMG_DESC:
                     ESP_LOGI(updater->TAG, "Reading Image Description");
+                    updater->screen_controller_.print("-> Reading Image Description");
                     break;
                 case ESP_HTTPS_OTA_VERIFY_CHIP_ID:
                     ESP_LOGI(updater->TAG, "Verifying chip id of new image: %d", *(esp_chip_id_t*)event_data);
+                    updater->screen_controller_.print("-> Verifying chip id");
                     break;
                 case ESP_HTTPS_OTA_DECRYPT_CB:
                     ESP_LOGI(updater->TAG, "Callback to decrypt function");
+                    updater->screen_controller_.print("-> Decrypting");
                     break;
                 case ESP_HTTPS_OTA_WRITE_FLASH:
                     ESP_LOGD(updater->TAG, "Writing to flash: %d written", *(int*)event_data);
+                    updater->screen_controller_.print("-> Writing to flash: " + std::to_string(
+                                *(int*)event_data) + " bytes");
                     break;
                 case ESP_HTTPS_OTA_UPDATE_BOOT_PARTITION:
                     ESP_LOGI(updater->TAG, "Boot partition updated. Next Partition: %d",
                             *(esp_partition_subtype_t*)event_data);
+                    updater->screen_controller_.print("-> Boot partition updated");
                     break;
                 case ESP_HTTPS_OTA_FINISH:
                     ESP_LOGI(updater->TAG, "OTA finish");
+                    updater->screen_controller_.print("-> OTA finish");
                     break;
                 case ESP_HTTPS_OTA_ABORT:
                     ESP_LOGI(updater->TAG, "OTA abort");
+                    updater->screen_controller_.print("-> OTA abort");
                     break;
             }
         }
@@ -246,4 +267,6 @@ private:
     std::string latest_version_;      ///< Latest version
     std::string firmware_url_;        ///< URL to download firmware
     std::string http_data_;           ///< HTTP response data
+
+    ScreenController& screen_controller_;  ///< Screen controller
 };
