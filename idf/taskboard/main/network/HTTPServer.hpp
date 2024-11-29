@@ -296,13 +296,15 @@ private:
         HTTPServer* server = (HTTPServer*)req->user_ctx;
         JSONHandler json_handler(server->task_board_driver_.get_unique_id());
 
-        // Add task status if there is a task
-        const Task* current_task = server->task_executor_.current_task();
-
-        if (nullptr != current_task)
-        {
-            json_handler.add_task_status(*current_task, server->task_executor_.current_precondition());
-        }
+        // Add task status if there is a task running
+        server->task_executor_.execute_operation_on_task(portMAX_DELAY,
+                [&json_handler](Task* task, Task* precondition)
+                {
+                    if (task != nullptr)
+                    {
+                        json_handler.add_task_status(*task, precondition);
+                    }
+                });
 
         char* status = json_handler.get_json_string();
 

@@ -260,11 +260,16 @@ extern "C" void app_main(
         // Update board sensor readings
         task_board_driver.update();
 
-        // Check timeout status of current task
-        const bool active_current_task = task_executor.current_task() != nullptr;
-        const bool active_current_precondition = task_executor.current_precondition() != nullptr;
-        const bool current_task_timeout = active_current_task && !active_current_precondition &&
-                task_executor.current_task()->timeout();
+        // Check timeout status of current task, block forever
+        bool current_task_timeout = false;
+        task_executor.execute_operation_on_task(portMAX_DELAY, [&](Task* task, Task* precondition)
+                {
+                    const bool active_current_task = task != nullptr;
+                    const bool active_current_precondition = precondition != nullptr;
+
+                    current_task_timeout = active_current_task && !active_current_precondition &&
+                    task->timeout();
+                });
 
         // Handle Button B press - Start/Restart default task
         if (BUTTON_B.read() == true)

@@ -60,6 +60,61 @@ inline builtin_interfaces__msg__Time get_rmw_time()
 }
 
 /**
+ * @brief Timer
+ *
+ * @details Wrapper util for timing operations
+ */
+struct Timer
+{
+    /**
+     * @brief Constructs a new Timer object
+     *
+     * @param period_ms Period in milliseconds
+     */
+    Timer(
+            const uint32_t period_ms)
+        : period_ms_(period_ms)
+        , start_time_(esp_timer_get_time())
+    {
+    }
+
+    /**
+     * @brief Restarts the timer
+     */
+    void restart()
+    {
+        start_time_ = esp_timer_get_time();
+    }
+
+    /**
+     * @brief Check if the timer has elapsed
+     *
+     * @details If the timer has elapsed, the timer is restarted
+     *
+     * @return true if the timer has elapsed
+     */
+    bool triggered()
+    {
+        bool ret = false;
+        const uint32_t current_time = esp_timer_get_time();
+
+        if (current_time - start_time_ > period_ms_ * 1000)
+        {
+            start_time_ = current_time;
+            ret = true;
+        }
+
+        return ret;
+    }
+
+private:
+
+    uint32_t period_ms_;        ///< Period in milliseconds
+    uint32_t start_time_;       ///< Start time in microseconds
+
+};
+
+/**
  * @struct TimedOperation
  *
  * @brief Executes a callback function periodically

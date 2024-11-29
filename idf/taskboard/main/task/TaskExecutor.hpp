@@ -6,6 +6,10 @@
 
 #include <hal/ScreenController.hpp>
 #include <hal/NonVolatileStorage.hpp>
+#include <util/Timing.hpp>
+
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 
 #include <esp_log.h>
 
@@ -13,16 +17,15 @@
  * @struct TaskExecutor
  *
  * @brief Class for managing task execution and screen output
+ *
+ * @details This class is prune to be called from multiple execution contexts, so it should be thread-safe
  */
 struct TaskExecutor
 {
     const char* TAG = "TaskExecutor";  ///< Logging tag
 
-    //! Analog update interval in microseconds
-    static constexpr int64_t ANALOG_UPDATE_INTERVAL = 5e4; // 100 ms
-
-    //! Callback type for task finish event
-    using FinishTaskCallback = std::function<void (const Task&)>;
+    //! Callback task updates
+    using TaskExecutorCallback = std::function<void (const Task*, const Task*)>;
 
     /**
      * @brief Constructs a new TaskExecutor object
@@ -37,6 +40,7 @@ struct TaskExecutor
         , non_volatile_storage_(non_volatile_storage)
         , last_analog_update_(esp_timer_get_time())
     {
+        mutex_ = xSemaphoreCreateMutex();
     }
 
     /**
@@ -46,6 +50,18 @@ struct TaskExecutor
      */
     void update()
     {
+        // Lock mutex for thread safety
+        xSemaphoreTake(mutex_, portMAX_DELAY);
+
+        // Notify periodically the task callbacks, even if there is no task running
+        for (auto& callback : task_callbacks_)
+        {
+            if (callback.first.triggered())
+            {
+                callback.second(current_task_, precondition_);
+            }
+        }
+
         // Handle precondition first
         if (precondition_ != nullptr && current_task_ != nullptr)
         {
@@ -104,14 +120,17 @@ struct TaskExecutor
                 non_volatile_storage_.add_new_register(*current_task_, current_task_->is_human_task());
 
                 // Call finish task callbacks
-                for (auto& callback : finish_task_callbacks_)
+                for (auto& callback : task_callbacks_)
                 {
-                    callback(*current_task_);
+                    callback.second(current_task_, precondition_);
                 }
 
                 current_task_ = nullptr;
             }
         }
+
+        // Unlock mutex
+        xSemaphoreGive(mutex_);
     }
 
     /**
@@ -124,9 +143,17 @@ struct TaskExecutor
     bool run_task(
             Task& task)
     {
+        // Lock mutex for thread safety
+        xSemaphoreTake(mutex_, portMAX_DELAY);
+
         ESP_LOGI(TAG, "Running task: %s", task.name().c_str());
 
-        return run_task_inner(task, nullptr);
+        const bool ret = run_task_inner(task, nullptr);
+
+        // Unlock mutex
+        xSemaphoreGive(mutex_);
+
+        return ret;
     }
 
     /**
@@ -141,9 +168,17 @@ struct TaskExecutor
             Task& task,
             Task& precondition)
     {
+        // Lock mutex for thread safety
+        xSemaphoreTake(mutex_, portMAX_DELAY);
+
         ESP_LOGI(TAG, "Running task: %s with precondition", task.name().c_str());
 
-        return run_task_inner(task, &precondition);
+        const bool ret = run_task_inner(task, &precondition);
+
+        // Unlock mutex
+        xSemaphoreGive(mutex_);
+
+        return ret;
     }
 
     /**
@@ -151,12 +186,17 @@ struct TaskExecutor
      */
     void cancel_task()
     {
+        // Lock mutex for thread safety
+        xSemaphoreTake(mutex_, portMAX_DELAY);
+
         ESP_LOGI(TAG, "Cancelling task");
 
         current_task_ = nullptr;
         precondition_ = nullptr;
         force_screen_update_ = true;
 
+        // Unlock mutex
+        xSemaphoreGive(mutex_);
     }
 
     /**
@@ -166,38 +206,45 @@ struct TaskExecutor
      */
     bool running() const
     {
-        return current_task_ != nullptr;
+        // Lock mutex for thread safety
+        xSemaphoreTake(mutex_, portMAX_DELAY);
+
+        const bool ret = current_task_ != nullptr;
+
+        // Unlock mutex
+        xSemaphoreGive(mutex_);
+
+        return ret;
     }
 
     /**
-     * @brief Gets the current task
+     * @brief Adds a callback for task execution events
      *
-     * @return Pointer to the current task, or nullptr if no task is running
+     * @param period_ms Period in milliseconds to call the callback
+     * @param callback Callback function
      */
-    const Task* current_task() const
+    void add_callback(
+            const uint32_t& period_ms,
+            TaskExecutorCallback callback)
     {
-        return current_task_;
+        // Lock mutex for thread safety
+        xSemaphoreTake(mutex_, portMAX_DELAY);
+
+        task_callbacks_.push_back(std::make_pair(period_ms, callback));
+
+        // Unlock mutex
+        xSemaphoreGive(mutex_);
     }
 
-    /**
-     * @brief Gets the current precondition task
-     *
-     * @return Pointer to the current precondition task, or nullptr if no task is running
-     */
-    const Task* current_precondition() const
+    void execute_operation_on_task(
+            const uint32_t& timeout_ticks,
+            std::function<void(Task*, Task*)> operation)
     {
-        return precondition_;
-    }
-
-    /**
-     * @brief Adds a callback for task finish events
-     *
-     * @param callback Callback function to be called when a task finishes
-     */
-    void add_finish_task_callback(
-            FinishTaskCallback callback)
-    {
-        finish_task_callbacks_.push_back(callback);
+        if (xSemaphoreTake(mutex_, timeout_ticks) == pdTRUE)
+        {
+            operation(current_task_, precondition_);
+            xSemaphoreGive(mutex_);
+        }
     }
 
 private:
@@ -216,31 +263,34 @@ private:
     {
         bool ret = false;
 
-        // Ensure task is restarted
-        task.restart();
-
-        if (current_task_ == nullptr && !task.done())
+        if (current_task_ == nullptr)
         {
-            current_task_ = &task;
-            current_task_->restart();
+            // Ensure task is restarted
+            task.restart();
 
-            precondition_ = precondition;
-
-            if (precondition_ != nullptr)
+            if (!task.done())
             {
-                precondition_->restart();
-                precondition_->update();
+                current_task_ = &task;
+                current_task_->restart();
 
-                // Quick cancel precondition if already done
-                if (precondition_->done())
+                precondition_ = precondition;
+
+                if (precondition_ != nullptr)
                 {
-                    ESP_LOGI(TAG, "Precondition already done, cancelling");
-                    precondition_ = nullptr;
-                }
-            }
+                    precondition_->restart();
+                    precondition_->update();
 
-            force_screen_update_ = true;
-            ret = true;
+                    // Quick cancel precondition if already done
+                    if (precondition_->done())
+                    {
+                        ESP_LOGI(TAG, "Precondition already done, cancelling");
+                        precondition_ = nullptr;
+                    }
+                }
+
+                force_screen_update_ = true;
+                ret = true;
+            }
         }
 
         return ret;
@@ -254,5 +304,7 @@ private:
     bool force_screen_update_ = false;                          ///< Flag to force screen update
     int64_t last_analog_update_ = 0;                            ///< Last analog update time
 
-    std::vector<FinishTaskCallback> finish_task_callbacks_;     ///< Vector of task finish callbacks
+    SemaphoreHandle_t mutex_;                                   ///< Mutex for thread safety
+
+    std::vector<std::pair<Timer, TaskExecutorCallback>> task_callbacks_;      ///< Vector of task update callbacks
 };

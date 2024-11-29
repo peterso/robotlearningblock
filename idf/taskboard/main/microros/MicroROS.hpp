@@ -24,9 +24,10 @@ struct MicroROSMainArgs
 };
 
 /// Notification bit indicating manual task cancellation from Core 0
-constexpr uint8_t MANUALLY_CANCELLED_TASK = 0x01;
-constexpr uint8_t MICROROS_CANCELLED_TASK = 0x02;
-constexpr uint8_t MICROROS_TIMEOUT_TASK = 0x03;
+constexpr uint8_t MANUALLY_CANCELLED_TASK = 0x01 << 0;
+constexpr uint8_t MICROROS_CANCELLED_TASK = 0x01 << 1;
+constexpr uint8_t MICROROS_TIMEOUT_TASK = 0x01 << 2;
+constexpr uint8_t MICROROS_TASK_UPDATE_REQUIRED = 0x01 << 3;
 
 /**
  * @brief Main function for MicroROS task execution

@@ -52,20 +52,30 @@ void microros_main(
                 microros_controller.publish_taskboard_status(status);
             });
 
-    // Configure periodic task status publisher
-    // Publishes current task state and precondition status to ROS
-    TimedOperation publish_task_status(TASK_STATUS_PUBLISHER_PERIOD_MS,
-            [&microros_controller, &task_executor, &task_board_driver]()
-            {
-                const Task* current_task = task_executor.current_task();
+    // ------------------------
+    // Task Executor Callback
+    // ------------------------
+    // In order to avoid deadlock, let's register a callback to the task executor that defers the
+    // micro-ROS publish operation.
+    TaskHandle_t microros_task_handle = xTaskGetCurrentTaskHandle();
+    task_executor.add_callback(
+        TASK_STATUS_PUBLISHER_PERIOD_MS,
+        [&microros_task_handle](const Task* task, const Task* precondition)
+        {
+            // Notify micro-ROS task that a task update is required
+            xTaskNotify(microros_task_handle, MICROROS_TASK_UPDATE_REQUIRED, eSetBits);
+        });
 
-                if (nullptr != current_task)
+    auto handle_task_executor_notification =
+            [&microros_controller, &task_board_driver](Task* task, Task* precondition)
+            {
+                if (nullptr != task)
                 {
                     // If there's an active task, publish its status
-                    MicroROSTypes::TaskStatus task_status(*current_task, task_board_driver.get_unique_id());
-                    task_status.set_waiting_precondition(nullptr != task_executor.current_precondition());
+                    MicroROSTypes::TaskStatus task_status(*task, task_board_driver.get_unique_id());
+                    task_status.set_waiting_precondition(nullptr != precondition);
 
-                    if (task_executor.current_precondition() != nullptr)
+                    if (precondition != nullptr)
                     {
                         task_status.set_time(0);
                     }
@@ -78,21 +88,7 @@ void microros_main(
                     MicroROSTypes::TaskStatus empty_task_status(task_board_driver.get_unique_id());
                     microros_controller.publish_task_status(empty_task_status);
                 }
-            });
-
-    // ------------------------
-    // Task Completion Callback
-    // ------------------------
-
-    // Register callback for task completion events
-    // TODO(pgarrido): This may be called from other thread/core so it shall be protected
-    task_executor.add_finish_task_callback([&microros_controller, &task_board_driver](const Task& task)
-            {
-                // Publish final task status when task completes
-                MicroROSTypes::TaskStatus task_status(task, task_board_driver.get_unique_id());
-                task_status.set_waiting_precondition(false);
-                microros_controller.publish_task_status(task_status);
-            });
+            };
 
     // ------------------------
     // Main micro-ROS Update Loop
@@ -102,18 +98,25 @@ void microros_main(
         // Update ROS communication and publish periodic messages
         microros_controller.update();
         publish_taskboard_status.update();
-        publish_task_status.update();
         microros_task_executor.update();
 
-        // Check for manual task cancellation from Core 0
+        // Check for notifications
         uint32_t value;
 
         if (pdPASS == xTaskNotifyWait(pdFALSE, 0xFFFFFFFF, &value, pdMS_TO_TICKS(0)))
         {
-            if (value == MANUALLY_CANCELLED_TASK)
+            // Check required update
+            if (value & MICROROS_TASK_UPDATE_REQUIRED)
+            {
+                task_executor.execute_operation_on_task(portMAX_DELAY, handle_task_executor_notification);
+            }
+
+            // Check for manual task cancellation
+            if (value & MANUALLY_CANCELLED_TASK)
             {
                 microros_task_executor.cancel_task();
             }
+
         }
 
         // Main loop delay
