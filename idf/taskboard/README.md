@@ -40,6 +40,7 @@ Noteworthy features:
     - [Connecting to a Wi-Fi network](#connecting-to-a-wi-fi-network)
     - [Connecting to a micro-ROS Agent](#connecting-to-a-micro-ros-agent)
     - [Recording a ROS 2 session](#recording-a-ros-2-session)
+  - [Over-The-Air (OTA) updates](#over-the-air-ota-updates)
 
 ## Build firmware
 
@@ -336,3 +337,18 @@ docker run -it --rm --privileged --net host --ipc host  -v $(pwd)/extra_ros_pack
 ```
 
 **Remember to add extra topics to `extra_ros_packages/record_replay_session/config.yml` if they need to be recorded**
+
+## Over-The-Air (OTA) updates
+
+The Robothon Task Board Firmware supports Over-The-Air (OTA) updates.
+
+The OTA update procedure relies on Github Releases and the ESP-IDF OTA mechanism.
+
+The followinf steps are done to perform an OTA update:
+
+1. The Task Board is connected to a Wi-Fi network.
+2. The newest release information is retrieved using HTTPS for a [well-defined end-point](./main/network/OTAUpdater.hpp#L25)
+3. The latest release name (in format `vX.Y.Z`) is compared to the [current firmware version](./main/version.hpp).
+4. If a newer version is available, the firmware will ask the user to confirm the update using the Task Board buttons and screen.
+5. If the user confirms the update, the firmware will download the first asset whose name starts with `taskboard.bin` from the release.
+6. After the firmware upgrade is done, the Task Board will reboot and start the new firmware.
