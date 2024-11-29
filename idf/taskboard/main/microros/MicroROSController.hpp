@@ -26,6 +26,8 @@
 // Ping operation configuration
 constexpr uint32_t PING_AGENT_TIMEOUT_MS = 200;
 constexpr uint32_t PING_AGENT_RETRIES = 10;
+constexpr uint32_t PING_ON_WAIT_AGENT_TIMEOUT_MS = 50;
+constexpr uint32_t PING_ON_WAIT_AGENT_RETRIES = 5;
 
 /**
  * @struct MicroROSController
@@ -498,7 +500,7 @@ private:
             case State::WAITING_AGENT:
                 state_ =
                         (RMW_RET_OK ==
-                        rmw_uros_ping_agent_options(PING_AGENT_TIMEOUT_MS, PING_AGENT_RETRIES,
+                        rmw_uros_ping_agent_options(PING_ON_WAIT_AGENT_TIMEOUT_MS, PING_ON_WAIT_AGENT_RETRIES,
                         rwm_options_)) ? State::AGENT_AVAILABLE : State::WAITING_AGENT;
                 break;
             case State::AGENT_CONNECTED:
