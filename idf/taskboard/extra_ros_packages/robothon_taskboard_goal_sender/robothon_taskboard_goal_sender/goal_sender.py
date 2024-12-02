@@ -1,3 +1,6 @@
+import argparse
+import random
+
 from action_msgs.msg import GoalStatus
 from robothon_taskboard_msgs.action import ExecuteTask
 from robothon_taskboard_msgs.msg import Task
@@ -12,9 +15,10 @@ from rclpy.node import Node
 
 class RobothonTaskBoardGoalSender(Node):
 
-    def __init__(self):
+    def __init__(self, random_order=False):
         super().__init__('minimal_action_client')
         self._action_client = ActionClient(self, ExecuteTask, 'taskboard_execute_task')
+        self.random_order = random_order
 
     def goal_response_callback(self, future):
         goal_handle = future.result()
@@ -52,13 +56,16 @@ class RobothonTaskBoardGoalSender(Node):
         task = Task()
         task.name = "Test task"
 
+        # Define task steps
+        steps = []
+
         # Press Blue Button
         task_step = TaskStep()
         task_step.sensor_name = "BLUE_BUTTON"
         task_step.type = TaskStep.TASK_STEP_TYPE_EQUAL
         task_step.target.type = SensorMeasurement.SENSOR_MEASUREMENT_TYPE_BOOL
         task_step.target.bool_value.append(True)
-        task.steps.append(task_step)
+        steps.append(task_step)
 
         # Move fader to 0.5
         task_step = TaskStep()
@@ -67,7 +74,7 @@ class RobothonTaskBoardGoalSender(Node):
         task_step.target.type = SensorMeasurement.SENSOR_MEASUREMENT_TYPE_ANALOG
         task_step.target.analog_value.append(0.5)
         task_step.tolerance = 0.1
-        task.steps.append(task_step)
+        steps.append(task_step)
 
         # Press Red Button
         task_step = TaskStep()
@@ -75,8 +82,14 @@ class RobothonTaskBoardGoalSender(Node):
         task_step.type = TaskStep.TASK_STEP_TYPE_EQUAL
         task_step.target.type = SensorMeasurement.SENSOR_MEASUREMENT_TYPE_BOOL
         task_step.target.bool_value.append(True)
-        task.steps.append(task_step)
+        steps.append(task_step)
 
+        # Shuffle steps if random_order is True
+        if self.random_order:
+            random.shuffle(steps)
+
+        # Add steps to task
+        task.steps.extend(steps)
         goal_msg.task = task
 
         self.get_logger().info('Sending goal request...')
@@ -91,11 +104,16 @@ class RobothonTaskBoardGoalSender(Node):
         self.get_logger().info('Cancelling goal')
         self._send_goal_future.result().cancel_goal_async()
 
+
 def main(args=None):
     try:
+        parser = argparse.ArgumentParser(description="Send taskboard goals")
+        parser.add_argument('--random-order', action='store_true', help="Shuffle the task steps before sending.")
+        cli_args = parser.parse_args()
+
         rclpy.init(args=args)
 
-        goal_sender = RobothonTaskBoardGoalSender()
+        goal_sender = RobothonTaskBoardGoalSender(random_order=cli_args.random_order)
 
         goal_sender.send_goal()
 
