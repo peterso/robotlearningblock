@@ -110,6 +110,11 @@ struct OTAUpdater
 
     }
 
+    /**
+     * @brief Check if the firmware can be updated
+     *
+     * @return true if the firmware can be updated, false otherwise
+     */
     bool can_update()
     {
         // latest_version_ is vX.Y.Z get the version numbers
@@ -132,6 +137,11 @@ struct OTAUpdater
         return newer_version && has_firmware_url;
     }
 
+    /**
+     * @brief Get the latest version
+     *
+     * @return Latest version
+     */
     const std::string& get_latest_version() const
     {
         return latest_version_;
