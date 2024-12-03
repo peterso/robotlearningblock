@@ -104,11 +104,28 @@ struct NonVolatileStorage
         }
 
         // Write CSV line: timestamp, task name, is_human
-        fprintf(file, "%s,%lld,%d,%s\n",
+        fprintf(file, "%s,%lld,%d,%s,",
                 task.name().c_str(),
                 task.elapsed_time(),
                 is_human ? 1 : 0,
                 task.unique_id().c_str());
+
+        // Write a vector with the time completion of each Task Step
+        fprintf(file, "[");
+
+        for (size_t i = 0; i < task.total_steps(); i++)
+        {
+            int64_t step_time = task.step_done_time(i);
+
+            fprintf(file, "%lld", step_time);
+
+            if (i < task.total_steps() - 1)
+            {
+                fprintf(file, ",");
+            }
+        }
+
+        fprintf(file, "]\n");
 
         // Ensure data is written to file
         fflush(file);
@@ -145,9 +162,7 @@ struct NonVolatileStorage
             return;
         }
 
-        // Write headers
-        fprintf(file, "# DEVICE_ID=%s\n", device_id_.c_str());
-        fprintf(file, "task_name,timestamp,is_human\n");
+        write_header(file);
 
         fflush(file);
         fclose(file);
@@ -208,9 +223,7 @@ private:
                 return;
             }
 
-            // Write headers
-            fprintf(file, "# DEVICE_ID=%s\n", device_id_.c_str());
-            fprintf(file, "task_name,timestamp,is_human\n");
+            write_header(file);
         }
         else
         {
@@ -227,6 +240,18 @@ private:
 
         fflush(file);
         fclose(file);
+    }
+
+    /**
+     * @brief Write header
+     *
+     * @param file File to write header
+     */
+    void write_header(
+            FILE* file)
+    {
+        fprintf(file, "# DEVICE_ID=%s\n", device_id_.c_str());
+        fprintf(file, "task_name,timestamp,is_human,task_uuid,step_times\n");
     }
 
     const std::string& device_id_;    ///< Reference to device's unique identifier

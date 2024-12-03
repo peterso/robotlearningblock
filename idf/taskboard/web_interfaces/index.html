@@ -1291,14 +1291,26 @@
                 const leaderboardData = lines
                     .filter(line => line.trim()) // Remove empty lines
                     .map(line => {
-                        const [taskName, timestamp, isHuman, uniqueId] = line.split(',');
+                        // Match values using regex to handle the JSON array correctly
+                        const regex = /([^,]+),([^,]+),([^,]+),([^,]+),(\[.*\])/;
+                        const match = line.match(regex);
+
+                        if (!match) {
+                            console.warn('Line could not be parsed:', line);
+                            return null;
+                        }
+
+                        const [, taskName, timestamp, isHuman, uniqueId, steps_times] = match;
+
                         return {
                             taskName,
-                            timestamp: parseInt(timestamp),
-                            isHuman: parseInt(isHuman) === 1,
-                            uniqueId
+                            timestamp: parseInt(timestamp, 10),
+                            isHuman: parseInt(isHuman, 10) === 1,
+                            uniqueId,
+                            steps_times: JSON.parse(steps_times)
                         };
                     })
+                    .filter(entry => entry !== null) // Remove any invalid lines
                     .sort((a, b) => a.timestamp - b.timestamp); // Sort by time
 
                 const leaderboardBody = document.getElementById('leaderboard-body');
