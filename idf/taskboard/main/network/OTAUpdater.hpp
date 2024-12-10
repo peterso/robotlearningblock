@@ -22,7 +22,7 @@
 struct OTAUpdater
 {
     const char* TAG = "OTAUpdater";     ///< Logging tag
-    const char* OTA_URI = "https://api.github.com/repos/pablogs9/robotlearningblock/releases/latest";
+    const char* OTA_URI = "https://api.github.com/repos/peterso/robotlearningblock/releases/latest";
 
     /**
      * @brief Constructs a new OTAUpdater object
