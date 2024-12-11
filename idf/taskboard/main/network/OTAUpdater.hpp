@@ -117,24 +117,65 @@ struct OTAUpdater
      */
     bool can_update()
     {
-        // latest_version_ is vX.Y.Z get the version numbers
-        std::string version = latest_version_.substr(1);
-        uint8_t major = std::stoi(version.substr(0, version.find('.')));
-        version = version.substr(version.find('.') + 1);
-        uint8_t minor = std::stoi(version.substr(0, version.find('.')));
-        version = version.substr(version.find('.') + 1);
-        uint8_t patch = std::stoi(version);
+        bool ret = false;
 
-        // Check if the latest version is greater than the current version
-        const bool newer_version =
-                major > FW_VERSION_MAJOR ||
-                (major == FW_VERSION_MAJOR && minor > FW_VERSION_MINOR) ||
-                (major == FW_VERSION_MAJOR && minor == FW_VERSION_MINOR && patch > FW_VERSION_PATCH);
+        if (!latest_version_.empty() && latest_version_[0] == 'v')
+        {
+            const size_t first_dot = latest_version_.find('.');
+            const size_t second_dot = (first_dot != std::string::npos)
+                                  ? latest_version_.find('.', first_dot + 1)
+                                  : std::string::npos;
 
-        // Check if there is a firmware URL
-        const bool has_firmware_url = !firmware_url_.empty();
+            // Validate the positions of the dots
+            if (first_dot == std::string::npos || first_dot == 1 ||
+                    second_dot == std::string::npos || second_dot <= first_dot + 1)
+            {
+                // Format incorrect, do nothing, ret remains false
+            }
+            else
+            {
+                const std::string major_str = latest_version_.substr(1, first_dot - 1);
+                const std::string minor_str = latest_version_.substr(first_dot + 1, second_dot - first_dot - 1);
+                const std::string patch_str = latest_version_.substr(second_dot + 1);
 
-        return newer_version && has_firmware_url;
+                const auto is_numeric = [](const std::string& s)
+                        {
+                            if (s.empty())
+                            {
+                                return false;
+                            }
+
+                            for (const char c : s)
+                            {
+                                if (!isdigit(static_cast<unsigned char>(c)))
+                                {
+                                    return false;
+                                }
+                            }
+
+                            return true;
+                        };
+
+                // Validate numeric fields
+                if (is_numeric(major_str) && is_numeric(minor_str) && is_numeric(patch_str))
+                {
+                    const uint8_t major = static_cast<uint8_t>(std::stoi(major_str));
+                    const uint8_t minor = static_cast<uint8_t>(std::stoi(minor_str));
+                    const uint8_t patch = static_cast<uint8_t>(std::stoi(patch_str));
+
+                    const bool newer_version =
+                            (major > FW_VERSION_MAJOR) ||
+                            (major == FW_VERSION_MAJOR && minor > FW_VERSION_MINOR) ||
+                            (major == FW_VERSION_MAJOR && minor == FW_VERSION_MINOR && patch > FW_VERSION_PATCH);
+
+                    const bool has_firmware_url = !firmware_url_.empty();
+
+                    ret = newer_version && has_firmware_url;
+                }
+            }
+        }
+
+        return ret;
     }
 
     /**
