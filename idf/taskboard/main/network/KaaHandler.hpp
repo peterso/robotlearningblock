@@ -63,12 +63,8 @@ struct KaaHandler
 
         esp_http_client_set_post_field(client_, status, strlen(status));
 
-        esp_err_t err = esp_http_client_perform(client_);
-
-        if (err != ESP_OK)
-        {
-            ESP_LOGE(TAG, "HTTP POST request failed");
-        }
+        // Best effort approach, do not complain on failure
+        esp_http_client_perform(client_);
     }
 
 private:
