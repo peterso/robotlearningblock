@@ -33,7 +33,7 @@ Noteworthy features:
   - [Accessing the data model](#accessing-the-data-model)
     - [Example applications](#example-applications)
       - [REST API](#rest-api)
-      - [Gerring status from ROS 2](#gerring-status-from-ros-2)
+      - [Getting status from ROS 2](#getting-status-from-ros-2)
       - [Triggering a new Task from ROS 2](#triggering-a-new-task-from-ros-2)
       - [Triggering Task Board default task from ROS 2](#triggering-task-board-default-task-from-ros-2)
   - [Common actions](#common-actions)
@@ -44,6 +44,7 @@ Noteworthy features:
       - [Configuring the micro-ROS Agent](#configuring-the-micro-ros-agent)
     - [Recording a ROS 2 session](#recording-a-ros-2-session)
   - [Over-The-Air (OTA) updates](#over-the-air-ota-updates)
+  - [Developing the Web Interface](#developing-the-web-interface)
 
 ## Build firmware
 
@@ -187,6 +188,8 @@ The **HTTPServer** is an interface that handles HTTP requests.
 
 This element will serve the REST API and Web Interface.
 
+Check section [Developing the Web Interface](./web_interfaces/README.md) for more information.
+
 ### JSONHandler
 
 The **JSONHandler** is a helper class that converts the Data Model to and from JSON.
@@ -238,7 +241,7 @@ An example of a webpage that consumes the REST API can be found in `web_interfac
 This webpage is also served by the **HTTPServer** controller in the endpoint `/`.
 
 
-#### Gerring status from ROS 2
+#### Getting status from ROS 2
 
 For subscribing to the Task Board status, you can use the following command:
 
@@ -259,9 +262,14 @@ An example of a ROS 2 application that sends a new Task to the Task Board can be
 This example application can be built as a normal ROS 2 package and run as a node:
 
 ```bash
+# Build the ROS 2 package
 cd extra_ros_packages
 colcon build
 
+# Source the ROS 2 workspace
+source install/local_setup.bash
+
+# Run the ROS 2 node
 ros2 run robothon_taskboard_goal_sender goal_sender
 ```
 
@@ -272,9 +280,14 @@ An ROS 2 application that triggers the Task Board default task can be found in `
 This example application can be built as a normal ROS 2 package and run as a node:
 
 ```bash
+# Build the ROS 2 package
 cd extra_ros_packages
 colcon build
 
+# Source the ROS 2 workspace
+source install/local_setup.bash
+
+# Run the ROS 2 node
 ros2 run robothon_taskboard_default_task_sender goal_sender
 ```
 
@@ -394,3 +407,28 @@ The followinf steps are done to perform an OTA update:
 4. If a newer version is available, the firmware will ask the user to confirm the update using the Task Board buttons and screen.
 5. If the user confirms the update, the firmware will download the first asset whose name starts with `taskboard.bin` from the release.
 6. After the firmware upgrade is done, the Task Board will reboot and start the new firmware.
+
+## Developing the Web Interface
+
+The Web Interface is served by the **HTTPServer** controller in the endpoint `/`.
+
+The Web Interface is built using Vanilla JavaScript, HTML 5 and CSS 3, in order to keep it simple, lightweight and embeddable in flash memory.
+
+HTML files are stored in the `web_interfaces` folder.
+Those files are minified and embedded into a C header file using [`generate_embedded_html.py`](./web_interfaces/generate_embedded_html.py) script.
+
+In order to update the Web Interface, the following steps can be followed:
+
+1. Modify the HTML files in the `web_interfaces` folder.
+2. You can use a local web server to test the changes
+
+```bash
+cd web_interfaces
+python3 -m http.server
+
+# Go to localhost:8000 in your web browser and ensure that "Device IP" (in the bottom left corner) is pointing to the Task Board IP address.
+```
+
+3. Run the `generate_embedded_html.py` script to generate the embedded HTML file.
+4. Copy the generated `.h` files to the firmware folder: [`main/network/webpages/`](./main/network/webpages/).
+5. Rebuild and flash the firmware.
