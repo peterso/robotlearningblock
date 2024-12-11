@@ -38,7 +38,7 @@ struct JSONHandler
      */
     JSONHandler(
             const std::string& unique_id)
-    : JSONHandler()
+        : JSONHandler()
     {
         cJSON_AddStringToObject(root_, "device_id", unique_id.c_str());
     }
@@ -144,7 +144,7 @@ struct JSONHandler
         }
     }
 
-/**
+    /**
      * @brief Adds task board status to the JSON object in Kaa format
      *
      * @param taskboard_driver Sensor ID

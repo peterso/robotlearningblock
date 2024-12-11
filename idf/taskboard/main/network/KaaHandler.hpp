@@ -25,7 +25,8 @@ struct KaaHandler
      *
      * @param task_board_driver Task board driver
      */
-    KaaHandler(const TaskBoardDriver& task_board_driver)
+    KaaHandler(
+            const TaskBoardDriver& task_board_driver)
         : task_board_driver_(task_board_driver)
     {
         // Make HTTP request to get latest release
@@ -58,13 +59,13 @@ struct KaaHandler
         JSONHandler json_handler;
         json_handler.add_taskboard_status_kaaiot(task_board_driver_);
 
-        const char *status = json_handler.get_json_string();
+        const char* status = json_handler.get_json_string();
 
         esp_http_client_set_post_field(client_, status, strlen(status));
 
         esp_err_t err = esp_http_client_perform(client_);
 
-        if(err != ESP_OK)
+        if (err != ESP_OK)
         {
             ESP_LOGE(TAG, "HTTP POST request failed");
         }

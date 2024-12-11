@@ -263,14 +263,15 @@ extern "C" void app_main(
     constexpr uint8_t KAA_THREAD_PRIORITY = 1;
 
     auto kaa_main = [](void* arg) -> void
-    {
-        KaaHandler* kaa_handler = static_cast<KaaHandler*>(arg);
-        while (true)
-        {
-            kaa_handler->send_telemetry();
-            vTaskDelay(pdMS_TO_TICKS(250));
-        }
-    };
+            {
+                KaaHandler* kaa_handler = static_cast<KaaHandler*>(arg);
+
+                while (true)
+                {
+                    kaa_handler->send_telemetry();
+                    vTaskDelay(pdMS_TO_TICKS(250));
+                }
+            };
 
     xTaskCreatePinnedToCore(
         kaa_main,
