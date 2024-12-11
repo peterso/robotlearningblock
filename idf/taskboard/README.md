@@ -39,6 +39,9 @@ Noteworthy features:
   - [Common actions](#common-actions)
     - [Connecting to a Wi-Fi network](#connecting-to-a-wi-fi-network)
     - [Connecting to a micro-ROS Agent](#connecting-to-a-micro-ros-agent)
+      - [Using Docker](#using-docker)
+      - [Building the micro-ROS Agent](#building-the-micro-ros-agent)
+      - [Configuring the micro-ROS Agent](#configuring-the-micro-ros-agent)
     - [Recording a ROS 2 session](#recording-a-ros-2-session)
   - [Over-The-Air (OTA) updates](#over-the-air-ota-updates)
 
@@ -307,13 +310,52 @@ By reaching the IP address of the board in a web browser, the Web Interface will
 
 ### Connecting to a micro-ROS Agent
 
+> [!IMPORTANT]
+Ensure that the micro-ROS Agent version matches the ROS 2 distribution.
+
+#### Using Docker
+
 In order to **connect to a micro-ROS Agent** to start the ROS 2 integration, an micro-ROS Agent can be instantiated using docker:
 
 ```bash
-docker run -it --rm --privileged --net=host --ipc host microros/micro-ros-agent:jazzy udp4 --port 8888 -v5
+docker run -it --rm --privileged --net=host --ipc host microros/micro-ros-agent:$ROS_DISTRO udp4 --port 8888 -v5
 ```
 
-And the IP address and port of the micro-ROS Agent can be configured using the Web Interface or the REST API.
+#### Building the micro-ROS Agent
+
+Also, the micro-ROS Agent can be built locally:
+
+```bash
+# Install dependencies
+apt update
+apt install ros-$ROS_DISTRO-micro-ros-msgs
+
+# Create a workspace
+mkdir -p microros_agent_ws/src
+cd microros_agent_ws
+
+# Clone the micro-ROS Agent
+git clone -b $ROS_DISTRO https://github.com/micro-ROS/micro-ROS-Agent.git src/micro-ROS-Agent
+
+# Build the micro-ROS Agent
+source /opt/ros/$ROS_DISTRO/setup.bash
+colcon build
+```
+
+After building the micro-ROS Agent, it can be started using:
+
+```bash
+cd microros_agent_ws
+
+source /opt/ros/$ROS_DISTRO/setup.bash
+source install/local_setup.bash
+
+ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888 -v5
+```
+
+#### Configuring the micro-ROS Agent
+
+The IP address and port of the micro-ROS Agent can be configured using the Web Interface or the REST API.
 
 ![Web Interface](images/webinterface.png "Robothon Task Board Web Interface")
 
