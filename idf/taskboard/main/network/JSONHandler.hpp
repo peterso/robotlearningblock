@@ -57,6 +57,19 @@ struct JSONHandler
     }
 
     /**
+     * @brief Add custom key-value pair to the JSON object
+     *
+     * @param key Key
+     * @param value Value
+     */
+    void add_custom(
+            const std::string& key,
+            const std::string& value)
+    {
+        cJSON_AddStringToObject(root_, key.c_str(), value.c_str());
+    }
+
+    /**
      * @brief Adds FreeRTOS summary to the JSON object
      */
     void add_freertos_summary()

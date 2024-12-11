@@ -120,7 +120,7 @@ void microros_main(
         // Check for notifications
         uint32_t value;
 
-        if (pdPASS == xTaskNotifyWait(pdFALSE, 0xFFFFFFFF, &value, pdMS_TO_TICKS(0)))
+        if (pdPASS == xTaskNotifyWait(pdFALSE, 0xFFFFFFFF, &value, 0))
         {
             // Check for manual task cancellation
             if (value & MANUALLY_CANCELLED_TASK)

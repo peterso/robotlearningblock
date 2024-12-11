@@ -548,13 +548,6 @@
             <input type="text" id="device-ip" placeholder="Leave empty for same domain"
                    onchange="updateDeviceIP(this.value)">
         </div>
-        <div class="refresh-rate">
-            <label for="refresh-rate">Auto-refresh rate (ms):</label>
-            <input type="number" id="refresh-rate" value="5000" min="0" step="500"
-                   onchange="updateRefreshInterval(this.value)">
-        </div>
-        <button onclick="fetchData()" class="refresh-button">Refresh Now</button>
-        <span id="sample-data-notice"></span>
         <span id="last-update" class="last-update"></span>
     </div>
 
@@ -1243,83 +1236,19 @@
                 return response;
             } catch (error) {
                 clearTimeout(timeoutId);
-                if (error.name === 'AbortError') {
-                    throw new Error('Request timed out');
-                }
-                throw error;
+                console.log('Fetch error:', error);
+                return { ok: false };
             }
-        }
-
-        async function fetchData() {
-            fetchTaskBoardData();
-            fetchTaskData();
-            fetchSystemStatus();
-        }
-
-        async function fetchSystemStatus() {
-            try {
-                const url = deviceIP ? "http://" + deviceIP + "/system_status" : '/system_status';
-                const response = await fetchWithTimeout(url);
-                if (!response.ok) {
-                    throw new Error("HTTP error! status: " + response.status);
-                }
-                clearError();
-                const data = await response.json();
-                usingSampleData = false;
-                updateSystemStatus(data);
-            } catch (error) {
-                showError("API Unreachable");
-            }
-        }
-
-        async function fetchTaskBoardData() {
-            try {
-                const url = deviceIP ? "http://" + deviceIP + "/taskboard_status" : '/taskboard_status';
-                const response = await fetchWithTimeout(url);
-                if (!response.ok) {
-                    throw new Error("HTTP error! status: " + response.status);
-                }
-                clearError();
-                const data = await response.json();
-                usingSampleData = false;
-                updateUI(data);
-            } catch (error) {
-                showError("API Unreachable");
-            }
-        }
-
-        async function fetchTaskData() {
-            try {
-                const url = deviceIP ? "http://" + deviceIP + "/task_status" : '/task_status';
-                const response = await fetchWithTimeout(url);
-                if (!response.ok) {
-                    throw new Error("HTTP error! status: " + response.status);
-                }
-                clearError();
-                const data = await response.json();
-                usingSampleData = false;
-                updateTaskUI(data);
-            } catch (error) {
-                showError("API Unreachable");
-            }
-        }
-
-        function updateRefreshInterval(ms) {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-            }
-            currentRefreshRate = ms;
-            const rate = Math.max(50, parseInt(ms));
-            document.getElementById('refresh-rate').value = rate;
-            refreshInterval = setInterval(fetchData, rate);
         }
 
         async function fetchLeaderboard() {
             try {
                 const url = deviceIP ? "http://" + deviceIP + "/leaderboard" : '/leaderboard';
                 const response = await fetchWithTimeout(url);
+
                 if (!response.ok) {
-                    throw new Error("HTTP error! status: " + response.status);
+                    console.log("HTTP error! status: " + response.status);
+                    return;
                 }
                 const csvText = await response.text();
 
@@ -1423,7 +1352,53 @@
             }
         }
 
-        // Load saved IP on startup
+        function connectWebSocket()
+        {
+            try{
+                const taskboard_ws_url = deviceIP ? "ws://" + deviceIP + "/ws" : '/ws';
+
+                // Connect to the WebSocket server
+                const taskboard_ws = new WebSocket(taskboard_ws_url);
+
+                // On data received
+                taskboard_ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+
+                        // Check "ws_data_type" to determine which data is being sent
+                        if (data.ws_data_type === "taskboard_status") {
+                            updateUI(data);
+                        } else if (data.ws_data_type === "system_status") {
+                            updateSystemStatus(data);
+                        } else if (data.ws_data_type === "task_status") {
+                            updateTaskUI(data);
+                        }
+                    } catch (error) {
+                        console.error('Error parsing WebSocket data:', error);
+                    }
+                };
+
+                // If the WebSocket closes, try to reconnect after a delay.
+                taskboard_ws.onclose = (event) => {
+                    console.warn("WebSocket closed. Reconnecting in 2 seconds...", event);
+                    setTimeout(connectWebSocket, 2000);
+                };
+
+                // On error, close the connection (which triggers onclose) and attempt reconnect.
+                taskboard_ws.onerror = (error) => {
+                    console.error("WebSocket error:", error);
+                    taskboard_ws.close();
+                };
+            }
+            catch (error) {
+                console.error("WebSocket connection failed:", error);
+
+                // Retry connection after 2 seconds
+                setTimeout(connectWebSocket, 2000);
+            }
+        }
+
+        // Entrypoint
         window.addEventListener('DOMContentLoaded', () => {
             const savedIP = localStorage.getItem('deviceIP');
             if (savedIP) {
@@ -1432,11 +1407,9 @@
             }
             fetchLeaderboard();
             logsInterval = setInterval(fetchLeaderboard, 5000);
-        });
 
-        // Initial fetchWithTimeout and interval setup
-        fetchData();
-        updateRefreshInterval(500);
+            connectWebSocket();
+        });
     </script>
 </body>
 </html>
