@@ -9,7 +9,7 @@
 
 // Firmware version
 constexpr uint32_t FW_VERSION_MAJOR = 2;
-constexpr uint32_t FW_VERSION_MINOR = 6;
+constexpr uint32_t FW_VERSION_MINOR = 7;
 constexpr uint32_t FW_VERSION_PATCH = 0;
 
 // Firmware version string

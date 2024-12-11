@@ -230,15 +230,7 @@ private:
         HTTPServer* server = (HTTPServer*)req->user_ctx;
         JSONHandler json_handler(server->task_board_driver_.get_unique_id());
 
-        for (size_t i = 0; i < server->task_board_driver_.get_sensor_count(); i++)
-        {
-            const SensorReader* sensor = server->task_board_driver_.get_sensor(i);
-
-            if (sensor != nullptr)
-            {
-                json_handler.add_sensor_measure(sensor->name(), sensor->read());
-            }
-        }
+        json_handler.add_taskboard_status(server->task_board_driver_);
 
         char* status = json_handler.get_json_string();
 

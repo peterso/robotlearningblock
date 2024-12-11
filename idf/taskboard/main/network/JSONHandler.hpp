@@ -27,18 +27,34 @@ struct JSONHandler
 {
     /**
      * @brief Constructs a new JSONHandler object
+     */
+    JSONHandler()
+    {
+        // Allow single instance of this class
+        if (false == mutex_initialized_)
+        {
+            mutex_ = xSemaphoreCreateMutex();
+            mutex_initialized_ = true;
+        }
+
+        // Lock mutex
+        xSemaphoreTake(mutex_, portMAX_DELAY);
+
+        cJSON_Hooks hooks = {custom_malloc, custom_free};
+        cJSON_InitHooks(&hooks);
+
+        root_ = cJSON_CreateObject();
+    }
+
+    /**
+     * @brief Constructs a new JSONHandler object
      *
      * @param unique_id Unique ID of the device
      */
     JSONHandler(
             const std::string& unique_id)
+    : JSONHandler()
     {
-        // Let's assume that this class is not going to be used in a multi-threaded environment
-        cJSON_Hooks hooks = {custom_malloc, custom_free};
-        cJSON_InitHooks(&hooks);
-
-        root_ = cJSON_CreateObject();
-
         cJSON_AddStringToObject(root_, "device_id", unique_id.c_str());
     }
 
@@ -57,6 +73,9 @@ struct JSONHandler
 
         // Reset memory buffer index
         memory_buffer_index_ = 0;
+
+        // Unlock mutex
+        xSemaphoreGive(mutex_);
     }
 
     /**
@@ -93,53 +112,105 @@ struct JSONHandler
     }
 
     /**
-     * @brief Adds sensor measurement to the JSON object
+     * @brief Adds task board status to the JSON object
      *
-     * @param id Sensor ID
-     * @param measurement Sensor measurement
+     * @param taskboard_driver Sensor ID
      */
-    void add_sensor_measure(
-            const std::string& id,
-            const SensorMeasurement& measurement)
+    void add_taskboard_status(
+            const TaskBoardDriver& task_board_driver)
     {
-        if (sensors_ == nullptr)
+        // Add sensors array
+        sensors_ = cJSON_CreateArray();
+        cJSON_AddItemToObject(root_, "sensors", sensors_);
+
+        for (size_t i = 0; i < task_board_driver.get_sensor_count(); i++)
         {
-            // Add sensors array
-            sensors_ = cJSON_CreateArray();
-            cJSON_AddItemToObject(root_, "sensors", sensors_);
+            const SensorReader* sensor_dev = task_board_driver.get_sensor(i);
+
+            if (sensor_dev != nullptr)
+            {
+                cJSON* sensor = cJSON_CreateObject();
+                cJSON_AddStringToObject(sensor, "id", sensor_dev->name().c_str());
+
+                const auto measurement = sensor_dev->read();
+
+                switch (measurement.get_type())
+                {
+                    case SensorMeasurement::Type::BOOLEAN:
+                        cJSON_AddBoolToObject(sensor, "value", measurement.get_boolean());
+                        break;
+                    case SensorMeasurement::Type::ANALOG:
+                        cJSON_AddNumberToObject(sensor, "value", measurement.get_analog());
+                        break;
+                    case SensorMeasurement::Type::VECTOR3:
+                    {
+                        cJSON* vector = cJSON_CreateObject();
+                        cJSON_AddNumberToObject(vector, "x", measurement.get_vector3().x);
+                        cJSON_AddNumberToObject(vector, "y", measurement.get_vector3().y);
+                        cJSON_AddNumberToObject(vector, "z", measurement.get_vector3().z);
+                        cJSON_AddItemToObject(sensor, "value", vector);
+                        break;
+                    }
+                    case SensorMeasurement::Type::INTEGER:
+                    {
+                        const double value = static_cast<double>(measurement.get_integer());
+                        cJSON_AddNumberToObject(sensor, "value", value);
+                        cJSON* is_integer = cJSON_CreateTrue();
+                        cJSON_AddItemToObject(sensor, "is_integer", is_integer);
+                        break;
+                    }
+                }
+
+                cJSON_AddItemToArray(sensors_, sensor);
+            }
         }
+    }
 
-        cJSON* sensor = cJSON_CreateObject();
-        cJSON_AddStringToObject(sensor, "id", id.c_str());
-
-        switch (measurement.get_type())
+/**
+     * @brief Adds task board status to the JSON object in Kaa format
+     *
+     * @param taskboard_driver Sensor ID
+     */
+    void add_taskboard_status_kaaiot(
+            const TaskBoardDriver& task_board_driver)
+    {
+        for (size_t i = 0; i < task_board_driver.get_sensor_count(); i++)
         {
-            case SensorMeasurement::Type::BOOLEAN:
-                cJSON_AddBoolToObject(sensor, "value", measurement.get_boolean());
-                break;
-            case SensorMeasurement::Type::ANALOG:
-                cJSON_AddNumberToObject(sensor, "value", measurement.get_analog());
-                break;
-            case SensorMeasurement::Type::VECTOR3:
+            const SensorReader* sensor_dev = task_board_driver.get_sensor(i);
+
+            if (sensor_dev != nullptr)
             {
-                cJSON* vector = cJSON_CreateObject();
-                cJSON_AddNumberToObject(vector, "x", measurement.get_vector3().x);
-                cJSON_AddNumberToObject(vector, "y", measurement.get_vector3().y);
-                cJSON_AddNumberToObject(vector, "z", measurement.get_vector3().z);
-                cJSON_AddItemToObject(sensor, "value", vector);
-                break;
-            }
-            case SensorMeasurement::Type::INTEGER:
-            {
-                const double value = static_cast<double>(measurement.get_integer());
-                cJSON_AddNumberToObject(sensor, "value", value);
-                cJSON* is_integer = cJSON_CreateTrue();
-                cJSON_AddItemToObject(sensor, "is_integer", is_integer);
-                break;
+                const auto measurement = sensor_dev->read();
+
+                switch (measurement.get_type())
+                {
+                    case SensorMeasurement::Type::BOOLEAN:
+                        cJSON_AddBoolToObject(root_, sensor_dev->name().c_str(), measurement.get_boolean());
+                        break;
+                    case SensorMeasurement::Type::ANALOG:
+                        cJSON_AddNumberToObject(root_, sensor_dev->name().c_str(), measurement.get_analog());
+                        break;
+                    case SensorMeasurement::Type::VECTOR3:
+                    {
+                        {
+                            std::string vector_name = sensor_dev->name() + "_x";
+                            cJSON_AddNumberToObject(root_, vector_name.c_str(), measurement.get_vector3().x);
+                            vector_name = sensor_dev->name() + "_y";
+                            cJSON_AddNumberToObject(root_, vector_name.c_str(), measurement.get_vector3().y);
+                            vector_name = sensor_dev->name() + "_z";
+                            cJSON_AddNumberToObject(root_, vector_name.c_str(), measurement.get_vector3().z);
+                        }
+                        break;
+                    }
+                    case SensorMeasurement::Type::INTEGER:
+                    {
+                        const double value = static_cast<double>(measurement.get_integer());
+                        cJSON_AddNumberToObject(root_, sensor_dev->name().c_str(), value);
+                        break;
+                    }
+                }
             }
         }
-
-        cJSON_AddItemToArray(sensors_, sensor);
     }
 
     /**
@@ -202,6 +273,16 @@ struct JSONHandler
     }
 
     /**
+     * @brief Generate Kaa telemetry JSON
+     *
+     *
+     */
+    void add_kaa_telemetry()
+    {
+
+    }
+
+    /**
      * @brief Gets the JSON string
      *
      * @return JSON string
@@ -224,8 +305,12 @@ private:
 
 private:
 
-    static uint8_t memory_buffer_[JSON_BUFFER_SIZE];   ///< Memory buffer for cJSON
-    static uint32_t memory_buffer_index_;       ///< Memory buffer index
+    static uint8_t memory_buffer_[JSON_BUFFER_SIZE];    ///< Memory buffer for cJSON
+    static uint32_t memory_buffer_index_;               ///< Memory buffer index
+
+    // Concurrent usage protection
+    static SemaphoreHandle_t mutex_;
+    static bool mutex_initialized_;
 
     /**
      * @brief cJSON memory allocation

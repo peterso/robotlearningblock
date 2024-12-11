@@ -8,6 +8,7 @@
 #include <network/HTTPServer.hpp>
 #include <network/WifiManager.hpp>
 #include <network/OTAUpdater.hpp>
+#include <network/KaaHandler.hpp>
 #include <hal/NonVolatileStorage.hpp>
 #include <hal/ScreenController.hpp>
 #include <hal/PbHubController.hpp>
@@ -250,6 +251,35 @@ extern "C" void app_main(
     // Wait for tasks
     screen_controller.print("-> Waiting tasks to start");
     screen_controller.print("-> Press Button B for default task");
+
+    // ------------------------
+    // Kaa IoT initialization
+    // ------------------------
+    KaaHandler kaa_handler(task_board_driver);
+
+    TaskHandle_t kaa_task_handle;
+    constexpr uint8_t KAA_THREAD_CORE_AFFINITY = 0;
+    constexpr uint32_t KAA_STACK_SIZE = 15000;
+    constexpr uint8_t KAA_THREAD_PRIORITY = 1;
+
+    auto kaa_main = [](void* arg) -> void
+    {
+        KaaHandler* kaa_handler = static_cast<KaaHandler*>(arg);
+        while (true)
+        {
+            kaa_handler->send_telemetry();
+            vTaskDelay(pdMS_TO_TICKS(250));
+        }
+    };
+
+    xTaskCreatePinnedToCore(
+        kaa_main,
+        "kaa",
+        KAA_STACK_SIZE,
+        &kaa_handler,
+        KAA_THREAD_PRIORITY,
+        &kaa_task_handle,
+        KAA_THREAD_CORE_AFFINITY);
 
     // ------------------------
     // Main Control Loop
