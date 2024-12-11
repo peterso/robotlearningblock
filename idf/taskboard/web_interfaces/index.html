@@ -785,10 +785,19 @@
             this.container = container;
             this.canvas = container.querySelector('canvas');
             this.ctx = this.canvas.getContext('2d');
+
+            // Main data (e.g. current heap usage)
             this.data = new Array(30).fill(null);
+
+            // Min data (e.g. minimum available memory)
+            this.minData = new Array(30).fill(null);
+
             this.maxValue = 0; // Will be adjusted dynamically
-            this.lineColor = '#4caf50'; // Green color for heap
+
+            // Colors
+            this.lineColor = '#4caf50';    // Green line for heap usage
             this.fillColor = 'rgba(76, 175, 80, 0.1)';
+            this.minLineColor = '#f44336'; // Red line for min available memory
 
             this.resizeCanvas();
             window.addEventListener('resize', () => this.resizeCanvas());
@@ -809,6 +818,15 @@
             this.draw();
         }
 
+        // New method for adding minimum heap values
+        addValueMinHeap(value) {
+            this.minData.push(value);
+            this.minData.shift();
+            // Update max value if needed
+            this.maxValue = Math.max(this.maxValue, value * 1.2);
+            this.draw();
+        }
+
         draw() {
             const ctx = this.ctx;
             const width = this.canvas.width;
@@ -821,7 +839,10 @@
             // Filter out null values
             const validData = this.data.map((value, index) => ({value, index}))
                                     .filter(item => item.value !== null);
+            const validMinData = this.minData.map((value, index) => ({value, index}))
+                                            .filter(item => item.value !== null);
 
+            // If we don't have at least two points for the main data, nothing to draw
             if (validData.length < 2) return;
 
             // Draw grid lines
@@ -844,27 +865,24 @@
                 ctx.fillText(label, width - 4, y - 2);
             });
 
-            // Draw filled area
+            // Draw filled area under the main data line
             ctx.beginPath();
             validData.forEach(({value, index}, i) => {
                 const x = (index / (this.data.length - 1)) * width;
                 const y = height - ((value / this.maxValue) * (height - padding * 2) + padding);
-
                 if (i === 0) {
                     ctx.moveTo(x, y);
                 } else {
                     ctx.lineTo(x, y);
                 }
             });
-
-            // Complete the fill path
             ctx.lineTo(width, height);
             ctx.lineTo(0, height);
             ctx.closePath();
             ctx.fillStyle = this.fillColor;
             ctx.fill();
 
-            // Draw line
+            // Draw main heap line
             ctx.beginPath();
             validData.forEach(({value, index}, i) => {
                 const x = (index / (this.data.length - 1)) * width;
@@ -879,6 +897,24 @@
             ctx.strokeStyle = this.lineColor;
             ctx.lineWidth = 2;
             ctx.stroke();
+
+            // Draw min heap line if we have enough data
+            if (validMinData.length > 1) {
+                ctx.beginPath();
+                validMinData.forEach(({value, index}, i) => {
+                    const x = (index / (this.minData.length - 1)) * width;
+                    const y = height - ((value / this.maxValue) * (height - padding * 2) + padding);
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.strokeStyle = this.minLineColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
         }
     }
 
@@ -985,12 +1021,13 @@
             // Handle heap
             const heapBar = document.getElementById('heap');
             const freeHeap = data.free_heap;
+            const minFreeHeap = data.min_free_heap;
 
             // Update heap display with graph
             heapBar.innerHTML = `
                 <div class="heap-indicator">
                     <div class="heap-title">Free Heap</div>
-                    <div class="heap-value">${(freeHeap/1024).toFixed(2)} kB</div>
+                    <div class="heap-value">${(freeHeap/1024).toFixed(2)} kB <small>(min: ${(minFreeHeap/1024).toFixed(2)} kB)</small></div>
                     <div class="graph-container">
                         <canvas class="graph-canvas"></canvas>
                     </div>
@@ -1011,6 +1048,7 @@
             }
 
             graph.addValue(freeHeap);
+            graph.addValueMinHeap(minFreeHeap);
 
         }
 

@@ -88,6 +88,7 @@ struct JSONHandler
 
         // Add free heap
         cJSON_AddNumberToObject(root_, "free_heap", esp_get_free_heap_size());
+        cJSON_AddNumberToObject(root_, "min_free_heap", esp_get_minimum_free_heap_size());
         cJSON_AddNumberToObject(root_, "total_time", total_run_time);
     }
 
