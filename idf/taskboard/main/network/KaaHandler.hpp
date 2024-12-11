@@ -55,16 +55,12 @@ struct KaaHandler
      */
     void send_telemetry()
     {
-        // Block the JSONHandler as little as possible
-        std::string status;
-        {
-            JSONHandler json_handler;
-            json_handler.add_taskboard_status_kaaiot(task_board_driver_);
+        JSONHandler json_handler;
+        json_handler.add_taskboard_status_kaaiot(task_board_driver_);
 
-            status = std::string(json_handler.get_json_string());
-        }
+        const char *status = json_handler.get_json_string();
 
-        esp_http_client_set_post_field(client_, status.c_str(), status.size());
+        esp_http_client_set_post_field(client_, status, strlen(status));
 
         esp_err_t err = esp_http_client_perform(client_);
 

@@ -16,8 +16,6 @@
 
 #include <esp_log.h>
 
-constexpr size_t JSON_BUFFER_SIZE = 15 * 1024;   ///< JSON buffer size
-
 /**
  * @struct JSONHandler
  *
@@ -30,19 +28,6 @@ struct JSONHandler
      */
     JSONHandler()
     {
-        // Allow single instance of this class
-        if (false == mutex_initialized_)
-        {
-            mutex_ = xSemaphoreCreateMutex();
-            mutex_initialized_ = true;
-        }
-
-        // Lock mutex
-        xSemaphoreTake(mutex_, portMAX_DELAY);
-
-        cJSON_Hooks hooks = {custom_malloc, custom_free};
-        cJSON_InitHooks(&hooks);
-
         root_ = cJSON_CreateObject();
     }
 
@@ -63,19 +48,12 @@ struct JSONHandler
      */
     ~JSONHandler()
     {
-        // cJSON Free will not do anything but let's call it anyway
         cJSON_Delete(root_);
 
         if (json_string_ != nullptr)
         {
             cJSON_free(json_string_);
         }
-
-        // Reset memory buffer index
-        memory_buffer_index_ = 0;
-
-        // Unlock mutex
-        xSemaphoreGive(mutex_);
     }
 
     /**
@@ -120,7 +98,7 @@ struct JSONHandler
             const TaskBoardDriver& task_board_driver)
     {
         // Add sensors array
-        sensors_ = cJSON_CreateArray();
+        cJSON* sensors_ = cJSON_CreateArray();
         cJSON_AddItemToObject(root_, "sensors", sensors_);
 
         for (size_t i = 0; i < task_board_driver.get_sensor_count(); i++)
@@ -273,26 +251,18 @@ struct JSONHandler
     }
 
     /**
-     * @brief Generate Kaa telemetry JSON
-     *
-     *
-     */
-    void add_kaa_telemetry()
-    {
-
-    }
-
-    /**
      * @brief Gets the JSON string
      *
      * @return JSON string
      */
     char* get_json_string()
     {
-        if (json_string_ == nullptr)
+        if (json_string_ != nullptr)
         {
-            json_string_ = cJSON_Print(root_);
+            cJSON_free(json_string_);
         }
+
+        json_string_ = cJSON_Print(root_);
 
         return json_string_;
     }
@@ -300,53 +270,5 @@ struct JSONHandler
 private:
 
     cJSON* root_ = nullptr;             ///< Root JSON object
-    cJSON* sensors_ = nullptr;          ///< Sensors array
     char* json_string_ = nullptr;       ///< JSON string
-
-private:
-
-    static uint8_t memory_buffer_[JSON_BUFFER_SIZE];    ///< Memory buffer for cJSON
-    static uint32_t memory_buffer_index_;               ///< Memory buffer index
-
-    // Concurrent usage protection
-    static SemaphoreHandle_t mutex_;
-    static bool mutex_initialized_;
-
-    /**
-     * @brief cJSON memory allocation
-     *
-     * @param size Size of the memory to allocate
-     *
-     * @return Pointer to the allocated memory
-     */
-    static void* custom_malloc(
-            size_t size)
-    {
-        uint8_t* ptr = &memory_buffer_[memory_buffer_index_];
-        size = (size + 3) & ~3;
-
-        // Ensure bounds
-        if (memory_buffer_index_ + size > JSON_BUFFER_SIZE)
-        {
-            ESP_LOGE("JSONHandler", "Memory buffer overflow");
-
-            return nullptr;
-        }
-
-        memory_buffer_index_ += size;
-
-        return ptr;
-    }
-
-    /**
-     * @brief cJSON memory deallocation
-     *
-     * @param ptr Pointer to the memory to deallocate
-     */
-    static void custom_free(
-            void* /* ptr */)
-    {
-        // Do nothing
-    }
-
 };
