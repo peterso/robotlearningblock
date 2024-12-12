@@ -331,7 +331,7 @@ Ensure that the micro-ROS Agent version matches the ROS 2 distribution.
 In order to **connect to a micro-ROS Agent** to start the ROS 2 integration, an micro-ROS Agent can be instantiated using docker:
 
 ```bash
-docker run -it --rm --privileged --net=host --ipc host microros/micro-ros-agent:$ROS_DISTRO udp4 --port 8888 -v5
+docker run -it --rm --privileged --net=host --ipc host microros/micro-ros-agent:$ROS_DISTRO udp4 --port 8888 -v4
 ```
 
 #### Building the micro-ROS Agent
@@ -380,7 +380,14 @@ To use the recorder, the easiest way is using docker:
 
 ```bash
 cd robotlearningblock/idf/taskboard
-docker run -it --rm --privileged --net host --ipc host  -v $(pwd)/extra_ros_packages/record_replay_session:/shared_folder eprosima/vulcanexus:jazzy-desktop ddsrecorder -c /shared_folder/config.yml
+docker run -it --rm --privileged --net host --ipc host  -v $(pwd)/extra_ros_packages/record_replay_session:/shared_folder eprosima/testing:jazzy-desktop ddsrecorder -c /shared_folder/config.yml
+```
+
+To allow the DDS Recorder to append custom ROS 2 types into `.mcap` file (to use them in platforms such as Foxglove Studio), ensure that the following command is run at least once during the recording session:
+
+```bash
+cd robotlearningblock/idf/taskboard
+docker run -it --rm --privileged --net host --ipc host  -v $(pwd)/extra_ros_packages:/shared_folder eprosima/testing:jazzy-desktop bash /shared_folder/record_replay_session/match_topic_types.sh
 ```
 
 Former command will generate a .mcap file in the `extra_ros_packages/record_replay_session` folder.
@@ -388,7 +395,7 @@ Former command will generate a .mcap file in the `extra_ros_packages/record_repl
 In order to replay the session, the following command can be used:
 
 ```bash
-docker run -it --rm --privileged --net host --ipc host  -v $(pwd)/extra_ros_packages/record_replay_session:/shared_folder eprosima/vulcanexus:jazzy-desktop ddsreplayer -i /shared_folder/[session_name]
+docker run -it --rm --privileged --net host --ipc host  -v $(pwd)/extra_ros_packages/record_replay_session:/shared_folder eprosima/testing:jazzy-desktop ddsreplayer -i /shared_folder/[session_name]
 ```
 
 **Remember to add extra topics to `extra_ros_packages/record_replay_session/config.yml` if they need to be recorded**
