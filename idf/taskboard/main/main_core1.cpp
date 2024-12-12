@@ -13,8 +13,8 @@
 #include <freertos/queue.h>
 
 // Timing configuration for periodic publishers
-constexpr uint32_t TASKBOARD_STATUS_PUBLISHER_PERIOD_MS = 250;
-constexpr uint32_t TASK_STATUS_PUBLISHER_PERIOD_MS = 500;
+constexpr uint32_t TASKBOARD_STATUS_PUBLISHER_PERIOD_MS = 50;
+constexpr uint32_t TASK_STATUS_PUBLISHER_PERIOD_MS = 250;
 
 /**
  * @brief micro-ROS main function
