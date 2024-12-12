@@ -275,7 +275,7 @@ struct JSONHandler
             cJSON_free(json_string_);
         }
 
-        json_string_ = cJSON_Print(root_);
+        json_string_ = cJSON_PrintUnformatted(root_);
 
         return json_string_;
     }
