@@ -84,12 +84,11 @@ struct WifiManager
         if (!provisioned_)
         {
             // Register a / handler for the provisioning app
-            httpd_uri_t uri = {
-                .uri      = "/",
-                .method   = HTTP_GET,
-                .handler  = WifiManager::serve_provisioning_page,
-                .user_ctx = NULL
-            };
+            httpd_uri_t uri = {};
+            uri.uri      = "/";
+            uri.method   = HTTP_GET;
+            uri.handler  = WifiManager::serve_provisioning_page;
+
             httpd_register_uri_handler(server.get_handle(), &uri);
             wifi_prov_scheme_softap_set_httpd_handle(&server.get_handle());
 

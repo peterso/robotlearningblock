@@ -8,8 +8,8 @@
 #include <string>
 
 // Firmware version
-constexpr uint32_t FW_VERSION_MAJOR = 2;
-constexpr uint32_t FW_VERSION_MINOR = 8;
+constexpr uint32_t FW_VERSION_MAJOR = 3;
+constexpr uint32_t FW_VERSION_MINOR = 0;
 constexpr uint32_t FW_VERSION_PATCH = 0;
 
 // Firmware version string

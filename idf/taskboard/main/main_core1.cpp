@@ -13,8 +13,8 @@
 #include <freertos/queue.h>
 
 // Timing configuration for periodic publishers
-constexpr uint32_t TASKBOARD_STATUS_PUBLISHER_PERIOD_MS = 250;
-constexpr uint32_t TASK_STATUS_PUBLISHER_PERIOD_MS = 500;
+constexpr uint32_t TASKBOARD_STATUS_PUBLISHER_PERIOD_MS = 50;
+constexpr uint32_t TASK_STATUS_PUBLISHER_PERIOD_MS = 250;
 
 /**
  * @brief micro-ROS main function
@@ -120,7 +120,7 @@ void microros_main(
         // Check for notifications
         uint32_t value;
 
-        if (pdPASS == xTaskNotifyWait(pdFALSE, 0xFFFFFFFF, &value, pdMS_TO_TICKS(0)))
+        if (pdPASS == xTaskNotifyWait(pdFALSE, 0xFFFFFFFF, &value, 0))
         {
             // Check for manual task cancellation
             if (value & MANUALLY_CANCELLED_TASK)

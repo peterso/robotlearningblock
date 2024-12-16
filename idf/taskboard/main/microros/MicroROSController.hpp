@@ -24,8 +24,8 @@
 #include <functional>
 
 // Ping operation configuration
-constexpr uint32_t PING_AGENT_TIMEOUT_MS = 200;
-constexpr uint32_t PING_AGENT_RETRIES = 10;
+constexpr uint32_t PING_AGENT_TIMEOUT_MS = 100;
+constexpr uint32_t PING_AGENT_RETRIES = 5;
 constexpr uint32_t PING_ON_WAIT_AGENT_TIMEOUT_MS = 50;
 constexpr uint32_t PING_ON_WAIT_AGENT_RETRIES = 5;
 
@@ -260,7 +260,7 @@ struct MicroROSController
 
                 break;
             case State::AGENT_CONNECTED:
-                rclc_executor_spin_some(&executor_, RCL_MS_TO_NS(100));
+                rclc_executor_spin_some(&executor_, RCL_MS_TO_NS(10));
                 break;
             case State::AGENT_DISCONNECTED:
                 ESP_LOGI(TAG, "Agent disconnected, destroying entities");
