@@ -13,9 +13,209 @@
 #include <esp_log.h>
 #include <esp_http_server.h>
 
+#include <freertos/task.h>
+#include <freertos/queue.h>
+
 #include <string>
+#include <vector>
 
 #include <network/webpages/web_index.h>
+
+/**
+ * @struct WebSocketServer
+ *
+ * @brief Websocket server for handling task board API, web interfaces
+ */
+struct WebSocketServer
+{
+    const char* TAG = "WebSocketServer";        ///< Logging tag
+
+    /**
+     * @brief Constructs a new WebSocketServer object
+     */
+    WebSocketServer()
+    {
+        client_mutex_ = xSemaphoreCreateMutex();
+    }
+
+    /**
+     * @brief Sends data to all clients
+     *
+     * @param data Data to send
+     * @param len Length of the data
+     */
+    void send_to_all_clients(
+            const uint8_t* data,
+            const size_t len)
+    {
+        httpd_ws_frame_t ws_pkt;
+        memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
+        ws_pkt.payload = (uint8_t*)data;
+        ws_pkt.len = len;
+        ws_pkt.type = HTTPD_WS_TYPE_TEXT;
+
+        if (xSemaphoreTake(client_mutex_, portMAX_DELAY) == pdTRUE)
+        {
+            for (auto const& client : clients)
+            {
+                if (ESP_OK != httpd_ws_send_frame_async(client.hd, client.client_fd, &ws_pkt))
+                {
+                    // Remove client if sending failed
+                    xSemaphoreGive(client_mutex_);
+                    remove_client(client.hd, client.client_fd);
+
+                    return;
+                }
+            }
+
+            xSemaphoreGive(client_mutex_);
+        }
+    }
+
+    /**
+     * @brief Websocket handler
+     *
+     * @param req HTTP request
+     *
+     * @return esp_err_t
+     */
+    static esp_err_t ws_handler(
+            httpd_req_t* req)
+    {
+        WebSocketServer* server = (WebSocketServer*)req->user_ctx;
+
+        if (req->method == HTTP_GET)
+        {
+            ESP_LOGI(server->TAG, "Handshake done, the new connection was opened");
+            server->add_client(req->handle, httpd_req_to_sockfd(req));
+
+            return ESP_OK;
+        }
+
+        httpd_ws_frame_t ws_pkt;
+        memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
+
+        // Receive frame
+        esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
+
+        if (ret != ESP_OK)
+        {
+            ESP_LOGE(server->TAG, "httpd_ws_recv_frame failed with %d, removing client", ret);
+            server->remove_client(req->handle, httpd_req_to_sockfd(req));
+
+            return ret;
+        }
+
+        // If it's a PING, respond with PONG
+        if (ws_pkt.type == HTTPD_WS_TYPE_PING)
+        {
+            ws_pkt.type = HTTPD_WS_TYPE_PONG;
+
+            return httpd_ws_send_frame(req, &ws_pkt);
+        }
+
+        // If it's a CLOSE frame, remove the client
+        if (ws_pkt.type == HTTPD_WS_TYPE_CLOSE)
+        {
+            ESP_LOGI(server->TAG, "WebSocket close frame received");
+            server->remove_client(req->handle, httpd_req_to_sockfd(req));
+
+            return ESP_OK;
+        }
+
+        return ESP_OK;
+    }
+
+private:
+
+    /**
+     * @brief Adds a new client to the server
+     *
+     * @param hd HTTPD handle
+     * @param client_fd Client file descriptor
+     */
+    struct ClientInfo
+    {
+        httpd_handle_t hd;
+        int client_fd;
+    };
+
+    SemaphoreHandle_t client_mutex_ = NULL;    ///< Mutex for thread safety
+    std::vector<ClientInfo> clients;           ///< List of clients
+
+private:
+
+    /**
+     * @brief Adds a new client to the server
+     *
+     * @param hd HTTPD handle
+     * @param client_fd Client file descriptor
+     */
+    void add_client(
+            httpd_handle_t hd,
+            int client_fd)
+    {
+        if (xSemaphoreTake(client_mutex_, portMAX_DELAY) == pdTRUE)
+        {
+
+            ClientInfo new_client;
+            new_client.hd = hd;
+            new_client.client_fd = client_fd;
+
+            clients.push_back(new_client);
+
+            xSemaphoreGive(client_mutex_);
+        }
+    }
+
+    /**
+     * @brief Removes a client from the server
+     *
+     * @param hd HTTPD handle
+     * @param client_fd Client file descriptor
+     */
+    void remove_client(
+            httpd_handle_t hd,
+            int client_fd)
+    {
+        if (xSemaphoreTake(client_mutex_, portMAX_DELAY) == pdTRUE)
+        {
+            for (auto it = clients.begin(); it != clients.end(); it++)
+            {
+                if (it->hd == hd && it->client_fd == client_fd)
+                {
+                    clients.erase(it);
+                    break;
+                }
+            }
+
+            xSemaphoreGive(client_mutex_);
+        }
+    }
+
+    struct WSDisconnectHandlerArg
+    {
+        httpd_handle_t* server;
+        WebSocketServer* ws_server;
+    };
+
+    static void ws_disconnect_handler(
+            void* arg,
+            esp_event_base_t event_base,
+            int32_t event_id,
+            void* event_data)
+    {
+        WSDisconnectHandlerArg* ws_arg = (WSDisconnectHandlerArg*) arg;
+        WebSocketServer* ws_server = ws_arg->ws_server;
+        httpd_handle_t* server = ws_arg->server;
+
+        struct httpd_data* hd = (struct httpd_data*) *server;
+        int sockfd = (int) event_data;
+
+        ws_server->remove_client(hd, sockfd);
+    }
+
+};
 
 /**
  * @struct HTTPServer
@@ -66,79 +266,80 @@ struct HTTPServer
     }
 
     /**
+     * @brief Sends data to all clients
+     */
+    void send_data_to_clients(
+            uint8_t* data,
+            size_t len)
+    {
+        ws_server_.send_to_all_clients(data, len);
+    }
+
+    /**
      * @brief Initializes the task board API
      */
     void initialize_taskboard_api()
     {
-        httpd_uri_t get_index_uri = {
-            .uri      = "/",
-            .method   = HTTP_GET,
-            .handler  = HTTPServer::index_handler,
-            .user_ctx = this
-        };
+        httpd_uri_t get_index_uri = {};
+        get_index_uri.uri      = "/";
+        get_index_uri.method   = HTTP_GET;
+        get_index_uri.handler  = HTTPServer::index_handler;
+        get_index_uri.user_ctx = this;
+        get_index_uri.is_websocket = false;
 
-        httpd_uri_t get_taskboard_status_uri = {
-            .uri      = "/taskboard_status",
-            .method   = HTTP_GET,
-            .handler  = HTTPServer::taskboard_status,
-            .user_ctx = this
-        };
+        httpd_uri_t get_taskboard_status_uri = {};
+        get_taskboard_status_uri.uri      = "/taskboard_status";
+        get_taskboard_status_uri.method   = HTTP_GET;
+        get_taskboard_status_uri.handler  = HTTPServer::taskboard_status;
+        get_taskboard_status_uri.user_ctx = this;
 
-        httpd_uri_t get_system_status_uri = {
-            .uri      = "/system_status",
-            .method   = HTTP_GET,
-            .handler  = HTTPServer::system_status,
-            .user_ctx = this
-        };
+        httpd_uri_t get_system_status_uri = {};
+        get_system_status_uri.uri      = "/system_status";
+        get_system_status_uri.method   = HTTP_GET;
+        get_system_status_uri.handler  = HTTPServer::system_status;
+        get_system_status_uri.user_ctx = this;
 
-        httpd_uri_t get_task_status_uri = {
-            .uri      = "/task_status",
-            .method   = HTTP_GET,
-            .handler  = HTTPServer::task_status,
-            .user_ctx = this
-        };
+        httpd_uri_t get_task_status_uri = {};
+        get_task_status_uri.uri      = "/task_status";
+        get_task_status_uri.method   = HTTP_GET;
+        get_task_status_uri.handler  = HTTPServer::task_status;
+        get_task_status_uri.user_ctx = this;
 
-        httpd_uri_t get_logs_uri = {
-            .uri      = "/leaderboard",
-            .method   = HTTP_GET,
-            .handler  = HTTPServer::logs_handler,
-            .user_ctx = this
-        };
+        httpd_uri_t get_logs_uri = {};
+        get_logs_uri.uri      = "/leaderboard";
+        get_logs_uri.method   = HTTP_GET;
+        get_logs_uri.handler  = HTTPServer::logs_handler;
+        get_logs_uri.user_ctx = this;
 
-        httpd_uri_t options_uri = {
-            .uri      = "*",
-            .method   = HTTP_OPTIONS,
-            .handler  = HTTPServer::options_handler,
-            .user_ctx = this
-        };
+        httpd_uri_t options_uri = {};
+        options_uri.uri      = "*";
+        options_uri.method   = HTTP_OPTIONS;
+        options_uri.handler  = HTTPServer::options_handler;
+        options_uri.user_ctx = this;
 
-        httpd_uri_t post_microros_uri = {
-            .uri      = "/microros",
-            .method   = HTTP_POST,
-            .handler  = HTTPServer::microros_handler,
-            .user_ctx = this
-        };
+        httpd_uri_t post_microros_uri = {};
+        post_microros_uri.uri      = "/microros";
+        post_microros_uri.method   = HTTP_POST;
+        post_microros_uri.handler  = HTTPServer::microros_handler;
+        post_microros_uri.user_ctx = this;
 
-        httpd_uri_t options_micro_ros_uri = {
-            .uri      = "/microros",
-            .method   = HTTP_OPTIONS,
-            .handler  = HTTPServer::options_handler,
-            .user_ctx = this
-        };
+        httpd_uri_t options_micro_ros_uri = {};
+        options_micro_ros_uri.uri      = "/microros";
+        options_micro_ros_uri.method   = HTTP_OPTIONS;
+        options_micro_ros_uri.handler  = HTTPServer::options_handler;
+        options_micro_ros_uri.user_ctx = this;
 
-        httpd_uri_t clear_logs_url = {
-            .uri      = "/clear_logs",
-            .method   = HTTP_POST,
-            .handler  = HTTPServer::clear_logs,
-            .user_ctx = this
-        };
+        httpd_uri_t clear_logs_url = {};
+        clear_logs_url.uri      = "/clear_logs";
+        clear_logs_url.method   = HTTP_POST;
+        clear_logs_url.handler  = HTTPServer::clear_logs;
+        clear_logs_url.user_ctx = this;
 
-        httpd_uri_t options_clear_logs_url = {
-            .uri      = "/clear_logs",
-            .method   = HTTP_OPTIONS,
-            .handler  = HTTPServer::options_handler,
-            .user_ctx = this
-        };
+        httpd_uri_t options_clear_logs_url = {};
+        options_clear_logs_url.uri      = "/clear_logs";
+        options_clear_logs_url.method   = HTTP_OPTIONS;
+        options_clear_logs_url.handler  = HTTPServer::options_handler;
+        options_clear_logs_url.user_ctx = this;
 
         httpd_register_uri_handler(server_, &get_index_uri);
         httpd_register_uri_handler(server_, &get_taskboard_status_uri);
@@ -150,6 +351,16 @@ struct HTTPServer
         httpd_register_uri_handler(server_, &options_micro_ros_uri);
         httpd_register_uri_handler(server_, &clear_logs_url);
         httpd_register_uri_handler(server_, &options_clear_logs_url);
+
+        // Web sockets
+        httpd_uri_t uri_ws = {};
+        uri_ws.uri      = "/ws";
+        uri_ws.method   = HTTP_GET;
+        uri_ws.handler  = WebSocketServer::ws_handler;
+        uri_ws.user_ctx = &ws_server_;
+        uri_ws.is_websocket = true;
+
+        httpd_register_uri_handler(server_, &uri_ws);
 
         ESP_LOGI(TAG, "Taskboard API initialized");
     }
@@ -427,4 +638,5 @@ private:
     TaskExecutor& task_executor_;                   ///< Reference to the task executor
     MicroROSController& micro_ros_controller_;      ///< Reference to the micro-ROS controller
     NonVolatileStorage& non_volatile_storage_;      ///< Reference to the non-volatile storage
+    WebSocketServer ws_server_;                     ///< Web socket server
 };

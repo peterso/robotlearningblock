@@ -26,6 +26,18 @@
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 
+// Forward declarations
+struct WebSocketTaskArgs
+{
+    HTTPServer& http_server;
+    TaskBoardDriver& task_board_driver;
+    TaskExecutor& task_executor;
+    MicroROSController& micro_ros_controller;
+};
+
+void websockets_task(
+        void* args);
+
 /**
  * @brief Get the task board implementation
  *
@@ -283,11 +295,29 @@ extern "C" void app_main(
         KAA_THREAD_CORE_AFFINITY);
 
     // ------------------------
+    // Websocket server
+    // ------------------------
+    TaskHandle_t ws_task_handle;
+    constexpr uint8_t WS_THREAD_CORE_AFFINITY = 0;
+    constexpr uint32_t WS_STACK_SIZE = 15000;
+    constexpr uint8_t WS_THREAD_PRIORITY = 0;
+
+    WebSocketTaskArgs ws_args = {http_server, task_board_driver, task_executor, micro_ros_controller};
+
+    xTaskCreatePinnedToCore(
+        websockets_task,
+        "ws",
+        WS_STACK_SIZE,
+        &ws_args,
+        WS_THREAD_PRIORITY,
+        &ws_task_handle,
+        WS_THREAD_CORE_AFFINITY);
+
+    // ------------------------
     // Main Control Loop
     // ------------------------
     while (true)
     {
-
         // Update board sensor readings
         task_board_driver.update();
 
@@ -371,5 +401,106 @@ extern "C" void app_main(
 
         // Main loop delay
         vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+
+void websockets_task(
+        void* arg)
+{
+    WebSocketTaskArgs* ws_args = static_cast<WebSocketTaskArgs*>(arg);
+    HTTPServer& http_server = ws_args->http_server;
+    TaskBoardDriver& task_board_driver = ws_args->task_board_driver;
+    TaskExecutor& task_executor = ws_args->task_executor;
+    MicroROSController& micro_ros_controller = ws_args->micro_ros_controller;
+
+    const std::string& unique_id = task_board_driver.get_unique_id();
+
+    auto send_task_board_status = [&http_server, &task_board_driver, &unique_id]()
+            {
+                JSONHandler json_handler(unique_id);
+                json_handler.add_taskboard_status(task_board_driver);
+                json_handler.add_custom("ws_data_type", "taskboard_status");
+
+                char* status = json_handler.get_json_string();
+
+                if (status != nullptr)
+                {
+                    http_server.send_data_to_clients((uint8_t*)status, strlen(status));
+                }
+            };
+
+    auto send_system_status = [&http_server, &micro_ros_controller, &unique_id]()
+            {
+                JSONHandler json_handler(unique_id);
+                json_handler.add_microros_info(micro_ros_controller);
+                json_handler.add_freertos_summary();
+                json_handler.add_custom("ws_data_type", "system_status");
+
+                char* status = json_handler.get_json_string();
+
+                if (status != nullptr)
+                {
+                    http_server.send_data_to_clients((uint8_t*)status, strlen(status));
+                }
+            };
+
+    auto send_task_status = [&http_server, &task_executor, &unique_id]()
+            {
+                JSONHandler json_handler(unique_id);
+                task_executor.execute_operation_on_task(portMAX_DELAY,
+                        [&json_handler](Task* task, Task* precondition)
+                        {
+                            if (task != nullptr)
+                            {
+                                json_handler.add_task_status(*task, precondition);
+                            }
+                        });
+
+                json_handler.add_custom("ws_data_type", "task_status");
+
+                char* status = json_handler.get_json_string();
+
+                if (status != nullptr)
+                {
+                    http_server.send_data_to_clients((uint8_t*)status, strlen(status));
+                }
+            };
+
+    constexpr uint32_t LOOP_RATE_MS = 20;
+    constexpr uint32_t TASK_BOARD_STATUS_RATE_MS = 20;
+    constexpr uint32_t SYSTEM_STATUS_RATE_MS = 240;
+    constexpr uint32_t TASK_STATUS_RATE_MS = 240;
+
+    static_assert(TASK_BOARD_STATUS_RATE_MS % LOOP_RATE_MS == 0,
+            "TASK_BOARD_STATUS_RATE_MS must be a multiple of LOOP_RATE_MS");
+    static_assert(SYSTEM_STATUS_RATE_MS % LOOP_RATE_MS == 0,
+            "SYSTEM_STATUS_RATE_MS must be a multiple of LOOP_RATE_MS");
+    static_assert(TASK_STATUS_RATE_MS % LOOP_RATE_MS == 0, "TASK_STATUS_RATE_MS must be a multiple of LOOP_RATE_MS");
+
+    uint32_t counter = 0;
+
+    while (true)
+    {
+        // Send system status every TASK_BOARD_STATUS_RATE_MS
+        if (counter % TASK_BOARD_STATUS_RATE_MS == 0)
+        {
+            send_task_board_status();
+        }
+
+        // Send system status every SYSTEM_STATUS_RATE_MS
+        if (counter % SYSTEM_STATUS_RATE_MS == 0)
+        {
+            send_system_status();
+        }
+
+        // Send task status every TASK_STATUS_RATE_MS
+        if (counter % TASK_STATUS_RATE_MS == 0)
+        {
+            send_task_status();
+        }
+
+        // Wait for the next loop iteration
+        vTaskDelay(pdMS_TO_TICKS(LOOP_RATE_MS));
+        counter += LOOP_RATE_MS;
     }
 }
