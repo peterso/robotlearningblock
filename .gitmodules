@@ -1,0 +1,3 @@
+[submodule "idf/taskboard/components/micro_ros_espidf_component"]
+	path = idf/taskboard/components/micro_ros_espidf_component
+	url = https://github.com/micro-ROS/micro_ros_espidf_component

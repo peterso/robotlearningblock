@@ -1,0 +1,21 @@
+{
+    "names": {
+        "microxrcedds_client": {
+            "cmake-args": [
+                "-DUCLIENT_MIN_HEARTBEAT_TIME_INTERVAL=100",
+                "-DUCLIENT_HARD_LIVELINESS_CHECK=ON",
+                "-DUCLIENT_HARD_LIVELINESS_CHECK_TIMEOUT=2500",
+                "-DUCLIENT_UDP_TRANSPORT_MTU=4096",
+            ]
+        },
+        "rmw_microxrcedds": {
+            "cmake-args": [
+                "-DRMW_UXRCE_MAX_PUBLISHERS=5",
+                "-DRMW_UXRCE_MAX_SUBSCRIPTIONS=1",
+                "-DRMW_UXRCE_MAX_SERVICES=3",
+                "-DRMW_UXRCE_MAX_CLIENTS=0",
+                "-DRMW_UXRCE_MAX_HISTORY=1"
+            ]
+        }
+    }
+}
