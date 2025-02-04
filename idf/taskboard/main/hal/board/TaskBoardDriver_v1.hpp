@@ -100,14 +100,22 @@ struct TaskBoardDriver_v1 :
                             return SensorMeasurement(value);
                         });
 
-        Sensor* probe_goal_analog = new Sensor("PROBE_GOAL_ANALOG", [&]()
+        Sensor* plug_insertion= new Sensor("PLUG_INSERTION", [&]()
                         {
-                            uint16_t value =
-                            hardware_low_level_controller_.pb_hub_controller.read_analog_IO0(
+			    bool value =
+                            hardware_low_level_controller_.pb_hub_controller.read_digital_IO0(
                                 PbHubController::Channel::CHANNEL_3);
-                            float float_value = static_cast<float>(value) / 4095.0f;
 
-                            return SensorMeasurement(float_value);
+                            return SensorMeasurement(!value);
+                        });
+
+        Sensor* probe_circuit = new Sensor("PROBE_CIRCUIT", [&]()
+                        {
+                            bool value =
+                            hardware_low_level_controller_.pb_hub_controller.read_digital_IO1(
+                                PbHubController::Channel::CHANNEL_3);
+
+                            return SensorMeasurement(!value);
                         });
 
         Sensor* on_board_button_a = new Sensor("ON_BOARD_BUTTON_A", [&]()
@@ -204,24 +212,11 @@ struct TaskBoardDriver_v1 :
                             return SensorMeasurement(is_cable_attached);
                         });
 
-        Sensor* probe_goal = new Sensor("PROBE_GOAL", [=]()
-                        {
-                            auto analog_measure = probe_goal_analog->read();
-
-                            const bool is_touching_goal = analog_measure.get_analog() < 0.1;
-
-                            return SensorMeasurement(is_touching_goal);
-                        });
-
         Sensor* fader_trigger_blue_button = new TriggeredSensor("FADER_BLUE_BUTTON", *blue_button, [=]()
                         {
                             return fader->read();
                         });
 
-        Sensor* red_button_counter = new CounterSensor("RED_BUTTON_COUNTER", [=]()
-                        {
-                            return red_button->read();
-                        });
 
         // Store sensors
         sensors_.push_back(blue_button);
@@ -230,7 +225,8 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(door_angle);
         sensors_.push_back(light_right);
         sensors_.push_back(light_left);
-        sensors_.push_back(probe_goal_analog);
+        sensors_.push_back(plug_insertion);
+        sensors_.push_back(probe_circuit);
         sensors_.push_back(on_board_button_a);
         sensors_.push_back(on_board_button_b);
         sensors_.push_back(on_board_button_c);
@@ -242,9 +238,7 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(door_status);
         sensors_.push_back(free_cable);
         sensors_.push_back(attached_cable);
-        sensors_.push_back(probe_goal);
         sensors_.push_back(fader_trigger_blue_button);
-        sensors_.push_back(red_button_counter);
 
         // Initial update
         update();
@@ -254,25 +248,26 @@ struct TaskBoardDriver_v1 :
         {
             new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.0f), 0.1f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(false)),
-            new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(false)),
+            new TaskStepEqual(*get_sensor_by_name("PLUG_INSERTION"), SensorMeasurement(false)),
             new TaskStepEqual(*get_sensor_by_name("FREE_CABLE"), SensorMeasurement(true)),
         };
 
         default_precondition_task_ = new SimultaneousConditionTask(*precondition_steps, "Precondition Task");
 
         TaskStep* timed_fader_operation =
-                new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.8f), 0.05f);
+                new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.5f), 0.05f); // target, +-tolerance
         timed_fader_operation->set_clue_timeout(*get_sensor_by_name("BLUE_BUTTON"), 3000);
 
         std::vector<const TaskStep*>* main_steps = new std::vector<const TaskStep*>
         {
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
             timed_fader_operation,
-            new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
+            //new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
+            new TaskStepEqual(*get_sensor_by_name("PLUG_INSERTION"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),
-            new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("PROBE_CIRCUIT"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("ATTACHED_CABLE"), SensorMeasurement(true)),
-            new TaskStepEqual(*get_sensor_by_name("RED_BUTTON_COUNTER"), SensorMeasurement(3ll)),
+            new TaskStepEqual(*get_sensor_by_name("RED_BUTTON"), SensorMeasurement(true)),
         };
 
         default_task_ = new SequentialTask(*main_steps, "Default Task");
@@ -312,8 +307,8 @@ struct TaskBoardDriver_v1 :
 
         // Handle floating values at PbHubController
         // TODO(pgarrido): Handle this with Peter
-        hardware_low_level_controller_.pb_hub_controller.write_digital_IO0(PbHubController::Channel::CHANNEL_3, true);
-        hardware_low_level_controller_.pb_hub_controller.write_digital_IO1(PbHubController::Channel::CHANNEL_3, true);
+        //hardware_low_level_controller_.pb_hub_controller.write_digital_IO0(PbHubController::Channel::CHANNEL_3, true);
+        //hardware_low_level_controller_.pb_hub_controller.write_digital_IO1(PbHubController::Channel::CHANNEL_3, true);
 
         for (auto& item : sensors_)
         {
