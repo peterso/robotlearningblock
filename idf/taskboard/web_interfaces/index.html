@@ -1050,7 +1050,13 @@
             document.getElementById('last-update').textContent = "Last updated: " + formatTimestamp();
 
             const sensorsGrid = document.getElementById('sensors-grid');
-            sensorsGrid.innerHTML = '';
+            const existingSensors = new Map();
+
+            // Store existing sensor elements in a Map for quick lookup
+            Array.from(sensorsGrid.children).forEach(child => {
+                const sensorId = child.querySelector('.sensor-name').textContent;
+                existingSensors.set(sensorId, child);
+            });
 
             // Order sensors by object, boolean or number, first are numbers
             data.sensors.sort((a, b) => {
@@ -1068,9 +1074,21 @@
             });
 
             data.sensors.forEach(sensor => {
-                const sensorDiv = document.createElement('div');
-                sensorDiv.className = 'sensor-item';
+                let sensorDiv = existingSensors.get(sensor.id);
 
+                if (!sensorDiv) {
+                    // Create a new sensor element if it doesn't exist
+                    sensorDiv = document.createElement('div');
+                    sensorDiv.className = 'sensor-item';
+                    sensorDiv.innerHTML = `
+                        <div class="sensor-name">${sensor.id}</div>
+                        <div class="sensor-value"></div>
+                    `;
+                    sensorsGrid.appendChild(sensorDiv);
+                }
+
+                // Update the sensor value
+                const valueDiv = sensorDiv.querySelector('.sensor-value');
                 let valueHtml = '';
                 let includeGraph = false;
 
@@ -1106,30 +1124,26 @@
                         includeGraph = true;  // Only add graphs for numeric sensors
                     }
                     else {
-                        valueHtml = sensor.value;
                         valueHtml = `<span class="integer-value ${sensor.value}">${sensor.value}</span>`;
                     }
                 } else {
                     valueHtml = sensor.value;
                 }
 
-                sensorDiv.innerHTML = `
-                    <div class="sensor-name">${sensor.id}</div>
-                    <div class="sensor-value">${valueHtml}</div>
-                    ${includeGraph ? `
-                        <div class="graph-container">
-                            <canvas class="graph-canvas"></canvas>
-                        </div>
-                    ` : ''}
-                `;
+                valueDiv.innerHTML = valueHtml;
 
-                sensorsGrid.appendChild(sensorDiv);
+                // Handle the graph container
+                let graphContainer = sensorDiv.querySelector('.graph-container');
+                if (includeGraph && !graphContainer) {
+                    graphContainer = document.createElement('div');
+                    graphContainer.className = 'graph-container';
+                    graphContainer.innerHTML = '<canvas class="graph-canvas"></canvas>';
+                    sensorDiv.appendChild(graphContainer);
+                } else if (!includeGraph && graphContainer) {
+                    graphContainer.remove();
+                }
 
-                // Handle graph if needed
                 if (includeGraph) {
-                    const graphContainer = sensorDiv.querySelector('.graph-container');
-
-                    // Get existing graph or create new one
                     let graph = sensorGraphs.get(sensor.id);
                     if (!graph) {
                         if (isIMU) {
@@ -1137,7 +1151,6 @@
                         }
                         else
                         {
-                            const value = sensor.value;
                             graph = new AnalogGraph(graphContainer, {
                                 points: 30,
                                 maxValue: Math.ceil(1.0),
@@ -1164,11 +1177,12 @@
             });
 
             // Clean up graphs for sensors that no longer exist
-            for (const [sensorId] of sensorGraphs) {
+            existingSensors.forEach((sensorDiv, sensorId) => {
                 if (!data.sensors.some(sensor => sensor.id === sensorId)) {
+                    sensorsGrid.removeChild(sensorDiv);
                     sensorGraphs.delete(sensorId);
                 }
-            }
+            });
         }
 
         function updateTaskUI(data)
