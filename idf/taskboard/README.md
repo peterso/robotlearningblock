@@ -445,8 +445,11 @@ python3 -m http.server
 3. Run the `generate_embedded_html.py` script to generate the embedded HTML file.
 
 ```bash
+# Inside web_interfaces folder
+cd web_interfaces
+
 # Install dependencies
-pip3 install csscompressor htmlmin jsmin bs4
+pip3 install -r requirements.txt
 apt install xxd
 
 # Generate embedded files
