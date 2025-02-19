@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <network/webpages/web_index.h>
+#include <network/webpages/web_urdf.h>
 
 /**
  * @struct WebSocketServer
@@ -341,6 +342,12 @@ struct HTTPServer
         options_clear_logs_url.handler  = HTTPServer::options_handler;
         options_clear_logs_url.user_ctx = this;
 
+        httpd_uri_t get_urdf = {};
+        get_urdf.uri      = "/urdf";
+        get_urdf.method   = HTTP_GET;
+        get_urdf.handler  = HTTPServer::get_urdf_handler;
+        get_urdf.user_ctx = this;
+
         httpd_register_uri_handler(server_, &get_index_uri);
         httpd_register_uri_handler(server_, &get_taskboard_status_uri);
         httpd_register_uri_handler(server_, &get_task_status_uri);
@@ -351,6 +358,7 @@ struct HTTPServer
         httpd_register_uri_handler(server_, &options_micro_ros_uri);
         httpd_register_uri_handler(server_, &clear_logs_url);
         httpd_register_uri_handler(server_, &options_clear_logs_url);
+        httpd_register_uri_handler(server_, &get_urdf);
 
         // Web sockets
         httpd_uri_t uri_ws = {};
@@ -627,6 +635,24 @@ private:
         server->non_volatile_storage_.clear_log();
 
         httpd_resp_send(req, "{\"status\": \"success\"}", -1);
+
+        return ESP_OK;
+    }
+    /**
+     * @brief Handler for urdf file
+     *
+     * @param req HTTP request
+     */
+     static esp_err_t get_urdf_handler(
+            httpd_req_t* req)
+    {
+        // Add CORS headers
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");  // Allow all origins
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
+
+        // Send urdf file
+        httpd_resp_send(req, (char*) _urdf_html, _urdf_html_len);
 
         return ESP_OK;
     }

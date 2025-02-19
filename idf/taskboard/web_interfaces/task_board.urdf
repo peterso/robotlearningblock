@@ -1,0 +1,234 @@
+<?xml version="1.0" ?>
+<robot name="task_board" version="1.0">
+  <link name="task_board">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="0.0"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+    </inertial>
+  </link>
+  <joint name="task_board_main_joint" type="fixed">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board"/>
+    <child link="task_board_main"/>
+  </joint>
+  <link name="task_board_main">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="0.0"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+    </inertial>
+  </link>
+  <joint name="task_board_body_joint" type="fixed">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_body"/>
+  </joint>
+  <link name="task_board_body">
+    <inertial>
+      <origin xyz="-0.0011780796339735389 -3.9309339626925066e-05 -0.039935238659381866" rpy="-0.008391642943024635 -0.02066241204738617 0.011745553463697433"/>
+      <mass value="7.616941928863525"/>
+      <inertia ixx="0.018900347873568535" ixy="0.0" ixz="0.0" iyy="0.04489736631512642" iyz="0.0" izz="0.05582557991147041"/>
+    </inertial>
+  </link>
+  <joint name="task_board_banana_plug_black_joint" type="fixed">
+    <origin xyz="0.03844299912452698 0.04390700161457062 0.0" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_banana_plug_black"/>
+  </joint>
+  <link name="task_board_banana_plug_black">
+    <inertial>
+      <origin xyz="1.5940020858806747e-08 -2.135486631971162e-08 -0.009129293262958527" rpy="-0.0 1.5707963705062866 0.0"/>
+      <mass value="0.004504608456045389"/>
+      <inertia ixx="7.183392369825015e-08" ixy="0.0" ixz="0.0" iyy="2.1908198277742486e-07" iyz="0.0" izz="2.1914435421876988e-07"/>
+    </inertial>
+  </link>
+  <joint name="task_board_banana_plug_black_hole_joint" type="fixed">
+    <origin xyz="0.0 0.0 0.0024999999441206455" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board_banana_plug_black"/>
+    <child link="task_board_banana_plug_black_hole"/>
+  </joint>
+  <link name="task_board_banana_plug_black_hole">
+    <inertial>
+      <origin xyz="0.0 3.896236269071907e-19 -0.011749510653316975" rpy="-0.0 1.5707963705062866 0.0"/>
+      <mass value="0.002106040483340621"/>
+      <inertia ixx="7.209348495962331e-08" ixy="0.0" ixz="0.0" iyy="1.3173702484436944e-07" iyz="0.0" izz="1.3173702484436944e-07"/>
+    </inertial>
+  </link>
+  <joint name="task_board_banana_plug_red_joint" type="fixed">
+    <origin xyz="0.03844299912452698 0.01890699937939644 0.0" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_banana_plug_red"/>
+  </joint>
+  <link name="task_board_banana_plug_red">
+    <inertial>
+      <origin xyz="1.5940020858806747e-08 -2.135486631971162e-08 -0.009129293262958527" rpy="-0.0 1.5707963705062866 0.0"/>
+      <mass value="0.004504608456045389"/>
+      <inertia ixx="7.183392369825015e-08" ixy="0.0" ixz="0.0" iyy="2.1908198277742486e-07" iyz="0.0" izz="2.1914435421876988e-07"/>
+    </inertial>
+  </link>
+  <joint name="task_board_banana_plug_red_hole_joint" type="fixed">
+    <origin xyz="0.0 0.0 0.0024999999441206455" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board_banana_plug_red"/>
+    <child link="task_board_banana_plug_red_hole"/>
+  </joint>
+  <link name="task_board_banana_plug_red_hole">
+    <inertial>
+      <origin xyz="0.0 3.896236269071907e-19 -0.011749510653316975" rpy="-0.0 1.5707963705062866 0.0"/>
+      <mass value="0.002106040483340621"/>
+      <inertia ixx="7.209348495962331e-08" ixy="0.0" ixz="0.0" iyy="1.3173702484436944e-07" iyz="0.0" izz="1.3173702484436944e-07"/>
+    </inertial>
+  </link>
+  <joint name="task_board_slider_joint" type="prismatic">
+    <origin xyz="0.06044299900531769 -0.034529998898506165 0.0033650000113993883" rpy="0.0 0.0 0.0"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_slider"/>
+    <limit effort="1000.0" lower="-0.017999999225139618" upper="0.017999999225139618" velocity="1000.0"/>
+  </joint>
+  <link name="task_board_slider">
+    <inertial>
+      <origin xyz="-1.862645149230957e-09 3.725290298461914e-09 -9.876557305688038e-05" rpy="-0.0 1.5707963705062866 0.0"/>
+      <mass value="0.000809999939519912"/>
+      <inertia ixx="5.10750020055184e-09" ixy="0.0" ixz="0.0" iyy="5.631264343719522e-09" iyz="0.0" izz="7.363766041379449e-09"/>
+    </inertial>
+  </link>
+  <joint name="task_board_cable_wrap_post_left_joint" type="fixed">
+    <origin xyz="0.08894900232553482 0.0934389978647232 0.0016400000313296914" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_cable_wrap_post_left"/>
+  </joint>
+  <link name="task_board_cable_wrap_post_left">
+    <inertial>
+      <origin xyz="-0.01696014031767845 -0.008828177116811275 0.004354794975370169" rpy="2.402512550354004 -0.1900920271873474 -0.15321698784828186"/>
+      <mass value="0.043695658445358276"/>
+      <inertia ixx="5.7250399549957365e-06" ixy="0.0" ixz="0.0" iyy="6.1012633523205295e-06" iyz="0.0" izz="1.0074165402329527e-05"/>
+    </inertial>
+  </link>
+  <joint name="task_board_button_blue_joint" type="prismatic">
+    <origin xyz="0.0962430015206337 0.04390700161457062 0.0020230000372976065" rpy="0.0 0.0 0.0"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_button_blue"/>
+    <limit effort="1000.0" lower="-0.003000000026077032" upper="0.0" velocity="1000.0"/>
+  </joint>
+  <link name="task_board_button_blue">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="1.5707963705062866 0.032549697905778885 -4.479882775854094e-08"/>
+      <mass value="0.0006532502011395991"/>
+      <inertia ixx="5.863464824784614e-09" ixy="0.0" ixz="0.0" iyy="5.863464824784614e-09" iyz="0.0" izz="1.0612049905489584e-08"/>
+    </inertial>
+  </link>
+  <joint name="task_board_banana_pug_port_joint" type="fixed">
+    <origin xyz="-0.10184399783611298 -0.04301600158214569 0.01899999938905239" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_banana_pug_port"/>
+  </joint>
+  <link name="task_board_banana_pug_port">
+    <inertial>
+      <origin xyz="1.5504801922361366e-06 -0.0065566315315663815 -0.004786085803061724" rpy="1.5705891847610474 0.1959097534418106 -1.5712090730667114"/>
+      <mass value="0.06875700503587723"/>
+      <inertia ixx="6.211651907506166e-06" ixy="0.0" ixz="0.0" iyy="1.379157583869528e-05" iyz="0.0" izz="1.5920872101560235e-05"/>
+    </inertial>
+  </link>
+  <joint name="task_board_banana_pug_hole_joint" type="fixed">
+    <origin xyz="0.0 0.012734999880194664 0.0" rpy="-1.5707963705062866 0.0 0.0"/>
+    <parent link="task_board_banana_pug_port"/>
+    <child link="task_board_banana_pug_hole"/>
+  </joint>
+  <link name="task_board_banana_pug_hole">
+    <inertial>
+      <origin xyz="0.0 3.896236269071907e-19 -0.011749510653316975" rpy="-0.0 1.5707963705062866 0.0"/>
+      <mass value="0.002106040483340621"/>
+      <inertia ixx="7.209348495962331e-08" ixy="0.0" ixz="0.0" iyy="1.3173702484436944e-07" iyz="0.0" izz="1.3173702484436944e-07"/>
+    </inertial>
+  </link>
+  <joint name="task_board_m5_stick_c_joint" type="fixed">
+    <origin xyz="0.0962430015206337 -0.023080000653862953 0.006850000005215406" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_m5_stick_c"/>
+  </joint>
+  <link name="task_board_m5_stick_c">
+    <inertial>
+      <origin xyz="-1.1457431355665904e-05 2.9143269784981385e-05 0.00017303161439485848" rpy="1.576095461845398 -0.018257638439536095 0.00010338406718801707"/>
+      <mass value="0.04181278124451637"/>
+      <inertia ixx="2.4424950879620155e-06" ixy="0.0" ixz="0.0" iyy="8.191432243620511e-06" iyz="0.0" izz="9.508899893262424e-06"/>
+    </inertial>
+  </link>
+  <joint name="task_board_cable_wrap_post_right_joint" type="fixed">
+    <origin xyz="-0.0743279978632927 0.0934389978647232 0.0016400000313296914" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_cable_wrap_post_right"/>
+  </joint>
+  <link name="task_board_cable_wrap_post_right">
+    <inertial>
+      <origin xyz="0.01696014031767845 -0.008828177116811275 0.004354794975370169" rpy="-2.402512788772583 0.1900920271873474 -0.15321700274944305"/>
+      <mass value="0.043695658445358276"/>
+      <inertia ixx="5.7250399549957365e-06" ixy="0.0" ixz="0.0" iyy="6.1012633523205295e-06" iyz="0.0" izz="1.0074165402329527e-05"/>
+    </inertial>
+  </link>
+  <joint name="task_board_lid_joint" type="revolute">
+    <origin xyz="-0.047283999621868134 -0.032333001494407654 -0.0008019999950192869" rpy="0.0 0.0 0.0"/>
+    <axis xyz="1.0 0.0 0.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_lid"/>
+    <limit effort="1000.0" lower="-0.05000000074505806" upper="2.072930097579956" velocity="1000.0"/>
+  </joint>
+  <link name="task_board_lid">
+    <inertial>
+      <origin xyz="2.5788585844566114e-06 0.037636153399944305 0.007401283830404282" rpy="1.5708831548690796 0.08519060909748077 4.983466624253197e-06"/>
+      <mass value="0.1086004376411438"/>
+      <inertia ixx="6.124936044216156e-05" ixy="0.0" ixz="0.0" iyy="6.734210182912648e-05" iyz="0.0" izz="0.00012705853441730142"/>
+    </inertial>
+  </link>
+  <joint name="task_board_lid_knob_joint" type="fixed">
+    <origin xyz="0.0 0.06539800018072128 0.012198000214993954" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board_lid"/>
+    <child link="task_board_lid_knob"/>
+  </joint>
+  <link name="task_board_lid_knob">
+    <inertial>
+      <origin xyz="-3.4078295811923454e-06 -6.770335403416539e-06 0.0006270412122830749" rpy="1.53434157371521 1.5584917068481445 -1.6072484254837036"/>
+      <mass value="0.0028435129206627607"/>
+      <inertia ixx="4.3162213358982626e-08" ixy="0.0" ixz="0.0" iyy="8.163605258459938e-08" iyz="0.0" izz="8.164399645238518e-08"/>
+    </inertial>
+  </link>
+  <joint name="task_board_button_red_joint" type="prismatic">
+    <origin xyz="0.0962430015206337 0.030906999483704567 0.0020230000372976065" rpy="0.0 0.0 0.0"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="task_board_main"/>
+    <child link="task_board_button_red"/>
+    <limit effort="1000.0" lower="-0.003000000026077032" upper="0.0" velocity="1000.0"/>
+  </joint>
+  <link name="task_board_button_red">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="1.5707963705062866 0.032549697905778885 -4.479882775854094e-08"/>
+      <mass value="0.0006532502011395991"/>
+      <inertia ixx="5.863464824784614e-09" ixy="0.0" ixz="0.0" iyy="5.863464824784614e-09" iyz="0.0" izz="1.0612049905489584e-08"/>
+    </inertial>
+  </link>
+  <joint name="task_board_probe_joint" type="fixed">
+    <origin xyz="-0.101844 -0.007 0.019" rpy="0.0 0.0 0.0"/>
+    <parent link="task_board"/>
+    <child link="task_board_probe"/>
+  </joint>
+  <link name="task_board_probe">
+    <inertial>
+      <origin xyz="-2.27348695425178e-11 0.0001277880510315299 -3.0341962276025924e-09" rpy="-1.4511678218841553 1.5101650953292847 -1.570797085762024"/>
+      <mass value="0.006231526378542185"/>
+      <inertia ixx="6.648315320489928e-08" ixy="0.0" ixz="0.0" iyy="5.043107648816658e-06" iyz="0.0" izz="5.043107648816658e-06"/>
+    </inertial>
+  </link>
+  <joint name="task_board_cable_plug_joint" type="fixed">
+    <origin xyz="0.03844299912452698 0.01890699937939644 0.019" rpy="0.0 0.0 -1.5707963705062866"/>
+    <parent link="task_board"/>
+    <child link="task_board_cable_plug"/>
+  </joint>
+  <link name="task_board_cable_plug">
+    <inertial>
+      <origin xyz="-0.00967562384903431 -4.372870676672136e-10 -4.746794729726389e-05" rpy="-3.141592502593994 -0.27512624859809875 -1.5707963705062866"/>
+      <mass value="0.009143883362412453"/>
+      <inertia ixx="3.367600811543525e-07" ixy="0.0" ixz="0.0" iyy="1.5876109955570428e-06" iyz="0.0" izz="1.8079294932249468e-06"/>
+    </inertial>
+  </link>
+</robot>

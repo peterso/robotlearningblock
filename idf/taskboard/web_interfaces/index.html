@@ -67,6 +67,7 @@
                 "top top"
                 "sensors leaderboard"
                 "sensors microros"
+                "sensors resources"
                 "sensors tasks";
             gap: 20px;
         }
@@ -75,6 +76,7 @@
         .tasks-card { grid-area: tasks; }
         .leaderboard-card { grid-area: leaderboard; }
         .micro-ros-card { grid-area: microros; }
+        .resources-card {grid-area: resources; }
         @media (max-width: 768px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -344,7 +346,7 @@
             color: #1976d2;
         }
 
-        .micro-ros-status {
+        .micro-ros-status, .file-container {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -386,7 +388,7 @@
             width: 150px;
         }
 
-        .micro-ros-button {
+        .micro-ros-button, .download-button {
             background: #2196f3;
             color: white;
             border: none;
@@ -396,7 +398,7 @@
             font-weight: bold;
         }
 
-        .micro-ros-button:hover {
+        .micro-ros-button:hover, .download-button:hover {
             background: #1976d2;
         }
 
@@ -538,6 +540,13 @@
                     </thead>
                     <tbody id="tasks-body"></tbody>
                 </table>
+            </div>
+        </div>
+        <div class="card resources-card">
+            <h2>Resources</h2>
+            <div class="file-container">
+                <button class="download-button" onclick="getURDFfile()">Download TaskBoard's URDF file
+                </button>
             </div>
         </div>
     </div>
@@ -1365,7 +1374,29 @@
                 showError("Failed to clear leaderboard: " + error.message);
             }
         }
-
+        function download(filename, text) {
+            let dle = document.createElement('a');
+            dle.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            dle.setAttribute('download', filename);
+            dle.style.display = 'none';
+            
+            document.body.appendChild(dle);
+            dle.click();
+            document.body.removeChild(dle);
+        }
+        async function getURDFfile() {
+            try {
+                const urdfUrl = deviceIP ? "http://" + deviceIP + "/urdf" : '/urdf';
+                const response = await fetch(urdfUrl);
+                if (!response.ok) {
+                    throw new Error("HTTP error! status: " + response.status);
+                } else {
+                    response.text().then((text) => download("task_board.urdf", text));
+                }
+            } catch (error) {
+                showError("Failed to download URDF file: " + error.message);
+            }
+        }
         function connectWebSocket()
         {
             try{
