@@ -73,6 +73,12 @@ cd /robotlearningblock/idf/taskboard
 idf.py build flash monitor
 ```
 
+To run `idf.py` from any additional terminal attached to the Docker, the following command is needed:
+
+```bash
+source /opt/esp/idf/export.sh
+```
+
 ## Data Model Overview
 
 The Robothon Task Board Firmware is built around a hierarchical data model where **Tasks** is the main component.
@@ -437,5 +443,15 @@ python3 -m http.server
 ```
 
 3. Run the `generate_embedded_html.py` script to generate the embedded HTML file.
+
+```bash
+# Install dependencies
+pip3 install csscompressor htmlmin jsmin bs4
+apt install xxd
+
+# Generate embedded files
+python3 generate_embedded_html.py
+```
+
 4. Copy the generated `.h` files to the firmware folder: [`main/network/webpages/`](./main/network/webpages/).
 5. Rebuild and flash the firmware.
