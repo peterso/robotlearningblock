@@ -249,7 +249,7 @@ extern "C" void app_main(
 
     TaskHandle_t microros_task_handle;
     constexpr uint8_t MICROROS_THREAD_CORE_AFFINITY = 1;
-    constexpr uint32_t MICROROS_STACK_SIZE = 8192;
+    constexpr uint32_t MICROROS_STACK_SIZE = 7168;
     constexpr uint8_t MICROROS_THREAD_PRIORITY = 4;
     xTaskCreatePinnedToCore(
         microros_main,
@@ -271,7 +271,7 @@ extern "C" void app_main(
 
     TaskHandle_t kaa_task_handle;
     constexpr uint8_t KAA_THREAD_CORE_AFFINITY = 0;
-    constexpr uint32_t KAA_STACK_SIZE = 8192;
+    constexpr uint32_t KAA_STACK_SIZE = 5120;
     constexpr uint8_t KAA_THREAD_PRIORITY = 1;
 
     auto kaa_main = [](void* arg) -> void
@@ -299,7 +299,7 @@ extern "C" void app_main(
     // ------------------------
     TaskHandle_t ws_task_handle;
     constexpr uint8_t WS_THREAD_CORE_AFFINITY = 0;
-    constexpr uint32_t WS_STACK_SIZE = 8192;
+    constexpr uint32_t WS_STACK_SIZE = 4096;
     constexpr uint8_t WS_THREAD_PRIORITY = 0;
 
     WebSocketTaskArgs ws_args = {http_server, task_board_driver, task_executor, micro_ros_controller};
