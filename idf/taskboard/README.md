@@ -79,6 +79,17 @@ To run `idf.py` from any additional terminal attached to the Docker, the followi
 source /opt/esp/idf/export.sh
 ```
 
+To update a `M5STACK StickC Plus` (different from a `M5STACK StickC Plus2`), it is necessary to use the special partitions csv file and a different baud rate for flashing (after following the previous structions up to changing to the project directory):
+
+```bash
+# Rename partitions csv files
+mv partitions.csv partitions_standard.csv
+mv partitions_stickcplus.csv partitions.csv
+
+# Configure the project
+idf.py build && idf.py -b 500000 flash && idf.py monitor
+```
+
 ## Data Model Overview
 
 The Robothon Task Board Firmware is built around a hierarchical data model where **Tasks** is the main component.
