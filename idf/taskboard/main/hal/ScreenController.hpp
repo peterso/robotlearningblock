@@ -10,6 +10,12 @@
 
 #include <M5Unified.h>
 
+#if CONFIG_M5STACK_CORE2
+    #define SCREEN_ROTATION 1
+#else
+    #define SCREEN_ROTATION 3
+#endif
+
 /**
  * @struct ScreenController
 
@@ -40,7 +46,7 @@ struct ScreenController :
             int text_color = TFT_WHITE,
             int background_color = TFT_BLACK)
     {
-        display_.setRotation(3);
+        display_.setRotation(SCREEN_ROTATION);
         display_.setTextColor(TFT_WHITE, TFT_BLACK);
         display_.setTextSize(1);
         display_.setCursor(5, 0);
@@ -78,7 +84,7 @@ struct ScreenController :
             int text_color = TFT_WHITE,
             int background_color = TFT_BLACK)
     {
-        display_.setRotation(3);
+        display_.setRotation(SCREEN_ROTATION);
         display_.setTextColor(text_color, background_color);
         display_.setTextSize(1);
         display_.setCursor(5, 0);
