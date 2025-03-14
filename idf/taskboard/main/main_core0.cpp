@@ -166,11 +166,7 @@ extern "C" void app_main(
         }
 
         // Initialize WiFi manager
-        uint8_t mac[6];
-        esp_read_mac(mac, ESP_MAC_WIFI_STA);
-        char ssid_with_mac[32];
-        snprintf(ssid_with_mac, sizeof(ssid_with_mac), "Robothon Task Board %01X%02X", (mac[4] & 0x0F), mac[5]);
-        WifiManager wifi_manager(http_server, ssid_with_mac, reset_provisioning);
+        WifiManager wifi_manager(http_server, task_board_driver.get_unique_ssid(), reset_provisioning);
 
         // Display appropriate connection instructions based on provisioning state
         if (wifi_manager.is_provisioned())

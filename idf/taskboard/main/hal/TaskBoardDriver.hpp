@@ -63,6 +63,13 @@ struct TaskBoardDriver
             const std::string& sensor_name) const = 0;
 
     /**
+    * @brief Gets a unique SSID name based on WiFi interface MAC address
+    *
+    * @return Reference to the board's unique SSID string
+    */
+    virtual const std::string& get_unique_ssid() const = 0;
+
+    /**
      * @brief Gets the default task configured for this board
      *
      * @return Reference to the default task
