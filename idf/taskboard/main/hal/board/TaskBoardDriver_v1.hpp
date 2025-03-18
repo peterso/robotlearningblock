@@ -141,7 +141,7 @@ struct TaskBoardDriver_v1 :
                             return SensorMeasurement(value);
                         });
 
-        Sensor* accelometer = new Sensor("ACCELOMETER", [&]()
+        Sensor* accelerometer = new Sensor("ACCELEROMETER", [&]()
                         {
                             SensorMeasurement::Vector3 values;
                             hardware_low_level_controller_.m5_unified.Imu.getAccel(&values.x, &values.y, &values.z);
@@ -238,7 +238,7 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(on_board_button_b);
         sensors_.push_back(on_board_button_c);
         sensors_.push_back(on_board_button_pwr);
-        sensors_.push_back(accelometer);
+        sensors_.push_back(accelerometer);
         sensors_.push_back(magnetometer);
         sensors_.push_back(gyroscope);
         sensors_.push_back(temperature);
