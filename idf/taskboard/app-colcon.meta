@@ -5,7 +5,7 @@
                 "-DUCLIENT_MIN_HEARTBEAT_TIME_INTERVAL=100",
                 "-DUCLIENT_HARD_LIVELINESS_CHECK=ON",
                 "-DUCLIENT_HARD_LIVELINESS_CHECK_TIMEOUT=2500",
-                "-DUCLIENT_UDP_TRANSPORT_MTU=4096",
+                "-DUCLIENT_UDP_TRANSPORT_MTU=2048",
             ]
         },
         "rmw_microxrcedds": {
