@@ -105,6 +105,8 @@ struct TaskExecutor
                     current_task_->is_human_task() ? TFT_DARKGREY : TFT_BLACK);
 
                 force_screen_update_ = false;
+
+                blinkLED();
             }
 
             // Print clue
@@ -296,6 +298,16 @@ private:
         return ret;
     }
 
+    void blinkLED() {
+        // Turn LED on
+        M5.Power.setLed(255);
+
+        // Start the timer to turn LED off
+        if (timer_led_ != nullptr) {
+            xTimerStart(timer_led_, 0);
+        }
+    }
+
     ScreenController& screen_controller_;                       ///< Reference to screen controller
     NonVolatileStorage& non_volatile_storage_;                  ///< Reference to non-volatile storage
 
@@ -305,6 +317,17 @@ private:
     int64_t last_analog_update_ = 0;                            ///< Last analog update time
 
     SemaphoreHandle_t mutex_;                                   ///< Mutex for thread safety
+
+    TimerHandle_t timer_led_ = xTimerCreate(                    ///< Timer to turn LED off
+        "LedOff",              // Timer name
+        pdMS_TO_TICKS(500),    // Delay in ms
+        pdFALSE,               // Disabled auto-reload 
+        nullptr,
+        [](TimerHandle_t xTimer) {  // Callback
+            // Turn LED off
+            M5.Power.setLed(0);
+        }
+    );
 
     std::vector<std::pair<Timer, TaskExecutorCallback>> task_callbacks_;      ///< Vector of task update callbacks
 };
