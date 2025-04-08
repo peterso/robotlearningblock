@@ -43,6 +43,9 @@ struct TaskBoardDriver_v1 :
         char mac_str[18];
         sprintf(mac_str, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
         unique_id_ = mac_str;
+        char ssid_with_mac[32];
+        snprintf(ssid_with_mac, sizeof(ssid_with_mac), "Robothon Task Board %01X%02X", (mac[4] & 0x0F), mac[5]);
+        unique_ssid_ = ssid_with_mac;
 
         // Initialize sensors
         Sensor* blue_button = new Sensor("BLUE_BUTTON", [&]()
@@ -139,7 +142,7 @@ struct TaskBoardDriver_v1 :
                             return SensorMeasurement(value);
                         });
 
-        Sensor* accelometer = new Sensor("ACCELOMETER", [&]()
+        Sensor* accelerometer = new Sensor("ACCELEROMETER", [&]()
                         {
                             SensorMeasurement::Vector3 values;
                             hardware_low_level_controller_.m5_unified.Imu.getAccel(&values.x, &values.y, &values.z);
@@ -236,7 +239,7 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(on_board_button_b);
         sensors_.push_back(on_board_button_c);
         sensors_.push_back(on_board_button_pwr);
-        sensors_.push_back(accelometer);
+        sensors_.push_back(accelerometer);
         sensors_.push_back(magnetometer);
         sensors_.push_back(gyroscope);
         sensors_.push_back(temperature);
@@ -365,11 +368,18 @@ struct TaskBoardDriver_v1 :
         return sensor;
     }
 
+    /// Virtual method implementation
+    const std::string& get_unique_ssid() const override
+    {
+        return unique_ssid_;
+    }
+
 private:
 
     HardwareLowLevelController& hardware_low_level_controller_;    ///< Reference to hardware interface
     std::vector<Sensor*> sensors_;                                 ///< List of all board sensors
     std::string unique_id_ = "TaskBoard_v1";                       ///< Board identifier
+    std::string unique_ssid_ = "Robothon Task Board";                       ///< Board identifier
 
     Task* default_task_;                    ///< Default main task sequence
     Task* default_precondition_task_;       ///< Default precondition task sequence

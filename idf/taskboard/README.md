@@ -48,6 +48,9 @@ Noteworthy features:
 
 ## Build firmware
 
+> [!IMPORTANT]
+Make sure to configure the specific controller hardware and partition filename needed for your board as explained below in the menuconfig step.
+
 The Robothon Task Board Firmware is built on top of the ESP-IDF framework.
 
 The easiest way to get started is to use the ESP-IDF Docker image:
@@ -70,7 +73,21 @@ git submodule update --init --recursive
 cd /robotlearningblock/idf/taskboard
 
 # Configure the project
+idf.py menuconfig
+# M5STACK controller -> M5STACK hardware (Select the hardware of the M5 HW on your board)
+# Partition Table -> Custom partition CSV file
+#     "partitions.csv" (default) for M5STACK StickC Plus2 and M5STACK CORE2
+#     "partitions_stickcplus.csv" for M5STACK StickC Plus (version with 4MB of FLASH memory)
+
+# Deploy to the board and monitor execution
 idf.py build flash monitor
+```
+
+To update a `M5STACK StickC Plus` (the version with 4MB of FLASH memory), it is necessary to use a different baud rate for flashing:
+
+```bash
+# Deploy to the board and monitor execution
+idf.py build && idf.py -b 500000 flash && idf.py monitor
 ```
 
 To run `idf.py` from any additional terminal attached to the Docker, the following command is needed:
@@ -322,6 +339,8 @@ By means of these buttons, the following basic configuration actions can be perf
 After the Task Board is started in provisioning mode, it will create a Wi-Fi network.
 
 The board will notify in its screen the SSID of the new network and the IP address of the board.
+
+The Wi-Fi SSID is "Robothon Task Board " + the last three characters of the MAC address of the device.
 
 By reaching the IP address of the board in a web browser, the Web Interface will be shown:
 

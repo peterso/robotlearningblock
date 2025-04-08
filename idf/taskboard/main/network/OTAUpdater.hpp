@@ -52,7 +52,7 @@ struct OTAUpdater
 
         if (err == ESP_OK)
         {
-            ESP_LOGI(TAG, "HTTP GET readed = %d", http_data_.size());
+            ESP_LOGI(TAG, "HTTP GET read = %d", http_data_.size());
 
             cJSON* root = cJSON_Parse(http_data_.c_str());
 
