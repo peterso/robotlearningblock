@@ -51,5 +51,26 @@ struct TaskStepEqualToRandom :
 
 private:
 
+    /// Virtual method implementation
+    void show_clue_implementation(
+            ClueScreenController& screen_controller) const override
+    {
+        if (!success())
+        {
+            screen_controller.print_task_clue(sensor_.name() + " != " + random_expected_value_.to_string());
+
+            const auto sensor_value = sensor_.read();
+
+            if (sensor_value.get_type() == SensorMeasurement::Type::ANALOG)
+            {
+                screen_controller.print_task_clue_analog(sensor_value.get_analog(), random_expected_value_.get_analog());
+            }
+        }
+        else
+        {
+            reset_clue();
+        }
+    }
+
     mutable SensorMeasurement random_expected_value_;    ///< Current random target value, updated when matched
 };
