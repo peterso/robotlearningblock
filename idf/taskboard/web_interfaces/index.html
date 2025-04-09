@@ -271,6 +271,8 @@
             padding: 10px;
             background: #f8f8f8;
             border-radius: 4px;
+            flex-wrap: wrap;
+            padding-left: 2.2rem;
         }
         .step.done {
             background: #e8f5e9;
@@ -281,6 +283,7 @@
         .step-status {
             font-size: 1.2em;
             color: #666;
+            margin-left: -1.5rem;
         }
         .step.done .step-status {
             color: #4caf50;
@@ -1229,6 +1232,7 @@
                                     <span class="step-status">${step.done ? '✓' : '○'}</span>
                                     <span class="step-name">${step.sensor}</span>
                                     ${step.finish_time || step.finish_time == 0.0 ? '<span class="step-time">' + step.finish_time.toFixed(2) + ' s</span>' : ''}
+                                    ${step.score || step.score == 0.0 ? '<span>·</span><span>' + step.score.toFixed(0) + '%</span>' : ''}
                                 </div>
                             `).join('')}
                         </div>
