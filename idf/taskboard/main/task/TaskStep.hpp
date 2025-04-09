@@ -169,6 +169,15 @@ struct TaskStep :
     virtual bool success() const = 0;
 
     /**
+     * @brief Calculates the score for this step
+     *
+     * @details The score is a measurement of how well the task has been performed.
+     *
+     * @return Score value between 0 and 100, where 0 means no success and 100 means full success.
+     */
+    virtual float score() const = 0;
+
+    /**
      * @brief Gets the target value for this step
      *
      * @return Expected sensor measurement value

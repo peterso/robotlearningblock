@@ -41,6 +41,12 @@ struct TaskStepGreaterEqualThan :
     }
 
     /// Virtual method implementation
+    float score() const override
+    {
+        return 100.0f;
+    }
+
+    /// Virtual method implementation
     SensorMeasurement expected_value() const override
     {
         return expected_value_;

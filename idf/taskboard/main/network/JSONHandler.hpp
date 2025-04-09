@@ -252,6 +252,7 @@ struct JSONHandler
 
             if (task.step_done(i))
             {
+                cJSON_AddNumberToObject(step, "score", task.step_score(i));
                 cJSON_AddNumberToObject(step, "finish_time", task.step_done_time(i) / 1e6);
             }
 

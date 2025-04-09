@@ -58,6 +58,7 @@ struct SequentialTask :
         // Initialize step finish time if not done yet
         if (steps_finish_time_.size() == 0)
         {
+            steps_score_.resize(steps_.size(), -1.0f);
             steps_finish_time_.resize(steps_.size(), -1);
         }
 
@@ -65,6 +66,7 @@ struct SequentialTask :
         {
             if (steps_[current_step_]->success())
             {
+                steps_score_[current_step_] = steps_[current_step_]->score();
                 steps_finish_time_[current_step_] = elapsed_time();
                 current_step_++;
 
@@ -95,6 +97,18 @@ struct SequentialTask :
     }
 
     /// Virtual method implementation
+    float step_score(
+            size_t step) const override
+    {
+        if (step >= steps_score_.size())
+        {
+            return -1;
+        }
+
+        return steps_score_[step];
+    }
+
+    /// Virtual method implementation
     int64_t step_done_time(
             size_t step) const override
     {
@@ -116,5 +130,6 @@ struct SequentialTask :
 private:
 
     size_t current_step_ = 0;                   ///< Index of current step being executed
+    std::vector<float> steps_score_;         ///< Score for each step
     std::vector<int64_t> steps_finish_time_;    ///< Completion status for each step
 };

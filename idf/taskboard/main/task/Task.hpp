@@ -64,6 +64,16 @@ struct Task
             size_t step) const = 0;
 
     /**
+     * @brief Gets the score of a specific step
+     *
+     * @param step Index of the step to check
+     *
+     * @return Score of the specified step
+     */
+    virtual float step_score(
+            size_t step) const = 0;
+
+    /**
      * @brief Gets step done time
      *
      * @param step Index of the step to check

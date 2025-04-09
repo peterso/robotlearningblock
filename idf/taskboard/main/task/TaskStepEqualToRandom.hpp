@@ -49,6 +49,12 @@ struct TaskStepEqualToRandom :
         return ret;
     }
 
+    /// Virtual method implementation
+    float score() const override
+    {
+        return 100.0f;
+    }
+
 private:
 
     /// Virtual method implementation
