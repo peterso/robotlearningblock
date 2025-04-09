@@ -227,6 +227,27 @@ struct TaskBoardDriver_v1 :
                             return red_button->read();
                         });
 
+        Sensor* touch_screen_position = new Sensor("TOUCH_SCREEN_POSITION", [&]()
+                        {
+                            SensorMeasurement::Vector3 values;
+                            m5::Touch_Class::touch_detail_t touch_detail = hardware_low_level_controller_.m5_unified.Touch.getDetail(0);
+                            if (touch_detail.isPressed())
+                            {
+                                m5gfx::touch_point_t touch_position = hardware_low_level_controller_.m5_unified.Touch.getTouchPointRaw(0);
+                                values.x = touch_position.x;
+                                values.y = touch_position.y;
+                                values.z = 0;
+                            }
+                            else
+                            {
+                                values.x = -1;
+                                values.y = -1;
+                                values.z = -1;
+                            }
+
+                            return SensorMeasurement(values);
+                        });
+
         // Store sensors
         sensors_.push_back(blue_button);
         sensors_.push_back(red_button);
@@ -249,6 +270,7 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(probe_goal);
         sensors_.push_back(fader_trigger_blue_button);
         sensors_.push_back(red_button_counter);
+        sensors_.push_back(touch_screen_position);
 
         // Initial update
         update();
