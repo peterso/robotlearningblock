@@ -165,20 +165,23 @@ struct ScreenController :
             const std::vector<SensorMeasurement>& expected_path,
             const std::vector<SensorMeasurement>& measured_path) override
     {
-        display_.drawCircle(expected_path[0].get_vector3().x, expected_path[0].get_vector3().y, 6, TFT_RED);
+        const int32_t w = display_.width();
+        const int32_t h = display_.height();
+
+        display_.fillCircle(expected_path[0].get_vector3().x * w / 100.0f, expected_path[0].get_vector3().y * h / 100.0f, 6, TFT_RED);
 
         for (size_t i = 1; i < expected_path.size(); i++)
         {
-            display_.drawLine(expected_path[i - 1].get_vector3().x, expected_path[i - 1].get_vector3().y, expected_path[i].get_vector3().x, expected_path[i].get_vector3().y);
+            display_.drawLine(expected_path[i - 1].get_vector3().x * w / 100.0f, expected_path[i - 1].get_vector3().y * h / 100.0f, expected_path[i].get_vector3().x * w / 100.0f, expected_path[i].get_vector3().y * h / 100.0f);
         }
 
         if (measured_path.size() > 0)
         {
-            display_.drawCircle(measured_path[0].get_vector3().x, measured_path[0].get_vector3().y, 6, TFT_BLUE);
+            display_.fillCircle(measured_path[0].get_vector3().x * w / 100.0f, measured_path[0].get_vector3().y * h / 100.0f, 6, TFT_BLUE);
 
             for (size_t i = 1; i < measured_path.size(); i++)
             {
-                display_.drawLine(measured_path[i - 1].get_vector3().x, measured_path[i - 1].get_vector3().y, measured_path[i].get_vector3().x, measured_path[i].get_vector3().y, TFT_BLUE);
+                display_.drawLine(measured_path[i - 1].get_vector3().x * w / 100.0f, measured_path[i - 1].get_vector3().y * h / 100.0f, measured_path[i].get_vector3().x * w / 100.0f, measured_path[i].get_vector3().y * h / 100.0f, TFT_BLUE);
             }
         }
     }

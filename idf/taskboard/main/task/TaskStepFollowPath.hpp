@@ -36,8 +36,6 @@ struct TaskStepFollowPath :
     void initializeStep() const
     {
         constexpr int32_t N_POINTS = 3;
-        const int32_t w = 320;
-        const int32_t h = 240;
 
         step_started_ = false;
 
@@ -47,14 +45,30 @@ struct TaskStepFollowPath :
         {
             // Generate random point
             SensorMeasurement::Vector3 next_point = SensorMeasurement::Vector3{
-                (float) esp_random() * w / UINT32_MAX,
-                (float) esp_random() * h / UINT32_MAX,
+                (float) esp_random() * 100.0f / UINT32_MAX,
+                (float) esp_random() * 100.0f / UINT32_MAX,
                 0.0f
             };
-            // TODO: Check if the point is within acceptable boundaries, and at enough distance from the previous point
-            // if ...
+            // Check if the point is too close to the edges of the screen
+            if (next_point.x < 5.0f || next_point.x > 95.0f ||
+                next_point.y < 30.0f || next_point.y > 90.0f)
+            {
+                // Do not add
+                continue;
+            }
+            // Check if the point is too close to the last point
+            if (!expected_path_.empty())
+            {
+                const auto last_point = expected_path_.back().get_vector3();
+                if (std::hypot(
+                        (last_point.x - next_point.x),
+                        (last_point.y - next_point.y)) < 30.0f)
+                {
+                    // Do not add
+                    continue;
+                }
+            }
             expected_path_.push_back(SensorMeasurement(next_point));
-            // end if
         }
 
         // Clear measured path
@@ -117,8 +131,8 @@ struct TaskStepFollowPath :
 
         // Calculate score based on distances and difference of lenghts
         float score = 100.0f
-                - 50.0*first_distance/hypot(320, 240)
-                - 50.0*last_distance/hypot(320, 240)
+                - 50.0*first_distance/141.42f
+                - 50.0*last_distance/141.42f
                 - 50.0*std::abs(expected_length - measured_length)/std::max(expected_length, measured_length);
 
         if (score < 0.0f)
