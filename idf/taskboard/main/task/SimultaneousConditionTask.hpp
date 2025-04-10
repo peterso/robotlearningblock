@@ -50,10 +50,12 @@ struct SimultaneousConditionTask :
 
                 if (!state)
                 {
+                    steps_score_[i] = -1.0f;
                     steps_finish_time_[i] = -1;
                 }
                 else
                 {
+                    steps_score_[i] = steps_[i]->score();
                     steps_finish_time_[i] = elapsed_time();
                 }
             }

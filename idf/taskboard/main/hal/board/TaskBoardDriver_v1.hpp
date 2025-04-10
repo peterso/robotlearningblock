@@ -12,6 +12,7 @@
 #include <sensor/TriggeredSensor.hpp>
 #include <task/TaskStepEqual.hpp>
 #include <task/TaskStepEqualToRandom.hpp>
+#include <task/TaskStepFollowPath.hpp>
 #include <task/SimultaneousConditionTask.hpp>
 #include <task/SequentialTask.hpp>
 #include <util/Timing.hpp>
@@ -227,6 +228,31 @@ struct TaskBoardDriver_v1 :
                             return red_button->read();
                         });
 
+        Sensor* touch_screen_position = new Sensor("TOUCH_SCREEN_POSITION", [&]()
+                        {
+                            m5gfx::M5GFX& display = hardware_low_level_controller_.m5_unified.Display;
+                            const int32_t w = display.width();
+                            const int32_t h = display.height();
+
+                            SensorMeasurement::Vector3 values;
+                            m5::Touch_Class::touch_detail_t touch_detail = hardware_low_level_controller_.m5_unified.Touch.getDetail(0);
+                            if (touch_detail.isPressed())
+                            {
+                                m5gfx::touch_point_t touch_position = hardware_low_level_controller_.m5_unified.Touch.getTouchPointRaw(0);
+                                values.x = touch_position.x * 100.0f / w;
+                                values.y = touch_position.y * 100.0f / h;
+                                values.z = 1;
+                            }
+                            else
+                            {
+                                values.x = -1;
+                                values.y = -1;
+                                values.z = 0;
+                            }
+
+                            return SensorMeasurement(values);
+                        });
+
         // Store sensors
         sensors_.push_back(blue_button);
         sensors_.push_back(red_button);
@@ -249,6 +275,7 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(probe_goal);
         sensors_.push_back(fader_trigger_blue_button);
         sensors_.push_back(red_button_counter);
+        sensors_.push_back(touch_screen_position);
 
         // Initial update
         update();
@@ -276,6 +303,7 @@ struct TaskBoardDriver_v1 :
         {
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
             timed_fader_operation,
+            new TaskStepFollowPath(*get_sensor_by_name("TOUCH_SCREEN_POSITION")),
             random_fader_step,
             new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),
@@ -379,7 +407,7 @@ private:
     HardwareLowLevelController& hardware_low_level_controller_;    ///< Reference to hardware interface
     std::vector<Sensor*> sensors_;                                 ///< List of all board sensors
     std::string unique_id_ = "TaskBoard_v1";                       ///< Board identifier
-    std::string unique_ssid_ = "Robothon Task Board";                       ///< Board identifier
+    std::string unique_ssid_ = "Robothon Task Board";              ///< Board identifier
 
     Task* default_task_;                    ///< Default main task sequence
     Task* default_precondition_task_;       ///< Default precondition task sequence

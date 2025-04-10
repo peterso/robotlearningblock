@@ -32,6 +32,16 @@ struct ClueScreenController
             const float& current_value,
             const float& target_value) = 0;
 
+     /*
+      * @brief Displays a path clue without feedback
+      *
+      * @param expected_path Vector of SensorMeasurement objects representing the expected path
+      * @param measured_path Vector of SensorMeasurement objects representing the measured path
+      */
+     virtual void print_task_clue_path(
+            const std::vector<SensorMeasurement>& expected_path,
+            const std::vector<SensorMeasurement>& measured_path) = 0;
+
     /**
      * @brief Clears the screen of any displayed clues
      */

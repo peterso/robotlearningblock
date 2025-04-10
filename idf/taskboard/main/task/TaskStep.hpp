@@ -140,7 +140,8 @@ struct TaskStep :
         EQUAL,              ///< Sensor value must exactly match target
         EQUAL_TO_RANDOM,    ///< Sensor value must match a randomly generated target
         GREATER_OR_EQUAL,   ///< Sensor value must be greater or equal to target
-        UNKNOWN             ///< UndefOined comparison type
+        FOLLOW_PATH,        ///< Sensor value must follow a specific path
+        UNKNOWN             ///< Undefined comparison type
     };
 
     /**
@@ -167,6 +168,15 @@ struct TaskStep :
      * @return true if condition is satisfied, false otherwise
      */
     virtual bool success() const = 0;
+
+    /**
+     * @brief Calculates the score for this step
+     *
+     * @details The score is a measurement of how well the task has been performed.
+     *
+     * @return Score value between 0 and 100, where 0 means no success and 100 means full success.
+     */
+    virtual float score() const = 0;
 
     /**
      * @brief Gets the target value for this step

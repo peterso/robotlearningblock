@@ -29,6 +29,7 @@ struct ParallelTask :
         : Task(steps, task_name, false)
     {
         steps_status_.resize(steps.size(), false);
+        steps_score_.resize(steps.size(), -1.0f);
         steps_finish_time_.resize(steps.size(), -1);
     }
 
@@ -63,6 +64,7 @@ struct ParallelTask :
             if (!steps_status_[i] && steps_[i]->success())
             {
                 steps_status_[i] = true;
+                steps_score_[i] = steps_[i]->score();
                 steps_finish_time_[i] = elapsed_time();
                 ret = true;
             }
@@ -93,6 +95,13 @@ struct ParallelTask :
     }
 
     /// Virtual method implementation
+    float step_score(
+            size_t step) const override
+    {
+        return steps_score_[step];
+    }
+
+    /// Virtual method implementation
     int64_t step_done_time(
             size_t step) const override
     {
@@ -109,5 +118,6 @@ struct ParallelTask :
 protected:
 
     std::vector<bool> steps_status_;            ///< Completion status for each step
+    std::vector<float> steps_score_;        ///< Score for each step
     std::vector<int64_t> steps_finish_time_;    ///< Completion status for each step
 };

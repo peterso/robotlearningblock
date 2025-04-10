@@ -52,6 +52,9 @@ struct MicroROSTypes
                 case ::TaskStep::Type::GREATER_OR_EQUAL:
                     ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_GREATER_EQUAL;
                     break;
+                case ::TaskStep::Type::FOLLOW_PATH:
+                    ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_FOLLOW_PATH;
+                    break;
                 default:
                     ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_UNKNOWN;
                     break;
@@ -102,6 +105,10 @@ struct MicroROSTypes
             microros_msg_.status.data = new bool[task.total_steps()];
             microros_msg_.status.size = task.total_steps();
             microros_msg_.status.capacity = task.total_steps();
+
+            microros_msg_.score.data = new float[task.total_steps()];
+            microros_msg_.score.size = task.total_steps();
+            microros_msg_.score.capacity = task.total_steps();
 
             microros_msg_.finish_times.data = new builtin_interfaces__msg__Time[task.total_steps()];
             microros_msg_.finish_times.size = task.total_steps();
@@ -167,10 +174,12 @@ struct MicroROSTypes
 
                 if (task.step_done(i))
                 {
+                    microros_msg_.score.data[i] = task.step_score(i);
                     microros_msg_.finish_times.data[i] = usec_to_microros(task.step_done_time(i));
                 }
                 else
                 {
+                    microros_msg_.score.data[i] = {};
                     microros_msg_.finish_times.data[i] = {};
                 }
             }
@@ -202,6 +211,10 @@ struct MicroROSTypes
             microros_msg_.status.data = nullptr;
             microros_msg_.status.size = 0;
             microros_msg_.status.capacity = 0;
+
+            microros_msg_.score.data = nullptr;
+            microros_msg_.score.size = 0;
+            microros_msg_.score.capacity = 0;
 
             microros_msg_.finish_times.data = nullptr;
             microros_msg_.finish_times.size = 0;
@@ -242,6 +255,11 @@ struct MicroROSTypes
             if (microros_msg_.status.data != nullptr)
             {
                 delete microros_msg_.status.data;
+            }
+
+            if (microros_msg_.score.data != nullptr)
+            {
+                delete microros_msg_.score.data;
             }
 
             if (microros_msg_.finish_times.data != nullptr)

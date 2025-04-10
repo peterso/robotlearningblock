@@ -5,4 +5,5 @@ bool waiting_precondition
 builtin_interfaces/Time elapsed_time
 TaskStep[] steps
 bool[] status
+float32[] score
 builtin_interfaces/Time[] finish_times
