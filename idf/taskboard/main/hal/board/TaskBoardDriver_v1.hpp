@@ -237,13 +237,13 @@ struct TaskBoardDriver_v1 :
                                 m5gfx::touch_point_t touch_position = hardware_low_level_controller_.m5_unified.Touch.getTouchPointRaw(0);
                                 values.x = touch_position.x;
                                 values.y = touch_position.y;
-                                values.z = 0;
+                                values.z = 1;
                             }
                             else
                             {
                                 values.x = -1;
                                 values.y = -1;
-                                values.z = -1;
+                                values.z = 0;
                             }
 
                             return SensorMeasurement(values);

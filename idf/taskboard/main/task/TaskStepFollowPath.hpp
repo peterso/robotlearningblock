@@ -51,7 +51,7 @@ struct TaskStepFollowPath :
                 (float) esp_random() * h / UINT32_MAX,
                 0.0f
             };
-            // Check if the point is within acceptable boundaries and distance from the previous point
+            // TODO: Check if the point is within acceptable boundaries, and at enough distance from the previous point
             // if ...
             expected_path_.push_back(SensorMeasurement(next_point));
             // end if
@@ -65,17 +65,19 @@ struct TaskStepFollowPath :
     bool success() const override
     {
         const auto sensor_value = sensor_.read();
-        bool pressing_screen = (sensor_value.get_vector3().z == 0);
+        bool pressing_screen = (sensor_value.get_vector3().z != 0);
         if (!step_started_)
         {
             step_started_ = pressing_screen;
         }
         else
         {
-            measured_path_.push_back(sensor_value.get_vector3());
-            if (!pressing_screen)
+            if (pressing_screen)
             {
-                initializeStep();
+                measured_path_.push_back(sensor_value.get_vector3());
+            }
+            else
+            {
                 return true;
             }
         }
@@ -85,9 +87,47 @@ struct TaskStepFollowPath :
     /// Virtual method implementation
     float score() const override
     {
-        float score = 0.0f;
-        // Implement score function
-        // ...
+        // Calculate distance between first point of expected path and first point of measured path
+        float first_distance = std::hypot(
+                (expected_path_[0].get_vector3().x - measured_path_[0].get_vector3().x),
+                (expected_path_[0].get_vector3().y - measured_path_[0].get_vector3().y));
+
+        // Calculate distance between last point of expected path and last point of measured path
+        float last_distance = std::hypot(
+                (expected_path_[expected_path_.size() - 1].get_vector3().x - measured_path_[measured_path_.size() - 1].get_vector3().x),
+                (expected_path_[expected_path_.size() - 1].get_vector3().y - measured_path_[measured_path_.size() - 1].get_vector3().y));
+
+        // Calculate length of expected path
+        float expected_length = 0.0f;
+        for (size_t i = 1; i < expected_path_.size(); i++)
+        {
+            expected_length += std::hypot(
+                    (expected_path_[i].get_vector3().x - expected_path_[i - 1].get_vector3().x),
+                    (expected_path_[i].get_vector3().y - expected_path_[i - 1].get_vector3().y));
+        }
+
+        // Calculate length of measured path
+        float measured_length = 0.0f;
+        for (size_t i = 1; i < measured_path_.size(); i++)
+        {
+            measured_length += std::hypot(
+                    (measured_path_[i].get_vector3().x - measured_path_[i - 1].get_vector3().x),
+                    (measured_path_[i].get_vector3().y - measured_path_[i - 1].get_vector3().y));
+        }
+
+        // Calculate score based on distances and difference of lenghts
+        float score = 100.0f
+                - 50.0*first_distance/hypot(320, 240)
+                - 50.0*last_distance/hypot(320, 240)
+                - 50.0*std::abs(expected_length - measured_length)/std::max(expected_length, measured_length);
+
+        if (score < 0.0f)
+        {
+            score = 0.0f;
+        }
+
+        initializeStep();
+        
         return score;
     }
 

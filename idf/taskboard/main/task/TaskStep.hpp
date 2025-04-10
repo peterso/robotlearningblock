@@ -141,7 +141,7 @@ struct TaskStep :
         EQUAL_TO_RANDOM,    ///< Sensor value must match a randomly generated target
         GREATER_OR_EQUAL,   ///< Sensor value must be greater or equal to target
         FOLLOW_PATH,        ///< Sensor value must follow a specific path
-        UNKNOWN             ///< UndefOined comparison type
+        UNKNOWN             ///< Undefined comparison type
     };
 
     /**
