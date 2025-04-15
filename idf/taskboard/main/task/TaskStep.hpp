@@ -184,6 +184,13 @@ struct TaskStepBase :
     virtual float score() const = 0;
 
     /**
+     * @brief Checks if the step is automatic or operated
+     * 
+     * @return true if the step is automatic, false if it requires operation
+     */
+    virtual bool is_auto() const = 0;
+
+    /**
      * @brief Gets the comparison type for this step
      *
      * @return Reference to the step's comparison type
@@ -240,6 +247,12 @@ struct TaskStep :
         return sensor_.name();
     }
 
+    /// Virtual method implementation
+    bool is_auto() const override
+    {
+        return false;
+    }
+
     /**
      * @brief Gets the associated sensor
      *
@@ -280,6 +293,12 @@ struct TaskStepAuto :
     const std::string& name() const override
     {
         return name_;
+    }
+
+    /// Virtual method implementation
+    bool is_auto() const override
+    {
+        return true;
     }
 
     /// Virtual method implementation
