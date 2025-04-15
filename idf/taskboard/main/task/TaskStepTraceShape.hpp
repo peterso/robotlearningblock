@@ -10,25 +10,25 @@
 #include <esp_log.h>
 
 /**
- * @struct TaskStepFollowPath
+ * @struct TaskStepTraceShape
  *
  * @brief Implementation of TaskStep that checks how closely a path is followed
  *
  * @details Performs trace score evaluation between measured path and desired path
  */
-struct TaskStepFollowPath :
+struct TaskStepTraceShape :
     public TaskStep
 {
     /**
-     * @brief Constructs a new TaskStepFollowPath object
+     * @brief Constructs a new TaskStepTraceShape object
      *
      * @param sensor Reference to the sensor to monitor
      */
-    TaskStepFollowPath(
+    TaskStepTraceShape(
             SensorReader& sensor)
         : TaskStep(sensor)
     {
-        TaskStep::type_ = Type::FOLLOW_PATH;
+        TaskStep::type_ = Type::TRACE_SHAPE;
 
         initializeStep();
     }

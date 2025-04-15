@@ -13,7 +13,7 @@
 #include <sensor/TriggeredSensor.hpp>
 #include <task/TaskStepEqual.hpp>
 #include <task/TaskStepEqualToRandom.hpp>
-#include <task/TaskStepFollowPath.hpp>
+#include <task/TaskStepTraceShape.hpp>
 #include <task/SimultaneousConditionTask.hpp>
 #include <task/SequentialTask.hpp>
 #include <util/Timing.hpp>
@@ -304,7 +304,7 @@ struct TaskBoardDriver_v1 :
         {
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
             timed_fader_operation,
-            new TaskStepFollowPath(*get_sensor_by_name("TOUCH_SCREEN_POSITION")),
+            new TaskStepTraceShape(*get_sensor_by_name("TOUCH_SCREEN_POSITION")),
             random_fader_step,
             new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),

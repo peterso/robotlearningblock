@@ -52,8 +52,8 @@ struct MicroROSTypes
                 case ::TaskStep::Type::GREATER_OR_EQUAL:
                     ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_GREATER_EQUAL;
                     break;
-                case ::TaskStep::Type::FOLLOW_PATH:
-                    ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_FOLLOW_PATH;
+                case ::TaskStep::Type::TRACE_SHAPE:
+                    ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_TRACE_SHAPE;
                     break;
                 default:
                     ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_UNKNOWN;
