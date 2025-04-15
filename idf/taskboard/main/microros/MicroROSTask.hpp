@@ -149,6 +149,6 @@ struct MicroROSTask :
 private:
 
     rclc_action_goal_handle_t const* const goal_handle_;    ///< Pointer to the micro-ROS action goal handle
-    std::vector<const TaskStep*> steps_;                    ///< List of task steps
+    std::vector<const TaskStepBase*> steps_;                ///< List of task steps
     bool steps_from_default_task_ = false;                  ///< Flag to indicate if steps are from default task
 };

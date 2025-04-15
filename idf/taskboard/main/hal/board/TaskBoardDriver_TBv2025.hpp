@@ -14,6 +14,7 @@
 #include <task/TaskStepEqual.hpp>
 #include <task/TaskStepEqualToRandom.hpp>
 #include <task/TaskStepTraceShape.hpp>
+#include <task/TaskStepWaitRandom.hpp>
 #include <task/SimultaneousConditionTask.hpp>
 #include <task/SequentialTask.hpp>
 #include <util/Timing.hpp>
@@ -282,7 +283,7 @@ struct TaskBoardDriver_v1 :
         update();
 
         // Create default tasks
-        std::vector<const TaskStep*>* precondition_steps = new std::vector<const TaskStep*>
+        std::vector<const TaskStepBase*>* precondition_steps = new std::vector<const TaskStepBase*>
         {
             new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.0f), 0.1f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(false)),
@@ -300,13 +301,14 @@ struct TaskBoardDriver_v1 :
                 new TaskStepEqualToRandom(*get_sensor_by_name("FADER"), 0.05f);
         // random_fader_step->set_clue_timeout(*get_sensor_by_name("BLUE_BUTTON"), 3000);
 
-        std::vector<const TaskStep*>* main_steps = new std::vector<const TaskStep*>
+        std::vector<const TaskStepBase*>* main_steps = new std::vector<const TaskStepBase*>
         {
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
             timed_fader_operation,
             new TaskStepTraceShape(*get_sensor_by_name("TOUCH_SCREEN_POSITION")),
             random_fader_step,
             new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
+            new TaskStepWaitRandom("WAIT_FOR_BALL_RELEASE"),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("ATTACHED_CABLE"), SensorMeasurement(true)),

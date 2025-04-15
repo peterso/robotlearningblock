@@ -24,7 +24,7 @@ struct SequentialTask :
      * @param first_task_init_timer If true, timer starts only after first step completion
      */
     SequentialTask(
-            const std::vector<const TaskStep*>& steps,
+            const std::vector<const TaskStepBase*>& steps,
             const std::string& task_name = "",
             bool first_task_init_timer = false)
         : Task(steps, task_name, first_task_init_timer)
@@ -73,7 +73,7 @@ struct SequentialTask :
                 // Restart status of the next step
                 if (current_step_ < steps_.size())
                 {
-                    steps_[current_step_]->sensor().start_read();
+                    steps_[current_step_]->restart_step();
                 }
 
                 ret = true;

@@ -37,10 +37,11 @@ struct SensorMeasurement
      */
     enum class Type
     {
-        BOOLEAN,    ///< Boolean measurement type
-        ANALOG,     ///< Analog (float) measurement type
-        VECTOR3,    ///< 3D vector measurement type
-        INTEGER     ///< Integer measurement type
+        BOOLEAN = 1,    ///< Boolean measurement type
+        ANALOG  = 2,    ///< Analog (float) measurement type
+        VECTOR3 = 3,    ///< 3D vector measurement type
+        INTEGER = 4,    ///< Integer measurement type
+        EMPTY   = 5     ///< Empty measurement type
     };
 
     /**
@@ -92,6 +93,14 @@ struct SensorMeasurement
     }
 
     /**
+     * @brief Constructs an empty SensorMeasurement
+     */
+    SensorMeasurement()
+        : type_(Type::EMPTY)
+    {
+    }
+
+    /**
      * @brief Gets the type of measurement stored
      * @return Type enum indicating measurement type
      */
@@ -120,6 +129,9 @@ struct SensorMeasurement
                 break;
             case Type::INTEGER:
                 return std::to_string(integer_value);
+                break;
+            case Type::EMPTY:
+                return "";
                 break;
         }
 
@@ -160,6 +172,9 @@ struct SensorMeasurement
                 case Type::INTEGER:
                     ret = a.integer_value == b.integer_value;
                     break;
+                case Type::EMPTY:
+                    ret = true;
+                    break;
             }
         }
 
@@ -197,6 +212,9 @@ struct SensorMeasurement
                     break;
                 case Type::INTEGER:
                     ret = a.integer_value >= b.integer_value;
+                    break;
+                case Type::EMPTY:
+                    ret = true;
                     break;
             }
         }

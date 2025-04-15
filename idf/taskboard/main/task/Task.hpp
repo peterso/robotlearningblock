@@ -34,7 +34,7 @@ struct Task
      * @param first_task_init_timer If true, timer starts only after first step completion
      */
     Task(
-            const std::vector<const TaskStep*>& steps,
+            const std::vector<const TaskStepBase*>& steps,
             const std::string& task_name = "",
             bool first_task_init_timer = false)
         : steps_(steps)
@@ -110,9 +110,9 @@ struct Task
         previous_done_state_ = false;
 
         // Restart all sensor reads
-        for (const TaskStep* step : steps_)
+        for (const TaskStepBase* step : steps_)
         {
-            step->sensor().start_read();
+            step->restart_step();
         }
 
         // Regenerate unique ID
@@ -191,7 +191,7 @@ struct Task
      *
      * @return Const reference to the TaskStep object
      */
-    const TaskStep& step(
+    const TaskStepBase& step(
             size_t step) const
     {
         return *steps_[step];
@@ -235,7 +235,7 @@ protected:
         task_name_ = task_name;
     }
 
-    const std::vector<const TaskStep*>& steps_;     ///< Sequence of steps in the task
+    const std::vector<const TaskStepBase*>& steps_;     ///< Sequence of steps in the task
 
 private:
 
