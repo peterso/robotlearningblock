@@ -5,9 +5,9 @@
 #include <sdkconfig.h>
 
 #if CONFIG_M5STACK_CORE2
-#include <hal/board/TaskBoardDriver_v1.hpp>
+#include <hal/board/TaskBoardDriver_TBv2025.hpp>
 #else
-#include <hal/board/TaskBoardDriver_v1_RBv2023.hpp>
+#include <hal/board/TaskBoardDriver_TBv2023.hpp>
 #endif
 
 #include <util/Timing.hpp>
