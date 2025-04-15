@@ -2,7 +2,13 @@
  * Robothon Task Board Firmware
  */
 
+#include <sdkconfig.h>
+
+#if CONFIG_M5STACK_CORE2
 #include <hal/board/TaskBoardDriver_v1.hpp>
+#else
+#include <hal/board/TaskBoardDriver_v1_RBv2023.hpp>
+#endif
 
 #include <util/Timing.hpp>
 #include <network/HTTPServer.hpp>
