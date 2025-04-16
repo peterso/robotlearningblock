@@ -62,7 +62,6 @@ struct SequentialTask :
             steps_score_.resize(steps_.size(), -1.0f);
             steps_finish_time_.resize(steps_.size(), -1);
             steps_completion_time_.resize(steps_.size(), -1);
-            steps_time_sum_ = 0;
         }
 
         if (current_step_ < steps_.size())
@@ -167,6 +166,7 @@ struct SequentialTask :
     void restart() override
     {
         current_step_ = 0;
+        steps_time_sum_ = 0;
         Task::restart();
     }
 
