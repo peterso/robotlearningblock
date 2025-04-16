@@ -102,6 +102,26 @@ struct ParallelTask :
     }
 
     /// Virtual method implementation
+    float final_score() const override
+    {
+        float final_score = 0;
+        uint16_t steps_scored_count = 0;
+        for (const float step_score : steps_score_)
+        {
+            if (step_score >= 0.0)
+            {
+                final_score += step_score;
+                steps_scored_count++;
+            }
+        }
+        if (steps_scored_count > 0)
+        {
+            final_score /= steps_scored_count;
+        }
+        return final_score;
+    }
+
+    /// Virtual method implementation
     int64_t step_done_time(
             size_t step) const override
     {

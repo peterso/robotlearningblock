@@ -516,9 +516,10 @@
                 <table class="tasks-table">
                     <thead>
                         <tr>
+                            <th></th>
                             <th>Task</th>
                             <th>Time</th>
-                            <th></th>
+                            <th>Score</th>
                             <th>UUID</th>
                         </tr>
                     </thead>
@@ -1389,7 +1390,7 @@
                     .filter(line => line.trim()) // Remove empty lines
                     .map(line => {
                         // Match values using regex to handle the JSON array correctly
-                        const regex = /([^,]+),([^,]+),([^,]+),([^,]+),(\[.*\])/;
+                        const regex = /([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),(\[.*\])/;
                         const match = line.match(regex);
 
                         if (!match) {
@@ -1397,11 +1398,12 @@
                             return null;
                         }
 
-                        const [, taskName, timestamp, isHuman, uniqueId, steps_times] = match;
+                        const [, taskName, timestamp, score, isHuman, uniqueId, steps_times] = match;
 
                         return {
                             taskName,
                             timestamp: parseInt(timestamp, 10),
+                            score: parseFloat(score),
                             isHuman: parseInt(isHuman, 10) === 1,
                             uniqueId,
                             steps_times: JSON.parse(steps_times)
@@ -1418,9 +1420,10 @@
                     row.className = 'leaderboard-row';
                     row.innerHTML = `
 
+                        <td>${entry.isHuman ? '👤' : '🤖'}</td>
                         <td>${entry.taskName}</td>
                         <td class="time-cell">${(entry.timestamp / 1000000).toFixed(3)} s</td>
-                        <td>${entry.isHuman ? '👤' : '🤖'}</td>
+                        <td>${entry.score.toFixed(1)} %</td>
                         <td class="uuid-cell">
                             ${entry.uniqueId.substring(0, 8)}...
                             <span class="uuid-tooltip">${entry.uniqueId}</span>

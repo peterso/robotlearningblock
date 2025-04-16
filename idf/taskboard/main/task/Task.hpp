@@ -74,6 +74,13 @@ struct Task
             size_t step) const = 0;
 
     /**
+     * @brief Gets the final score of the protocol
+     * 
+     * @return Score of the protocol
+     */
+    virtual float final_score() const = 0;
+
+    /**
      * @brief Gets step done time
      *
      * @param step Index of the step to check
