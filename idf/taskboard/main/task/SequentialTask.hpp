@@ -16,6 +16,7 @@
 struct SequentialTask :
     public Task
 {
+    const char* TAG = "SequentialTask";                    ///< Logging tag
     /**
      * @brief Constructs a new SequentialTask object
      *
@@ -24,7 +25,7 @@ struct SequentialTask :
      * @param first_task_init_timer If true, timer starts only after first step completion
      */
     SequentialTask(
-            const std::vector<const TaskStep*>& steps,
+            const std::vector<const TaskStepBase*>& steps,
             const std::string& task_name = "",
             bool first_task_init_timer = false)
         : Task(steps, task_name, first_task_init_timer)
@@ -60,6 +61,8 @@ struct SequentialTask :
         {
             steps_score_.resize(steps_.size(), -1.0f);
             steps_finish_time_.resize(steps_.size(), -1);
+            steps_completion_time_.resize(steps_.size(), -1);
+            steps_time_sum_ = 0;
         }
 
         if (current_step_ < steps_.size())
@@ -68,12 +71,26 @@ struct SequentialTask :
             {
                 steps_score_[current_step_] = steps_[current_step_]->score();
                 steps_finish_time_[current_step_] = elapsed_time();
+                if (current_step_ == 0)
+                {
+                    steps_completion_time_[current_step_] = steps_finish_time_[current_step_];
+                }
+                else
+                {
+                    steps_completion_time_[current_step_] = steps_finish_time_[current_step_] - steps_finish_time_[current_step_ - 1];
+                }
+
+                if (!steps_[current_step_]->is_auto())
+                {
+                    steps_time_sum_ += steps_completion_time_[current_step_];
+                }
+                
                 current_step_++;
 
                 // Restart status of the next step
                 if (current_step_ < steps_.size())
                 {
-                    steps_[current_step_]->sensor().start_read();
+                    steps_[current_step_]->restart_step();
                 }
 
                 ret = true;
@@ -112,12 +129,18 @@ struct SequentialTask :
     int64_t step_done_time(
             size_t step) const override
     {
-        if (step >= steps_finish_time_.size())
+        if (step >= steps_completion_time_.size())
         {
             return -1;
         }
 
-        return steps_finish_time_[step];
+        return steps_completion_time_[step];
+    }
+    
+    /// Virtual method implementation
+    int64_t total_task_time() const
+    {
+        return steps_time_sum_;
     }
 
     /// Virtual method implementation
@@ -129,7 +152,9 @@ struct SequentialTask :
 
 private:
 
-    size_t current_step_ = 0;                   ///< Index of current step being executed
-    std::vector<float> steps_score_;         ///< Score for each step
-    std::vector<int64_t> steps_finish_time_;    ///< Completion status for each step
+    size_t current_step_ = 0;                       ///< Index of current step being executed
+    std::vector<float> steps_score_;                ///< Score for each step
+    std::vector<int64_t> steps_finish_time_;        ///< Completion status for each step
+    std::vector<int64_t> steps_completion_time_;    ///< Completion time for each step
+    int64_t steps_time_sum_ = 0;                    ///< Calculated task total time
 };

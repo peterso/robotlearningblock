@@ -106,7 +106,7 @@ struct NonVolatileStorage
         // Write CSV line: timestamp, task name, is_human
         fprintf(file, "%s,%lld,%d,%s,",
                 task.name().c_str(),
-                task.elapsed_time(),
+                task.total_task_time(),
                 is_human ? 1 : 0,
                 task.unique_id().c_str());
 
@@ -131,7 +131,7 @@ struct NonVolatileStorage
         fflush(file);
 
         ESP_LOGI(TAG, "Added new register: %s, %lld, %d",
-                task.name().c_str(), task.elapsed_time(), is_human ? 1 : 0);
+                task.name().c_str(), task.total_task_time(), is_human ? 1 : 0);
 
         fclose(file);
     }

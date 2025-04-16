@@ -150,6 +150,8 @@ struct JSONHandler
                         cJSON_AddItemToObject(sensor, "is_integer", is_integer);
                         break;
                     }
+                    case SensorMeasurement::Type::EMPTY:
+                        break;
                 }
 
                 cJSON_AddItemToArray(sensors_, sensor);
@@ -199,6 +201,8 @@ struct JSONHandler
                         cJSON_AddNumberToObject(root_, sensor_dev->name().c_str(), value);
                         break;
                     }
+                    case SensorMeasurement::Type::EMPTY:
+                        break;
                 }
             }
         }
@@ -246,7 +250,7 @@ struct JSONHandler
         for (size_t i = 0; i < task.total_steps(); i++)
         {
             cJSON* step = cJSON_CreateObject();
-            cJSON_AddStringToObject(step, "sensor", task.step(i).sensor().name().c_str());
+            cJSON_AddStringToObject(step, "sensor", task.step(i).name().c_str());
             cJSON* done = task.step_done(i) ? cJSON_CreateTrue() : cJSON_CreateFalse();
             cJSON_AddItemToObject(step, "done", done);
 

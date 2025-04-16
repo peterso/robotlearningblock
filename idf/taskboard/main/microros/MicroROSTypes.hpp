@@ -116,14 +116,14 @@ struct MicroROSTypes
 
             for (size_t i = 0; i < task.total_steps(); i++)
             {
-                const ::TaskStep& step = task.step(i);
+                const ::TaskStepBase& step = task.step(i);
 
                 robothon_taskboard_msgs__msg__TaskStep& msg_step = microros_msg_.steps.data[i];
                 msg_step = {};
 
-                msg_step.sensor_name.data = (char*)step.sensor().name().c_str();
-                msg_step.sensor_name.size = step.sensor().name().size();
-                msg_step.sensor_name.capacity = step.sensor().name().size() + 1;
+                msg_step.sensor_name.data = (char*)step.name().c_str();
+                msg_step.sensor_name.size = step.name().size();
+                msg_step.sensor_name.capacity = step.name().size() + 1;
 
                 if (step.clue_trigger() != nullptr)
                 {
@@ -167,6 +167,8 @@ struct MicroROSTypes
                         msg_step.target.integer_value.data[0] = step.expected_value().get_integer();
                         msg_step.target.integer_value.size = 1;
                         msg_step.target.integer_value.capacity = 1;
+                        break;
+                    case ::SensorMeasurement::Type::EMPTY:
                         break;
                 }
 
@@ -588,6 +590,8 @@ struct MicroROSTypes
                         sensor_data.value.integer_value.capacity = 1;
                         sensor_data.value.integer_value.data[0] = sensor_value.get_integer();
                         break;
+                    case ::SensorMeasurement::Type::EMPTY:
+                        break;
                 }
             }
 
@@ -616,6 +620,8 @@ struct MicroROSTypes
                         break;
                     case ::SensorMeasurement::Type::INTEGER:
                         delete sensor_data.value.integer_value.data;
+                        break;
+                    case ::SensorMeasurement::Type::EMPTY:
                         break;
                 }
             }
