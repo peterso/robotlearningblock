@@ -6,7 +6,7 @@ menu "M5STACK controller"
 
 choice CONTROLLER_HARDWARE
     prompt "M5STACK hardware"
-    default M5STACK_STICKC_PLUS2
+    default M5STACK_CORE2
     config M5STACK_STICKC_PLUS2
         bool "M5STACK_STICKC_PLUS2"
     config M5STACK_CORE2
