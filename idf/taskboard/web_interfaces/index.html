@@ -1336,7 +1336,7 @@
                                     <span class="step-status">${step.done ? '✓' : '○'}</span>
                                     <span class="step-name">${step.sensor}</span>
                                     ${step.finish_time || step.finish_time == 0.0 ? '<span class="step-time">' + step.finish_time.toFixed(2) + ' s</span>' : ''}
-                                    ${step.score || step.score == 0.0 ? '<span>·</span><span>' + step.score.toFixed(0) + '%</span>' : ''}
+                                    ${step.score >= 0.0 && step.score < 100.0 ? '<span>·</span><span>' + step.score.toFixed(0) + '%</span>' : ''}
                                 </div>
                             `).join('')}
                         </div>
