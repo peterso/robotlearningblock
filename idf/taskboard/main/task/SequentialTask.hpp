@@ -16,6 +16,7 @@
 struct SequentialTask :
     public Task
 {
+    const char* TAG = "SequentialTask";                    ///< Logging tag
     /**
      * @brief Constructs a new SequentialTask object
      *
@@ -69,7 +70,7 @@ struct SequentialTask :
             if (steps_[current_step_]->success())
             {
                 steps_score_[current_step_] = steps_[current_step_]->score();
-                steps_finish_time_[current_step_] = Task::elapsed_time();
+                steps_finish_time_[current_step_] = elapsed_time();
                 if (current_step_ == 0)
                 {
                     steps_completion_time_[current_step_] = steps_finish_time_[current_step_];
@@ -137,7 +138,7 @@ struct SequentialTask :
     }
     
     /// Virtual method implementation
-    int64_t elapsed_time() const
+    int64_t total_task_time() const
     {
         return steps_time_sum_;
     }

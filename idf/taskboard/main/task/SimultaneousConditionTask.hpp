@@ -64,4 +64,10 @@ struct SimultaneousConditionTask :
         return ret;
     }
 
+    /// Virtual method implementation
+    int64_t total_task_time() const override
+    {
+        return elapsed_time();
+    }
+
 };

@@ -121,6 +121,13 @@ struct Task
     }
 
     /**
+     * @brief Gets the total time taken for the task without taking into account automatic steps
+     *
+     * @return Total time in microseconds
+     */
+    virtual int64_t total_task_time() const = 0;
+
+    /**
      * @brief Gets the elapsed time since task start
      *
      * @return Elapsed time in microseconds
