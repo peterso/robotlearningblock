@@ -22,8 +22,13 @@ struct TaskStepWaitRandom :
      * 
      * @param name Name identifier for the task step
      */
-    TaskStepWaitRandom(std::string name = "")
-        : TaskStepAuto(name)
+    TaskStepWaitRandom(
+            std::string name = "",
+            int64_t minimum_waiting_time_ms = 2000L,
+            int64_t maximum_waiting_time_ms = 10000L)
+        : TaskStepAuto(name),
+            minimum_waiting_time_us_(minimum_waiting_time_ms * 1000L),
+            waiting_time_range_us_((maximum_waiting_time_ms - minimum_waiting_time_ms) * 1000L)
     {
         TaskStepAuto::type_ = Type::WAIT_RANDOM;
 
@@ -32,9 +37,9 @@ struct TaskStepWaitRandom :
 
     void initialize_step() const
     {
-        initial_time_ = -1LL;
+        initial_time_ = -1L;
         // Generate random value between 2 and 10 seconds
-        random_waiting_time_us_ = 2000000LL + 8000000LL * esp_random() / UINT32_MAX;
+        random_waiting_time_us_ = minimum_waiting_time_us_ + waiting_time_range_us_ * esp_random() / UINT32_MAX;
     }
 
     /// Virtual method implementation
@@ -75,6 +80,8 @@ private:
         }
     }
 
-    mutable int64_t initial_time_ = -1LL;             ///< Initial time when the step started
-    mutable int64_t random_waiting_time_us_ = 0LL;    ///< Current random target value
+    const int64_t minimum_waiting_time_us_ = 2000000L;     ///< Minimum waiting time in microseconds
+    const int64_t waiting_time_range_us_   = 8000000L;     ///< Waiting time range in microseconds
+    mutable int64_t initial_time_ = -1L;             ///< Initial time when the step started
+    mutable int64_t random_waiting_time_us_ = 0L;    ///< Current random target value
 };
