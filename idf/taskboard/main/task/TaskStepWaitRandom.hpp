@@ -27,10 +27,10 @@ struct TaskStepWaitRandom :
     {
         TaskStepAuto::type_ = Type::WAIT_RANDOM;
 
-        initializeStep();
+        initialize_step();
     }
 
-    void initializeStep() const
+    void initialize_step() const
     {
         initial_time_ = -1LL;
         // Generate random value between 2 and 10 seconds
@@ -53,7 +53,7 @@ struct TaskStepWaitRandom :
     /// Virtual method implementation
     float score() const override
     {
-        initializeStep();
+        initialize_step();
         // Score is irrelevant
         return -1.0f;
     }

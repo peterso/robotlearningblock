@@ -230,7 +230,7 @@ struct TaskBoardDriver_v1 :
                             return red_button->read();
                         });
 
-        Sensor* touch_screen_position = new Sensor("TOUCH_SCREEN_POSITION", [&]()
+        Sensor* touch_screen_position = new Sensor("TOUCH_SCREEN", [&]()
                         {
                             m5gfx::M5GFX& display = hardware_low_level_controller_.m5_unified.Display;
                             const int32_t w = display.width();
@@ -305,7 +305,9 @@ struct TaskBoardDriver_v1 :
         {
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
             timed_fader_operation,
-            new TaskStepTraceShape(*get_sensor_by_name("TOUCH_SCREEN_POSITION")),
+            new TaskStepTraceShape(*get_sensor_by_name("TOUCH_SCREEN"), TaskStepTraceShape::ShapeType::TRIANGLE),
+            new TaskStepTraceShape(*get_sensor_by_name("TOUCH_SCREEN"), TaskStepTraceShape::ShapeType::CIRCLE),
+            new TaskStepTraceShape(*get_sensor_by_name("TOUCH_SCREEN"), TaskStepTraceShape::ShapeType::SQUARE),
             random_fader_step,
             new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
             new TaskStepWaitRandom("WAIT_FOR_BALL_RELEASE"),

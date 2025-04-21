@@ -19,60 +19,189 @@
 struct TaskStepTraceShape :
     public TaskStep
 {
+    const char* TAG = "TaskStepTraceShape";    ///< Logging tag
+
+    enum ShapeType
+    {
+        FOUR_SIDED  = 0,
+        POINT       = 1,
+        LINE        = 2,
+        TRIANGLE    = 3,
+        SQUARE      = 4,
+        CIRCLE      = 100
+    };
+
     /**
      * @brief Constructs a new TaskStepTraceShape object
      *
      * @param sensor Reference to the sensor to monitor
      */
     TaskStepTraceShape(
-            SensorReader& sensor)
-        : TaskStep(sensor)
+            SensorReader& sensor,
+            ShapeType shape)
+        : TaskStep(sensor),
+            shape_(shape)
     {
         TaskStep::type_ = Type::TRACE_SHAPE;
 
-        initializeStep();
+        initialize_step();
     }
 
-    void initializeStep() const
+    void initialize_step() const
     {
-        constexpr int32_t N_POINTS = 3;
-
         step_started_ = false;
 
-        // Generate expected path with N_POINTS random points
+        // Clear paths
         expected_path_.clear();
-        while (expected_path_.size() < N_POINTS)
+        measured_path_.clear();
+
+        // Generate expected path of shape shape_
+        switch (shape_) {
+            case FOUR_SIDED:
+                draw_four_sided_shape();
+                close_shape();
+                break;
+            case POINT:
+            case LINE:
+                draw_open_shape((uint8_t) shape_);
+                break;
+            case TRIANGLE:
+                draw_open_shape(3);
+                close_shape();
+                break;
+            case SQUARE:
+            case CIRCLE:
+                draw_regular_shape((uint8_t) shape_);
+                close_shape();
+                break;
+        }
+    }
+
+    /**
+     * @brief Adds the first point to the end of the vector
+     */
+    void close_shape() const
+    {
+        expected_path_.push_back(expected_path_[0]);
+    }
+
+    /**
+     * @brief Draws an open shape with n_points
+     * 
+     * @param n_points Number of points (vertices)
+     */
+    void draw_open_shape(const uint8_t n_points) const
+    {
+        const float limits[4] = { 5.0f, 95.0f, 30.0f, 90.0f };
+        const float min_distance = 30.0f;
+
+        while (expected_path_.size() < n_points)
+        {
+            // Generate random point within the limits
+            SensorMeasurement::Vector3 next_point = SensorMeasurement::Vector3{
+                limits[0] + (float) esp_random() * (limits[1] - limits[0]) / UINT32_MAX,
+                limits[2] + (float) esp_random() * (limits[3] - limits[2]) / UINT32_MAX,
+                0.0f
+            };
+
+            // Check if the point is too close to any other point
+            bool valid_point = true;
+            for (const auto& point : expected_path_)
+            {
+                const auto last_point = point.get_vector3();
+                if (std::hypot(
+                        (last_point.x - next_point.x),
+                        (last_point.y - next_point.y)) < min_distance)
+                {
+                    valid_point = false;
+                    break;
+                }
+            }
+
+            if (valid_point)
+            {
+                expected_path_.push_back(SensorMeasurement(next_point));
+            }
+        }
+    }
+
+    /**
+     * @brief Draws a four-sided shape
+     * 
+     * @details The screen is divided into four sectors: Top left, bottom left, top right, and bottom right.
+     *          The four-sided shape has one point in per sector.
+     *          The points are not too close to each other.
+     */
+    void draw_four_sided_shape() const
+    {
+        const float limits[4][4] = {
+            {  5.0f, 50.0f, 30.0f, 60.0f }, // Top left
+            {  5.0f, 50.0f, 60.0f, 90.0f }, // Bottom left
+            { 50.0f, 95.0f, 60.0f, 90.0f }, // Bottom right
+            { 50.0f, 95.0f, 30.0f, 60.0f }  // Top right
+        };
+        const float min_distance = 30.0f;
+
+        while (expected_path_.size() < 4)
         {
             // Generate random point
             SensorMeasurement::Vector3 next_point = SensorMeasurement::Vector3{
-                (float) esp_random() * 100.0f / UINT32_MAX,
-                (float) esp_random() * 100.0f / UINT32_MAX,
+                limits[expected_path_.size()][0] + (float) esp_random() * (limits[expected_path_.size()][1] - limits[expected_path_.size()][0]) / UINT32_MAX,
+                limits[expected_path_.size()][2] + (float) esp_random() * (limits[expected_path_.size()][3] - limits[expected_path_.size()][2]) / UINT32_MAX,
                 0.0f
             };
-            // Check if the point is too close to the edges of the screen
-            if (next_point.x < 5.0f || next_point.x > 95.0f ||
-                next_point.y < 30.0f || next_point.y > 90.0f)
+
+            // Check if the point is too close to any other point
+            bool valid_point = true;
+            for (const auto& point : expected_path_)
             {
-                // Do not add
-                continue;
-            }
-            // Check if the point is too close to the last point
-            if (!expected_path_.empty())
-            {
-                const auto last_point = expected_path_.back().get_vector3();
+                const auto last_point = point.get_vector3();
                 if (std::hypot(
                         (last_point.x - next_point.x),
-                        (last_point.y - next_point.y)) < 30.0f)
+                        (last_point.y - next_point.y)) < min_distance)
                 {
-                    // Do not add
-                    continue;
+                    valid_point = false;
+                    break;
                 }
             }
-            expected_path_.push_back(SensorMeasurement(next_point));
+
+            if (valid_point)
+            {
+                expected_path_.push_back(SensorMeasurement(next_point));
+            }
         }
 
-        // Clear measured path
-        measured_path_.clear();
+        // Choose a random point to start the shape
+        const size_t start_point = esp_random() % expected_path_.size();
+        std::rotate(expected_path_.begin(), expected_path_.begin() + start_point, expected_path_.end());
+    }            
+
+    /**
+     * @brief Draws a regular polygon with n_points
+     * 
+     * @param n_points Number of points (vertices)
+     */
+    void draw_regular_shape(const uint8_t n_points) const
+    {
+        // Random center point
+        SensorMeasurement::Vector3 center_point = SensorMeasurement::Vector3{
+            40.0f + (float) esp_random() * 20.0f / UINT32_MAX,
+            40.0f + (float) esp_random() * 20.0f / UINT32_MAX,
+            0.0f
+        };
+        // Random radius between 20 and 35
+        const float radius = 20.0f + (float) esp_random() * 15.0f / UINT32_MAX;
+        //Random starting angle
+        const float start_angle = (float) esp_random() * 2.0f * M_PI / UINT32_MAX;
+
+        const float increment = 2.0f * M_PI / n_points;
+        for (size_t i = 0; i < n_points; i++)
+        {
+            const float angle = start_angle + i * increment;
+            const float x = center_point.x + radius * std::cos(angle);
+            const float y = center_point.y + radius * std::sin(angle);
+            expected_path_.push_back(SensorMeasurement(SensorMeasurement::Vector3{x, y, 0.0f}));
+        }
     }
 
     /// Virtual method implementation
@@ -133,14 +262,16 @@ struct TaskStepTraceShape :
         float score = 100.0f
                 - 50.0*first_distance/141.42f
                 - 50.0*last_distance/141.42f
-                - 50.0*std::abs(expected_length - measured_length)/std::max(expected_length, measured_length);
+                - (std::max(expected_length, measured_length) > 0.0f ?
+                    50.0*std::abs(expected_length - measured_length)/std::max(expected_length, measured_length) :
+                    0.0f);
 
         if (score < 0.0f)
         {
             score = 0.0f;
         }
 
-        initializeStep();
+        initialize_step();
         
         return score;
     }
@@ -168,7 +299,8 @@ protected:
         }
     }
 
-    mutable bool step_started_ = 0;
-    mutable std::vector<SensorMeasurement>expected_path_ = {};
-    mutable std::vector<SensorMeasurement>measured_path_ = {};
+    const ShapeType shape_;                                     ///< Shape type to be traced
+    mutable bool step_started_ = 0;                             ///< Flag to indicate if the step has started
+    mutable std::vector<SensorMeasurement>expected_path_ = {};  ///< Path to be traced
+    mutable std::vector<SensorMeasurement>measured_path_ = {};  ///< Path measured
 };
