@@ -47,13 +47,9 @@ struct TaskStepTraceShapeFromPool :
             ESP_LOGE(TAG, "Shape pool is empty");
             return;
         }
-
-        ESP_LOGI(TAG, "Shape pool size: %zu", shape_pool_->size());
         
-        const size_t random_index = esp_random() % shape_pool_->size();
-        shape_ = shape_pool_->at(random_index);
-        shape_pool_->erase(shape_pool_->begin() + random_index);
-        shape_pool_->shrink_to_fit();
+        shape_ = shape_pool_->at(0);
+        shape_pool_->erase(shape_pool_->begin());
 
         ESP_LOGI(TAG, "Took shape %d from pool", shape_);
         ESP_LOGI(TAG, "Shape pool size: %zu", shape_pool_->size());

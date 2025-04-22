@@ -11,6 +11,27 @@
 #include <esp_log.h>
 
 /**
+ * @brief Shuffles a vector using esp_random() as the RNG
+ * 
+ * @tparam T Type of elements in the vector
+ * @param vec Pointer to the vector to be shuffled
+ */
+template<typename T>
+void esp_shuffle(std::vector<T>* vec) {
+    if (vec == nullptr || vec->empty()) {
+        return;
+    }
+
+    for (size_t i = vec->size() - 1; i > 0; --i) {
+        uint32_t r = esp_random() % (i + 1);
+        size_t j = static_cast<size_t>(r);
+        
+        // Swap elements at positions i and j
+        std::swap((*vec)[i], (*vec)[j]);
+    }
+}
+
+/**
  * @struct TaskStepTraceShapeSetPool
  * 
  * @brief Implementation of TaskStep that empties a shape pool and fills it with a vector of shapes
@@ -46,6 +67,7 @@ struct TaskStepTraceShapeSetPool :
         shape_pool_->shrink_to_fit();
 
         shape_pool_->insert(shape_pool_->end(), shapes_vector_->begin(), shapes_vector_->end());
+        esp_shuffle(shape_pool_);
         ESP_LOGI(TAG, "Shape pool filled. Cointains %zu shapes", shape_pool_->size());
     }
 
@@ -108,6 +130,7 @@ struct TaskStepTraceShapeFillPool :
     void initialize_step() const
     {
         shape_pool_->insert(shape_pool_->end(), shapes_vector_->begin(), shapes_vector_->end());
+        esp_shuffle(shape_pool_);
         ESP_LOGI(TAG, "Shape pool filled. Cointains %zu shapes", shape_pool_->size());
     }
 
