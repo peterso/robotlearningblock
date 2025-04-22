@@ -144,6 +144,8 @@ struct TaskStepBase :
         EQUAL_TO_RANDOM,    ///< Sensor value must match a randomly generated target
         GREATER_OR_EQUAL,   ///< Sensor value must be greater or equal to target
         TRACE_SHAPE,        ///< Sensor value must follow a specific path
+        TRACE_SHAPE_FROM_POOL, ///< Sensor value must follow a path selected at random from a pool
+        TRACE_SHAPE_MANAGE_POOL, ///< Manage a shape pool
         WAIT_RANDOM,        ///< Wait for a random time
         UNKNOWN             ///< Undefined comparison type
     };

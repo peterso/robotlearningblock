@@ -14,6 +14,8 @@
 #include <task/TaskStepEqual.hpp>
 #include <task/TaskStepEqualToRandom.hpp>
 #include <task/TaskStepTraceShape.hpp>
+#include <task/TaskStepTraceShapeManagePool.hpp>
+#include <task/TaskStepTraceShapeFromPool.hpp>
 #include <task/TaskStepWaitRandom.hpp>
 #include <task/SimultaneousConditionTask.hpp>
 #include <task/SequentialTask.hpp>
@@ -282,6 +284,16 @@ struct TaskBoardDriver_v1 :
         // Initial update
         update();
 
+        std::vector<TaskStepTraceShape::ShapeType>* default_shapes = new std::vector<TaskStepTraceShape::ShapeType>
+        {
+            TaskStepTraceShape::ShapeType::TRIANGLE,
+            TaskStepTraceShape::ShapeType::CIRCLE,
+            TaskStepTraceShape::ShapeType::SQUARE
+        };
+
+        // Create shape pool
+        std::vector<TaskStepTraceShape::ShapeType>* shape_pool = new std::vector<TaskStepTraceShape::ShapeType> {};
+
         // Create default tasks
         std::vector<const TaskStepBase*>* precondition_steps = new std::vector<const TaskStepBase*>
         {
@@ -289,6 +301,7 @@ struct TaskBoardDriver_v1 :
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(false)),
             new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(false)),
             new TaskStepEqual(*get_sensor_by_name("FREE_CABLE"), SensorMeasurement(true)),
+            new TaskStepTraceShapeSetPool("SET_SHAPE_POOL", shape_pool, default_shapes),
         };
 
         default_precondition_task_ = new SimultaneousConditionTask(*precondition_steps, "Precondition Task");
@@ -305,9 +318,9 @@ struct TaskBoardDriver_v1 :
         {
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
             timed_fader_operation,
-            new TaskStepTraceShape(*get_sensor_by_name("TOUCH_SCREEN"), TaskStepTraceShape::ShapeType::TRIANGLE),
-            new TaskStepTraceShape(*get_sensor_by_name("TOUCH_SCREEN"), TaskStepTraceShape::ShapeType::CIRCLE),
-            new TaskStepTraceShape(*get_sensor_by_name("TOUCH_SCREEN"), TaskStepTraceShape::ShapeType::SQUARE),
+            new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
+            new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
+            new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             random_fader_step,
             new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
             new TaskStepWaitRandom("WAIT_FOR_BALL_RELEASE"),
