@@ -156,6 +156,11 @@ struct TaskStepBase :
     virtual void restart_step() const = 0;
 
     /**
+     * @brief runs at the beginning of the task step
+     */
+    virtual void initialize_step() const = 0;
+
+    /**
      * @brief Gets the name of the task step
      *
      * @return Reference to task step name string

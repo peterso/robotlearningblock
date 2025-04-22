@@ -43,11 +43,10 @@ struct TaskStepTraceShape :
             shape_(shape)
     {
         TaskStep::type_ = Type::TRACE_SHAPE;
-
-        initialize_step();
     }
 
-    void initialize_step() const
+    /// Virtual method implementation
+    void initialize_step() const override
     {
         step_started_ = false;
 
@@ -270,8 +269,6 @@ struct TaskStepTraceShape :
         {
             score = 0.0f;
         }
-
-        initialize_step();
         
         return score;
     }
@@ -279,6 +276,10 @@ struct TaskStepTraceShape :
     /// Virtual method implementation
     SensorMeasurement expected_value() const override
     {
+        if (expected_path_.empty())
+        {
+            return SensorMeasurement();
+        }
         return expected_path_[0];
     }
 

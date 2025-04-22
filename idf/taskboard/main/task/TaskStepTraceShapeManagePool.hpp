@@ -57,11 +57,10 @@ struct TaskStepTraceShapeSetPool :
         , shapes_vector_(shapes_vector)
     {
         TaskStepAuto::type_ = Type::TRACE_SHAPE_MANAGE_POOL;
-
-        initialize_step();
     }
 
-    void initialize_step() const
+    /// Virtual method implementation
+    void initialize_step() const override
     {
         shape_pool_->clear();
         shape_pool_->shrink_to_fit();
@@ -80,7 +79,6 @@ struct TaskStepTraceShapeSetPool :
     /// Virtual method implementation
     float score() const override
     {
-        initialize_step();
         return -1.0f;
     }
 
@@ -123,11 +121,10 @@ struct TaskStepTraceShapeFillPool :
         , shapes_vector_(shapes_vector)
     {
         TaskStepAuto::type_ = Type::TRACE_SHAPE_MANAGE_POOL;
-
-        initialize_step();
     }
 
-    void initialize_step() const
+    /// Virtual method implementation
+    void initialize_step() const override
     {
         shape_pool_->insert(shape_pool_->end(), shapes_vector_->begin(), shapes_vector_->end());
         esp_shuffle(shape_pool_);
@@ -143,7 +140,6 @@ struct TaskStepTraceShapeFillPool :
     /// Virtual method implementation
     float score() const override
     {
-        initialize_step();
         return -1.0f;
     }
 
@@ -183,11 +179,10 @@ struct TaskStepTraceShapeEmptyPool :
         , shape_pool_(shape_pool)
     {
         TaskStepAuto::type_ = Type::TRACE_SHAPE_MANAGE_POOL;
-
-        initialize_step();
     }
 
-    void initialize_step() const
+    /// Virtual method implementation
+    void initialize_step() const override
     {
         shape_pool_->clear();
         shape_pool_->shrink_to_fit();
@@ -203,7 +198,6 @@ struct TaskStepTraceShapeEmptyPool :
     /// Virtual method implementation
     float score() const override
     {
-        initialize_step();
         return -1.0f;
     }
 

@@ -31,35 +31,24 @@ struct TaskStepWaitRandom :
             waiting_time_range_us_((maximum_waiting_time_ms - minimum_waiting_time_ms) * 1000L)
     {
         TaskStepAuto::type_ = Type::WAIT_RANDOM;
-
-        initialize_step();
     }
 
-    void initialize_step() const
+    /// Virtual method implementation
+    void initialize_step() const override
     {
-        initial_time_ = -1L;
-        // Generate random value between 2 and 10 seconds
+        initial_time_ = esp_timer_get_time();
         random_waiting_time_us_ = minimum_waiting_time_us_ + waiting_time_range_us_ * esp_random() / UINT32_MAX;
     }
 
     /// Virtual method implementation
     bool success() const override
     {
-        if (initial_time_ == -1)
-        {
-            initial_time_ = esp_timer_get_time();
-        }
-
-        const bool ret = esp_timer_get_time() - initial_time_ >= random_waiting_time_us_;
-
-        return ret;
+        return (esp_timer_get_time() - initial_time_) >= random_waiting_time_us_;
     }
 
     /// Virtual method implementation
     float score() const override
     {
-        initialize_step();
-        // Score is irrelevant
         return -1.0f;
     }
 

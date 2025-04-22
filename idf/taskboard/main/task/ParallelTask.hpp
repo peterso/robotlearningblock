@@ -133,6 +133,10 @@ struct ParallelTask :
     {
         std::fill(steps_status_.begin(), steps_status_.end(), false);
         Task::restart();
+        for (size_t i = 0; i < steps_.size(); i++)
+        {
+            steps_[i]->initialize_step();
+        }
     }
 
 protected:

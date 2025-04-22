@@ -35,11 +35,10 @@ struct TaskStepTraceShapeFromPool :
             shape_pool_(shape_pool)
     {
         TaskStep::type_ = Type::TRACE_SHAPE_FROM_POOL;
-
-        initialize_step();
     }
 
-    void initialize_step() const
+    /// Virtual method implementation
+    void initialize_step() const override
     {
         // Select a random shape from the pool
         if (shape_pool_->empty())
@@ -275,8 +274,6 @@ struct TaskStepTraceShapeFromPool :
         {
             score = 0.0f;
         }
-
-        initialize_step();
         
         return score;
     }
@@ -284,6 +281,10 @@ struct TaskStepTraceShapeFromPool :
     /// Virtual method implementation
     SensorMeasurement expected_value() const override
     {
+        if (expected_path_.empty())
+        {
+            return SensorMeasurement();
+        }
         return expected_path_[0];
     }
 

@@ -39,6 +39,11 @@ struct TaskStepEqual :
     }
 
     /// Virtual method implementation
+    void initialize_step() const override
+    {
+    }
+
+    /// Virtual method implementation
     bool success() const override
     {
         return SensorMeasurement::equal(sensor_.read(), expected_value_, tolerance_);

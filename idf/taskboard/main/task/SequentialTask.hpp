@@ -90,6 +90,7 @@ struct SequentialTask :
                 if (current_step_ < steps_.size())
                 {
                     steps_[current_step_]->restart_step();
+                    steps_[current_step_]->initialize_step();
                 }
 
                 ret = true;
