@@ -147,6 +147,7 @@ struct TaskStepBase :
         TRACE_SHAPE_FROM_POOL, ///< Sensor value must follow a path selected at random from a pool
         TRACE_SHAPE_MANAGE_POOL, ///< Manage a shape pool
         WAIT_RANDOM,        ///< Wait for a random time
+        ACTUATOR,           ///< Actuator control step
         UNKNOWN             ///< Undefined comparison type
     };
 

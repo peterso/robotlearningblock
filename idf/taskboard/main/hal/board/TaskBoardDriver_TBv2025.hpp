@@ -11,6 +11,7 @@
 #include <sensor/AnalogFilteredSensor.hpp>
 #include <sensor/CounterSensor.hpp>
 #include <sensor/TriggeredSensor.hpp>
+#include <task/TaskStepActuator.hpp>
 #include <task/TaskStepEqual.hpp>
 #include <task/TaskStepEqualToRandom.hpp>
 #include <task/TaskStepTraceShape.hpp>
@@ -230,6 +231,42 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(temperature);
         sensors_.push_back(touch_screen_position);
 
+        // Initialize actuators
+        Actuator* goal_1_led = new Actuator("GOAL_1_LED", [&](Actuator::State state)
+                        {
+                            hardware_low_level_controller_.pb_hub_controller_2.write_digital_IO0(PbHubController::Channel::CHANNEL_0, state == Actuator::State::ON);
+                        });
+        Actuator* goal_2_led = new Actuator("GOAL_2_LED", [&](Actuator::State state)
+                        {
+                            hardware_low_level_controller_.pb_hub_controller_2.write_digital_IO0(PbHubController::Channel::CHANNEL_1, state == Actuator::State::ON);
+                        });
+        Actuator* goal_3_led = new Actuator("GOAL_3_LED", [&](Actuator::State state)
+                        {
+                            hardware_low_level_controller_.pb_hub_controller_2.write_digital_IO0(PbHubController::Channel::CHANNEL_2, state == Actuator::State::ON);
+                        });
+        Actuator* goal_4_led = new Actuator("GOAL_4_LED", [&](Actuator::State state)
+                        {
+                            hardware_low_level_controller_.pb_hub_controller_2.write_digital_IO0(PbHubController::Channel::CHANNEL_3, state == Actuator::State::ON);
+                        });
+        Actuator* ball_drop_solenoid = new Actuator("BALL_DROP_SOLENOID", [&](Actuator::State state)
+                        {
+                            // TODO (anton): Check actual pin
+                        });
+        Actuator* all_goal_leds = new Actuator("ALL_GOAL_LEDS", [&](Actuator::State state)
+                        {
+                            hardware_low_level_controller_.pb_hub_controller_2.write_digital_IO0(PbHubController::Channel::CHANNEL_0, state == Actuator::State::ON);
+                            hardware_low_level_controller_.pb_hub_controller_2.write_digital_IO0(PbHubController::Channel::CHANNEL_1, state == Actuator::State::ON);
+                            hardware_low_level_controller_.pb_hub_controller_2.write_digital_IO0(PbHubController::Channel::CHANNEL_2, state == Actuator::State::ON);
+                            hardware_low_level_controller_.pb_hub_controller_2.write_digital_IO0(PbHubController::Channel::CHANNEL_3, state == Actuator::State::ON);
+                        });
+
+        actuators_.push_back(goal_1_led);
+        actuators_.push_back(goal_2_led);
+        actuators_.push_back(goal_3_led);
+        actuators_.push_back(goal_4_led);
+        actuators_.push_back(ball_drop_solenoid);
+        actuators_.push_back(all_goal_leds);
+
         // Initial update
         update();
 
@@ -247,6 +284,8 @@ struct TaskBoardDriver_v1 :
         std::vector<const TaskStepBase*>* precondition_steps = new std::vector<const TaskStepBase*>
         {
             new TaskStepTraceShapeSetPool("SET_SHAPE_POOL", shape_pool, default_shapes),
+            new TaskStepActuator(*all_goal_leds, Actuator::State::OFF),
+            new TaskStepActuator(*ball_drop_solenoid, Actuator::State::OFF),
         };
 
         default_precondition_task_ = new SimultaneousConditionTask(*precondition_steps, "Precondition Task");
@@ -260,6 +299,16 @@ struct TaskBoardDriver_v1 :
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepWaitRandom("WAIT_FOR_BALL_RELEASE"),
+            new TaskStepActuator(*ball_drop_solenoid, Actuator::State::ON),
+            new TaskStepActuator(*all_goal_leds, Actuator::State::ON),
+            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_1"), SensorMeasurement(true)),
+            new TaskStepActuator(*goal_1_led, Actuator::State::OFF),
+            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_2"), SensorMeasurement(true)),
+            new TaskStepActuator(*goal_2_led, Actuator::State::OFF),
+            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_3"), SensorMeasurement(true)),
+            new TaskStepActuator(*goal_3_led, Actuator::State::OFF),
+            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_4"), SensorMeasurement(true)),
+            new TaskStepActuator(*goal_4_led, Actuator::State::OFF),
         };
 
         default_task_ = new SequentialTask(*main_steps, "Default Task");
@@ -351,6 +400,7 @@ private:
 
     HardwareLowLevelController& hardware_low_level_controller_;    ///< Reference to hardware interface
     std::vector<Sensor*> sensors_;                                 ///< List of all board sensors
+    std::vector<Actuator*> actuators_;                             ///< List of all board actuators
     std::string unique_id_ = "TaskBoard_v1";                       ///< Board identifier
     std::string unique_ssid_ = "Robothon Task Board";              ///< Board identifier
 

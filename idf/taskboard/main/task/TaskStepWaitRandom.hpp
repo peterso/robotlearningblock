@@ -21,6 +21,8 @@ struct TaskStepWaitRandom :
      * @brief Constructs a new TaskStepWaitRandom object
      * 
      * @param name Name identifier for the task step
+     * @param minimum_waiting_time_ms Minimum waiting time in milliseconds
+     * @param maximum_waiting_time_ms Maximum waiting time in milliseconds
      */
     TaskStepWaitRandom(
             std::string name = "",
