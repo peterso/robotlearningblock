@@ -17,6 +17,7 @@
 #include <network/KaaHandler.hpp>
 #include <hal/NonVolatileStorage.hpp>
 #include <hal/ScreenController.hpp>
+#include <hal/PaHubToPbHubController.hpp>
 #include <hal/PbHubController.hpp>
 #include <hal/HardwareLowLevelController.hpp>
 #include <microros/MicroROS.hpp>
@@ -100,17 +101,24 @@ extern "C" void app_main(
     M5.begin();
 
     // Initialize hardware controllers and drivers
-    PbHubController pb_hub_controller;
-    HardwareLowLevelController hardware_low_level_controller = {pb_hub_controller, M5};
+    PaHubToPbHubController pb_hub_controller_1(0);
+    PaHubToPbHubController pb_hub_controller_2(1);
+    HardwareLowLevelController hardware_low_level_controller = {pb_hub_controller_1, pb_hub_controller_2, M5};
     TaskBoardDriver& task_board_driver = get_task_board_implementation(hardware_low_level_controller);
     ScreenController screen_controller(hardware_low_level_controller);
     NonVolatileStorage non_volatile_storage(task_board_driver.get_unique_id());
 
     // Wait for PbHubController to initialize
     // This can take variable time after boot
-    while (!pb_hub_controller.check_status())
+    while (!pb_hub_controller_1.check_status())
     {
-        ESP_LOGI("app_main", "Waiting for PbHubController to start");
+        ESP_LOGI("app_main", "Waiting for PbHubController 1 to start");
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+
+    while (!pb_hub_controller_2.check_status())
+    {
+        ESP_LOGI("app_main", "Waiting for PbHubController 2 to start");
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 
@@ -145,8 +153,8 @@ extern "C" void app_main(
     const SensorReader& BUTTON_A = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_A");
     const SensorReader& BUTTON_B = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_B");
     const SensorReader& BUTTON_PWR = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_PWR");
-    const SensorReader& RED_BUTTON = *task_board_driver.get_sensor_by_name("RED_BUTTON");
-    const SensorReader& BLUE_BUTTON = *task_board_driver.get_sensor_by_name("BLUE_BUTTON");
+    const SensorReader& RED_BUTTON = *task_board_driver.get_sensor_by_name("RED_BUTTON_LEFT");
+    const SensorReader& BLUE_BUTTON = *task_board_driver.get_sensor_by_name("BLUE_BUTTON_LEFT");
 
     // Check if system should start in local mode (Button A pressed during boot)
     const bool start_local_mode = BUTTON_A.read() == true;
