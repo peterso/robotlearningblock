@@ -195,7 +195,7 @@ struct TaskStepTraceShapeFromPool :
         };
         // Random radius between 20 and 35
         const float radius = 20.0f + (float) esp_random() * 15.0f / UINT32_MAX;
-        //Random starting angle
+        // Random starting angle
         const float start_angle = (float) esp_random() * 2.0f * M_PI / UINT32_MAX;
 
         const float increment = 2.0f * M_PI / n_points;

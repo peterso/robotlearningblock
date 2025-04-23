@@ -248,9 +248,19 @@ struct TaskBoardDriver_v1 :
                         {
                             hardware_low_level_controller_.pb_hub_controller_2.write_digital_IO0(PbHubController::Channel::CHANNEL_3, state == Actuator::State::ON);
                         });
+
+        gpio_config_t io_conf = {
+            .pin_bit_mask = (1ULL << GPIO_NUM_27),  // Use GPIO 27
+            .mode = GPIO_MODE_OUTPUT,               // Set as output
+            .pull_up_en = GPIO_PULLUP_DISABLE,      // No pull-up
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,  // No pull-down
+            .intr_type = GPIO_INTR_DISABLE          // No interrupt
+        };
+        gpio_config(&io_conf);  // Apply the configuration
+        
         Actuator* ball_drop_solenoid = new Actuator("BALL_DROP_SOLENOID", [&](Actuator::State state)
                         {
-                            // TODO (anton): Check actual pin
+                            gpio_set_level(GPIO_NUM_27, state == Actuator::State::ON);
                         });
         Actuator* all_goal_leds = new Actuator("ALL_GOAL_LEDS", [&](Actuator::State state)
                         {
