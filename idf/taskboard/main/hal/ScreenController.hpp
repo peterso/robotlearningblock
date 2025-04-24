@@ -99,16 +99,22 @@ struct ScreenController :
         // Draw one circle per each task step
         constexpr uint32_t CIRCLE_RADIUS = 10;
 
-        for (size_t i = 0; i < task.total_steps(); i++)
+        for (size_t i = 0, aux = 0; i < task.total_steps(); i++)
         {
+            if (!task.step(i).show_to_user())
+            {
+                continue;
+            }
+            
             if (task.step_done(i))
             {
-                display_.fillCircle(15 + ((CIRCLE_RADIUS + 3) * 2 * i), 30, CIRCLE_RADIUS, TFT_GREEN);
+                display_.fillCircle(15 + ((CIRCLE_RADIUS + 3) * 2 * aux), 30, CIRCLE_RADIUS, TFT_GREEN);
             }
             else
             {
-                display_.drawCircle(15 + ((CIRCLE_RADIUS + 3) * 2 * i), 30, CIRCLE_RADIUS, TFT_RED);
+                display_.drawCircle(15 + ((CIRCLE_RADIUS + 3) * 2 * aux), 30, CIRCLE_RADIUS, TFT_RED);
             }
+            aux++;
         }
     }
 

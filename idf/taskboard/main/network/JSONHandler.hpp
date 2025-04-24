@@ -249,6 +249,11 @@ struct JSONHandler
 
         for (size_t i = 0; i < task.total_steps(); i++)
         {
+            if (!task.step(i).show_to_user())
+            {
+                continue;
+            }
+
             cJSON* step = cJSON_CreateObject();
             cJSON_AddStringToObject(step, "sensor", task.step(i).name().c_str());
             cJSON* done = task.step_done(i) ? cJSON_CreateTrue() : cJSON_CreateFalse();

@@ -200,6 +200,13 @@ struct TaskStepBase :
     virtual bool is_time_counted() const = 0;
 
     /**
+     * @brief Checks if the step should be shown to the user
+     * 
+     * @return true if the step should be shown, false otherwise
+     */
+    virtual bool show_to_user() const = 0;
+
+    /**
      * @brief Gets the comparison type for this step
      *
      * @return Reference to the step's comparison type
@@ -262,6 +269,12 @@ struct TaskStep :
         return true;
     }
 
+    /// Virtual method implementation
+    bool show_to_user() const override
+    {
+        return true;
+    }
+
     /**
      * @brief Gets the associated sensor
      *
@@ -306,6 +319,12 @@ struct TaskStepAuto :
 
     /// Virtual method implementation
     bool is_time_counted() const override
+    {
+        return false;
+    }
+
+    /// Virtual method implementation
+    bool show_to_user() const override
     {
         return false;
     }

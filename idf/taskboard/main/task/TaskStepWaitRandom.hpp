@@ -54,6 +54,11 @@ struct TaskStepWaitRandom :
         return -1.0f;
     }
 
+    /// Virtual method implementation
+    bool show_to_user() const override
+    {
+        return true;
+    }
 
 private:
 
