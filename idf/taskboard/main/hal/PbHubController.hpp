@@ -172,7 +172,7 @@ protected:
      *
      * @return true if operation successful, false otherwise
      */
-    bool read_operation(
+    virtual bool read_operation(
             const Channel channel,
             const Operation operation,
             uint8_t* data,
@@ -210,7 +210,7 @@ protected:
      *
      * @return true if operation successful, false otherwise
      */
-    bool write_operation(
+    virtual bool write_operation(
             const Channel channel,
             const Operation operation,
             const uint8_t* data,

@@ -13,9 +13,77 @@
 #include <cstdint>
 
 /**
+ * @struct PaHubController
+ * 
+ * @brief Controller for I2C communication with PaHub device
+ * 
+ */
+struct PaHubController
+{
+    const char* TAG = "PaHubController";    ///< Logging tag
+
+    static constexpr uint32_t I2C_FREQ = 400000;        ///< I2C bus frequency in Hz
+    static constexpr uint8_t PAHUB_I2C_ADDR = 0x70;   ///< Default I2C address for PaHub
+
+    /**
+     * @brief Constructs a new PaHubController object
+     *
+     * @details Initializes I2C communication with default address
+     */
+    PaHubController() noexcept
+        : i2c_addr_(PAHUB_I2C_ADDR)
+    {
+        bool init = M5.Ex_I2C.begin();
+
+        if (init)
+        {
+            ESP_LOGI(TAG, "PaHubController::PaHubController() on address %d", i2c_addr_);
+        }
+        else
+        {
+            ESP_LOGE(TAG, "PaHubController::PaHubController() failed");
+        }
+    }
+
+    /**
+     * @brief Selects the TCA9548A I2C multiplexer channel
+     *
+     * @param bus Target bus number
+     *
+     * @return true if operation successful, false otherwise
+     */
+    bool TCA9548A_select(uint8_t bus)
+    {
+        bool status = true;
+
+        if (bus != last_channel_selected_)
+        {
+            status = status && M5.Ex_I2C.start(i2c_addr_, false, I2C_FREQ);
+            status = status && M5.Ex_I2C.write(1 << bus);
+            status = status && M5.Ex_I2C.stop();
+            if (status)
+            {
+                last_channel_selected_ = bus;
+                ESP_LOGI(TAG, "TCA9548A_select() bus %d selected", bus);
+            }
+        }
+
+        return status;
+    }
+
+private:
+
+    const uint8_t i2c_addr_ = 0;   ///< I2C address of PaHub device
+    uint8_t last_channel_selected_ = -1;   ///< Last selected channel
+
+};
+
+
+
+/**
  * @struct PaHubToPbHubController
  *
- * @brief Controller for I2C communication with PbHub device
+ * @brief Controller for I2C communication with PbHub device through PaHub
  *
  */
 struct PaHubToPbHubController :
@@ -23,7 +91,6 @@ struct PaHubToPbHubController :
 {
     const char* TAG = "PaHubToPbHubController";    ///< Logging tag
 
-    static constexpr uint8_t PAHUB_I2C_ADDR = 0x70;   ///< Default I2C address for PaHub
     static constexpr uint8_t PBHUB_I2C_ADDR = 0x61;   ///< Default I2C address for PbHub
 
     /**
@@ -31,9 +98,9 @@ struct PaHubToPbHubController :
      *
      * @details Initializes I2C communication with default address
      */
-    PaHubToPbHubController(uint8_t pb_hub_channel) noexcept
-        : pa_hub_i2c_addr_(PAHUB_I2C_ADDR),
-            i2c_addr_(PBHUB_I2C_ADDR),
+    PaHubToPbHubController(PaHubController& pa_hub_controller,uint8_t pb_hub_channel) noexcept
+        :   i2c_addr_(PBHUB_I2C_ADDR),
+            pa_hub_controller_(pa_hub_controller),
             pb_hub_channel_(pb_hub_channel)
     {
         bool init = M5.Ex_I2C.begin();
@@ -51,24 +118,6 @@ struct PaHubToPbHubController :
 private:
 
     /**
-     * @brief Selects the TCA9548A I2C multiplexer channel
-     *
-     * @param bus Target bus number
-     *
-     * @return true if operation successful, false otherwise
-     */
-    bool TCA9548A_select(uint8_t bus)
-    {
-        bool status = true;
-
-        status = status && M5.Ex_I2C.start(pa_hub_i2c_addr_, false, I2C_FREQ);
-        status = status && M5.Ex_I2C.write(1 << bus);
-        status = status && M5.Ex_I2C.stop();
-
-        return status;
-    }
-
-    /**
      * @brief Performs I2C read operation
      *
      * @param channel Target channel
@@ -82,11 +131,11 @@ private:
             const Channel channel,
             const Operation operation,
             uint8_t* data,
-            const size_t length)
+            const size_t length) override
     {
         bool status = true;
         
-        status = status && TCA9548A_select(pb_hub_channel_);
+        status = status && pa_hub_controller_.TCA9548A_select(pb_hub_channel_);
 
         status = status && PbHubController::read_operation(channel, operation, data, length);
 
@@ -112,11 +161,11 @@ private:
             const Channel channel,
             const Operation operation,
             const uint8_t* data,
-            const size_t length)
+            const size_t length) override
     {
         bool status = true;
 
-        status = status && TCA9548A_select(pb_hub_channel_);
+        status = status && pa_hub_controller_.TCA9548A_select(pb_hub_channel_);
 
         status = status && PbHubController::write_operation(channel, operation, data, length);
 
@@ -128,7 +177,7 @@ private:
         return status;
     }
 
-    const uint8_t pa_hub_i2c_addr_ = 0;   ///< I2C address of PaHub device
     const uint8_t i2c_addr_ = 0;        ///< I2C address of PbHub device
-    const uint8_t pb_hub_channel_ = 0;   ///< Channel of PbHub device
+    PaHubController& pa_hub_controller_;   ///< Reference to PaHub controller
+    const uint8_t pb_hub_channel_ = 0;   ///< Channel of PaHub where PbHub is located
 };

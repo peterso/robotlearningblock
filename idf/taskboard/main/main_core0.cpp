@@ -33,6 +33,9 @@
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 
+static constexpr uint8_t PAHUB_CHANNEL_FOR_PBHUB1 = 0;
+static constexpr uint8_t PAHUB_CHANNEL_FOR_PBHUB2 = 1;
+
 // Forward declarations
 struct WebSocketTaskArgs
 {
@@ -101,8 +104,9 @@ extern "C" void app_main(
     M5.begin();
 
     // Initialize hardware controllers and drivers
-    PaHubToPbHubController pb_hub_controller_1(0);
-    PaHubToPbHubController pb_hub_controller_2(1);
+    PaHubController pa_hub_controller;
+    PaHubToPbHubController pb_hub_controller_1(pa_hub_controller, PAHUB_CHANNEL_FOR_PBHUB1);
+    PaHubToPbHubController pb_hub_controller_2(pa_hub_controller, PAHUB_CHANNEL_FOR_PBHUB2);
     HardwareLowLevelController hardware_low_level_controller = {pb_hub_controller_1, pb_hub_controller_2, M5};
     TaskBoardDriver& task_board_driver = get_task_board_implementation(hardware_low_level_controller);
     ScreenController screen_controller(hardware_low_level_controller);
