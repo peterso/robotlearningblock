@@ -142,6 +142,7 @@ struct TaskStepBase :
     {
         EQUAL,              ///< Sensor value must exactly match target
         EQUAL_TO_RANDOM,    ///< Sensor value must match a randomly generated target
+        EQUAL_DURING_RANDOM,///< Sensor value must match a target value maintained during a random time
         GREATER_OR_EQUAL,   ///< Sensor value must be greater or equal to target
         TRACE_SHAPE,        ///< Sensor value must follow a specific path
         TRACE_SHAPE_FROM_POOL, ///< Sensor value must follow a path selected at random from a pool

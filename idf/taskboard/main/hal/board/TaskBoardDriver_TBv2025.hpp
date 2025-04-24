@@ -13,6 +13,7 @@
 #include <sensor/TriggeredSensor.hpp>
 #include <task/TaskStepActuator.hpp>
 #include <task/TaskStepEqual.hpp>
+#include <task/TaskStepEqualDuringRandom.hpp>
 #include <task/TaskStepEqualToRandom.hpp>
 #include <task/TaskStepTraceShape.hpp>
 #include <task/TaskStepTraceShapeManagePool.hpp>
@@ -257,7 +258,7 @@ struct TaskBoardDriver_v1 :
             .intr_type = GPIO_INTR_DISABLE          // No interrupt
         };
         gpio_config(&io_conf);  // Apply the configuration
-        
+
         Actuator* ball_drop_solenoid = new Actuator("BALL_DROP_SOLENOID", [&](Actuator::State state)
                         {
                             gpio_set_level(GPIO_NUM_27, state == Actuator::State::ON);
@@ -308,7 +309,7 @@ struct TaskBoardDriver_v1 :
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
-            new TaskStepWaitRandom("WAIT_FOR_BALL_RELEASE"),
+            new TaskStepEqualDuringRandom(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(true), 0.0, 3000L, 8000L),
             new TaskStepActuator(*ball_drop_solenoid, Actuator::State::ON),
             new TaskStepActuator(*all_goal_leds, Actuator::State::ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_1"), SensorMeasurement(true)),

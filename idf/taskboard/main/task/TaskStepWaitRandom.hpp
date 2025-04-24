@@ -71,8 +71,8 @@ private:
         }
     }
 
-    const int64_t minimum_waiting_time_us_ = 2000000L;     ///< Minimum waiting time in microseconds
-    const int64_t waiting_time_range_us_   = 8000000L;     ///< Waiting time range in microseconds
+    const int64_t minimum_waiting_time_us_;     ///< Minimum waiting time in microseconds
+    const int64_t waiting_time_range_us_;     ///< Waiting time range in microseconds
     mutable int64_t initial_time_ = -1L;             ///< Initial time when the step started
     mutable int64_t random_waiting_time_us_ = 0L;    ///< Current random target value
 };
