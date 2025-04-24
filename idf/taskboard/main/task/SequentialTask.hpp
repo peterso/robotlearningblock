@@ -79,7 +79,7 @@ struct SequentialTask :
                     steps_completion_time_[current_step_] = steps_finish_time_[current_step_] - steps_finish_time_[current_step_ - 1];
                 }
 
-                if (!steps_[current_step_]->is_auto())
+                if (steps_[current_step_]->is_time_counted())
                 {
                     steps_time_sum_ += steps_completion_time_[current_step_];
                 }

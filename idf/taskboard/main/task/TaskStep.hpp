@@ -197,7 +197,7 @@ struct TaskStepBase :
      * 
      * @return true if the step is automatic, false if it requires operation
      */
-    virtual bool is_auto() const = 0;
+    virtual bool is_time_counted() const = 0;
 
     /**
      * @brief Gets the comparison type for this step
@@ -257,9 +257,9 @@ struct TaskStep :
     }
 
     /// Virtual method implementation
-    bool is_auto() const override
+    bool is_time_counted() const override
     {
-        return false;
+        return true;
     }
 
     /**
@@ -305,9 +305,9 @@ struct TaskStepAuto :
     }
 
     /// Virtual method implementation
-    bool is_auto() const override
+    bool is_time_counted() const override
     {
-        return true;
+        return false;
     }
 
     /// Virtual method implementation

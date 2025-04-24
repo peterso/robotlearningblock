@@ -74,6 +74,12 @@ struct TaskStepEqualDuringRandom :
         return -1.0f;
     }
 
+    /// Virtual method implementation
+    bool is_time_counted() const override
+    {
+        return false;
+    }
+
 private:
 
     /// Virtual method implementation
