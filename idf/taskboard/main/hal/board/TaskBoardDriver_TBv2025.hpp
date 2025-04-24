@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "driver/gpio.h"
+
 #include <hal/TaskBoardDriver.hpp>
 #include <hal/HardwareLowLevelController.hpp>
 #include <sensor/Sensor.hpp>
@@ -35,14 +37,20 @@ struct TaskBoardDriver_v1 :
 {
     const char* TAG = "TaskBoardDriver_v1";    ///< Logging tag
 
+    static constexpr uint8_t PAHUB_CHANNEL_FOR_PBHUB1 = 0;
+    static constexpr uint8_t PAHUB_CHANNEL_FOR_PBHUB2 = 1;
+
     /**
      * @brief Constructs a new TaskBoardDriver_v1 object
      *
      * @param hardware_low_level_controller Reference to hardware interface
      */
     TaskBoardDriver_v1(
-            HardwareLowLevelController& hardware_low_level_controller)
-        : hardware_low_level_controller_(hardware_low_level_controller)
+            m5::M5Unified& m5_unified)
+        : pa_hub_controller_(new PaHubController()),
+          pb_hub_controller_1_(new PaHubToPbHubController(*pa_hub_controller_, PAHUB_CHANNEL_FOR_PBHUB1)),
+          pb_hub_controller_2_(new PaHubToPbHubController(*pa_hub_controller_, PAHUB_CHANNEL_FOR_PBHUB2)),
+          hardware_low_level_controller_(*pb_hub_controller_1_, *pb_hub_controller_2_, m5_unified)
     {
         // Fill unique id
         uint8_t mac[6];
@@ -53,6 +61,20 @@ struct TaskBoardDriver_v1 :
         char ssid_with_mac[32];
         snprintf(ssid_with_mac, sizeof(ssid_with_mac), "Robothon Task Board %01X%02X", (mac[4] & 0x0F), mac[5]);
         unique_ssid_ = ssid_with_mac;
+
+        // Wait for PbHubControllers to initialize
+        // This can take variable time after boot
+        while (!hardware_low_level_controller_.pb_hub_controller_1.check_status())
+        {
+            ESP_LOGI("app_main", "Waiting for PbHubController 1 to start");
+            vTaskDelay(pdMS_TO_TICKS(10));
+        }
+
+        while (!hardware_low_level_controller_.pb_hub_controller_2.check_status())
+        {
+            ESP_LOGI("app_main", "Waiting for PbHubController 2 to start");
+            vTaskDelay(pdMS_TO_TICKS(10));
+        }
 
         // Initialize sensors
         Sensor* ball_goal_1 = new Sensor("BALL_GOAL_1", [&]()
@@ -407,9 +429,18 @@ struct TaskBoardDriver_v1 :
         return unique_ssid_;
     }
 
+    /// Virtual method implementation
+    HardwareLowLevelController& get_hardware_low_level_controller() override
+    {
+        return hardware_low_level_controller_;
+    }
+
 private:
 
-    HardwareLowLevelController& hardware_low_level_controller_;    ///< Reference to hardware interface
+    PaHubController* pa_hub_controller_;    ///< Reference to PaHub controller
+    PaHubToPbHubController* pb_hub_controller_1_;    ///< Reference to PbHub controller 1
+    PaHubToPbHubController* pb_hub_controller_2_;    ///< Reference to PbHub controller 2
+    HardwareLowLevelController hardware_low_level_controller_;    ///< Reference to hardware interface
     std::vector<Sensor*> sensors_;                                 ///< List of all board sensors
     std::vector<Actuator*> actuators_;                             ///< List of all board actuators
     std::string unique_id_ = "TaskBoard_v1";                       ///< Board identifier

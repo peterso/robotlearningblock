@@ -33,9 +33,6 @@
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 
-static constexpr uint8_t PAHUB_CHANNEL_FOR_PBHUB1 = 0;
-static constexpr uint8_t PAHUB_CHANNEL_FOR_PBHUB2 = 1;
-
 // Forward declarations
 struct WebSocketTaskArgs
 {
@@ -47,25 +44,6 @@ struct WebSocketTaskArgs
 
 void websockets_task(
         void* args);
-
-/**
- * @brief Get the task board implementation
- *
- * @details This functions returns an instance of the actual class that implements the current configuration
- * of the task board. This is useful to allow the user to change the task board implementation without
- * changing the main code.
- *
- * @param hardware_low_level_controller The hardware low level controller
- *
- * @return TaskBoardDriver& The task board implementation
- */
-TaskBoardDriver& get_task_board_implementation(
-        HardwareLowLevelController& hardware_low_level_controller)
-{
-    TaskBoardDriver_v1* task_board_driver = new TaskBoardDriver_v1(hardware_low_level_controller);
-
-    return *task_board_driver;
-}
 
 /**
  * @brief System entry point
@@ -104,27 +82,10 @@ extern "C" void app_main(
     M5.begin();
 
     // Initialize hardware controllers and drivers
-    PaHubController pa_hub_controller;
-    PaHubToPbHubController pb_hub_controller_1(pa_hub_controller, PAHUB_CHANNEL_FOR_PBHUB1);
-    PaHubToPbHubController pb_hub_controller_2(pa_hub_controller, PAHUB_CHANNEL_FOR_PBHUB2);
-    HardwareLowLevelController hardware_low_level_controller = {pb_hub_controller_1, pb_hub_controller_2, M5};
-    TaskBoardDriver& task_board_driver = get_task_board_implementation(hardware_low_level_controller);
-    ScreenController screen_controller(hardware_low_level_controller);
+    TaskBoardDriver_v1 task_board_driver_v1(M5);
+    TaskBoardDriver& task_board_driver = task_board_driver_v1;
+    ScreenController screen_controller(task_board_driver.get_hardware_low_level_controller());
     NonVolatileStorage non_volatile_storage(task_board_driver.get_unique_id());
-
-    // Wait for PbHubController to initialize
-    // This can take variable time after boot
-    while (!pb_hub_controller_1.check_status())
-    {
-        ESP_LOGI("app_main", "Waiting for PbHubController 1 to start");
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
-
-    while (!pb_hub_controller_2.check_status())
-    {
-        ESP_LOGI("app_main", "Waiting for PbHubController 2 to start");
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
 
     // ------------------------
     // System Setup
@@ -157,8 +118,12 @@ extern "C" void app_main(
     const SensorReader& BUTTON_A = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_A");
     const SensorReader& BUTTON_B = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_B");
     const SensorReader& BUTTON_PWR = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_PWR");
-    const SensorReader& RED_BUTTON = *task_board_driver.get_sensor_by_name("RED_BUTTON_LEFT");
-    const SensorReader& BLUE_BUTTON = *task_board_driver.get_sensor_by_name("BLUE_BUTTON_LEFT");
+    const SensorReader& RED_BUTTON = nullptr != task_board_driver.get_sensor_by_name("RED_BUTTON") ? 
+        *task_board_driver.get_sensor_by_name("RED_BUTTON") :
+        *task_board_driver.get_sensor_by_name("RED_BUTTON_LEFT");
+    const SensorReader& BLUE_BUTTON = nullptr != task_board_driver.get_sensor_by_name("BLUE_BUTTON") ?
+        *task_board_driver.get_sensor_by_name("BLUE_BUTTON") :
+        *task_board_driver.get_sensor_by_name("BLUE_BUTTON_LEFT");
 
     // Check if system should start in local mode (Button A pressed during boot)
     const bool start_local_mode = BUTTON_A.read() == true;

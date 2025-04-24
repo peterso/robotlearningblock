@@ -7,6 +7,8 @@
 #include <task/Task.hpp>
 #include <sensor/Sensor.hpp>
 
+#include <hal/HardwareLowLevelController.hpp>
+
 #include <cstdint>
 #include <string>
 
@@ -68,6 +70,13 @@ struct TaskBoardDriver
     * @return Reference to the board's unique SSID string
     */
     virtual const std::string& get_unique_ssid() const = 0;
+
+    /**
+     * @brief Gets the hardware low-level controller reference
+     * 
+     * @return Reference to the hardware low-level controller
+     */
+    virtual HardwareLowLevelController& get_hardware_low_level_controller() = 0;
 
     /**
      * @brief Gets the default task configured for this board
