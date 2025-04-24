@@ -169,6 +169,10 @@ struct SequentialTask :
         current_step_ = 0;
         steps_time_sum_ = 0;
         Task::restart();
+        if (steps_.size() > 0)
+        {
+            steps_[0]->initialize_step();
+        }
     }
 
 private:
