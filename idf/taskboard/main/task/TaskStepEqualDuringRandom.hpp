@@ -46,12 +46,6 @@ struct TaskStepEqualDuringRandom :
     {
         initial_time_ = esp_timer_get_time();
         random_waiting_time_us_ = minimum_waiting_time_us_ + waiting_time_range_us_ * esp_random() / UINT32_MAX;
-
-        ESP_LOGI(TAG, "TaskStepEqualDuringRandom::initialize_step() minimum_waiting_time_us_ = %lld, waiting_time_range_us_ = %lld",
-                 minimum_waiting_time_us_, waiting_time_range_us_);
-        ESP_LOGI(TAG, "TaskStepEqualDuringRandom::initialize_step() random_waiting_time_us_ = %lld",
-                 random_waiting_time_us_);
-
     }
 
     /// Virtual method implementation

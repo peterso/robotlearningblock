@@ -50,8 +50,8 @@ struct TaskStepTraceShapeSetPool :
      */
     TaskStepTraceShapeSetPool(
             std::string name,
-            std::vector<TaskStepTraceShape::ShapeType>* shape_pool,
-            std::vector<TaskStepTraceShape::ShapeType>* shapes_vector)
+            std::vector<TraceShapeCommon::ShapeType>* shape_pool,
+            std::vector<TraceShapeCommon::ShapeType>* shapes_vector)
         : TaskStepAuto(name)
         , shape_pool_(shape_pool)
         , shapes_vector_(shapes_vector)
@@ -67,7 +67,6 @@ struct TaskStepTraceShapeSetPool :
 
         shape_pool_->insert(shape_pool_->end(), shapes_vector_->begin(), shapes_vector_->end());
         esp_shuffle(shape_pool_);
-        ESP_LOGI(TAG, "Shape pool filled. Cointains %zu shapes", shape_pool_->size());
     }
 
     /// Virtual method implementation
@@ -91,8 +90,8 @@ private:
         screen_controller.print_task_clue("Shape pool filled");
     }
 
-    std::vector<TaskStepTraceShape::ShapeType>* shape_pool_;    ///< Vector of shapes to be filled
-    const std::vector<TaskStepTraceShape::ShapeType>* shapes_vector_;    ///< Vector of shapes to fill the pool with
+    std::vector<TraceShapeCommon::ShapeType>* shape_pool_;    ///< Vector of shapes to be filled
+    const std::vector<TraceShapeCommon::ShapeType>* shapes_vector_;    ///< Vector of shapes to fill the pool with
 };
 
 /**
@@ -114,8 +113,8 @@ struct TaskStepTraceShapeFillPool :
      */
     TaskStepTraceShapeFillPool(
             std::string name,
-            std::vector<TaskStepTraceShape::ShapeType>* shape_pool,
-            std::vector<TaskStepTraceShape::ShapeType>* shapes_vector)
+            std::vector<TraceShapeCommon::ShapeType>* shape_pool,
+            std::vector<TraceShapeCommon::ShapeType>* shapes_vector)
         : TaskStepAuto(name)
         , shape_pool_(shape_pool)
         , shapes_vector_(shapes_vector)
@@ -128,7 +127,6 @@ struct TaskStepTraceShapeFillPool :
     {
         shape_pool_->insert(shape_pool_->end(), shapes_vector_->begin(), shapes_vector_->end());
         esp_shuffle(shape_pool_);
-        ESP_LOGI(TAG, "Shape pool filled. Cointains %zu shapes", shape_pool_->size());
     }
 
     /// Virtual method implementation
@@ -152,8 +150,8 @@ private:
         screen_controller.print_task_clue("Shape pool filled");
     }
 
-    std::vector<TaskStepTraceShape::ShapeType>* shape_pool_;    ///< Vector of shapes to be filled
-    const std::vector<TaskStepTraceShape::ShapeType>* shapes_vector_;    ///< Vector of shapes to fill the pool with
+    std::vector<TraceShapeCommon::ShapeType>* shape_pool_;    ///< Vector of shapes to be filled
+    const std::vector<TraceShapeCommon::ShapeType>* shapes_vector_;    ///< Vector of shapes to fill the pool with
 };
 
 /**
@@ -174,7 +172,7 @@ struct TaskStepTraceShapeEmptyPool :
      */
     TaskStepTraceShapeEmptyPool(
             std::string name,
-            std::vector<TaskStepTraceShape::ShapeType>* shape_pool)
+            std::vector<TraceShapeCommon::ShapeType>* shape_pool)
         : TaskStepAuto(name)
         , shape_pool_(shape_pool)
     {
@@ -186,7 +184,6 @@ struct TaskStepTraceShapeEmptyPool :
     {
         shape_pool_->clear();
         shape_pool_->shrink_to_fit();
-        ESP_LOGI(TAG, "Shape pool emptied. Cointains %zu shapes", shape_pool_->size());
     }
 
     /// Virtual method implementation
@@ -210,5 +207,5 @@ private:
         screen_controller.print_task_clue("Shape pool emptied");
     }
 
-    std::vector<TaskStepTraceShape::ShapeType>* shape_pool_;    ///< Vector of shapes to be emptied
+    std::vector<TraceShapeCommon::ShapeType>* shape_pool_;    ///< Vector of shapes to be emptied
 };

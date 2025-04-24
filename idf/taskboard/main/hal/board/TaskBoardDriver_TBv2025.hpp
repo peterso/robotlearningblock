@@ -281,15 +281,15 @@ struct TaskBoardDriver_v1 :
         // Initial update
         update();
 
-        std::vector<TaskStepTraceShape::ShapeType>* default_shapes = new std::vector<TaskStepTraceShape::ShapeType>
+        std::vector<TraceShapeCommon::ShapeType>* default_shapes = new std::vector<TraceShapeCommon::ShapeType>
         {
-            TaskStepTraceShape::ShapeType::TRIANGLE,
-            TaskStepTraceShape::ShapeType::CIRCLE,
-            TaskStepTraceShape::ShapeType::SQUARE
+            TraceShapeCommon::ShapeType::TRIANGLE,
+            TraceShapeCommon::ShapeType::CIRCLE,
+            TraceShapeCommon::ShapeType::SQUARE
         };
 
         // Create shape pool
-        std::vector<TaskStepTraceShape::ShapeType>* shape_pool = new std::vector<TaskStepTraceShape::ShapeType> {};
+        std::vector<TraceShapeCommon::ShapeType>* shape_pool = new std::vector<TraceShapeCommon::ShapeType> {};
 
         // Create default tasks
         std::vector<const TaskStepBase*>* precondition_steps = new std::vector<const TaskStepBase*>
