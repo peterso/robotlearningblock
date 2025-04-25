@@ -193,6 +193,34 @@ struct ScreenController :
     }
 
     /// Virtual method implementation
+    void print_task_clue_goal(const char* clue_text) override
+    {
+        // static constexpr int32_t TEXT_TOP    = 35;
+        // static constexpr int32_t TEXT_CENTER = 160;
+        static constexpr uint8_t TEXT_FONT   = 4;
+
+        display_.setTextSize(2);
+        display_.setCursor(70, 90);
+        display_.print(clue_text);
+
+        // Draw two squares to act as buttons on the bottom of the screen
+        static constexpr int32_t BUTTON_WIDTH = 80;
+        static constexpr int32_t BUTTON_HEIGHT = 80;
+        static constexpr int32_t BUTTON_Y = 220 - BUTTON_HEIGHT;
+        static constexpr int32_t BUTTON_A_X = 40;
+        static constexpr int32_t BUTTON_B_X = 320 - BUTTON_WIDTH -40;
+
+        display_.fillRect(BUTTON_A_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT, TFT_BLUE);
+        display_.drawRect(BUTTON_A_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT, TFT_WHITE);
+        display_.fillRect(BUTTON_B_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT, TFT_BLUE);
+        display_.drawRect(BUTTON_B_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT, TFT_WHITE);
+        // display_.setTextSize(2);
+        // display_.setTextColor(TFT_WHITE, TFT_BLUE);
+        display_.drawCentreString("A", BUTTON_A_X + BUTTON_WIDTH / 2, BUTTON_Y + BUTTON_HEIGHT / 2-10);
+        display_.drawCentreString("B", BUTTON_B_X + BUTTON_WIDTH / 2, BUTTON_Y + BUTTON_HEIGHT / 2-10);
+    }
+
+    /// Virtual method implementation
     void clear_all_task_clue() override
     {
         display_.fillRect(5, 70, display_.width(), display_.height(), TFT_BLACK);

@@ -42,6 +42,8 @@ struct ClueScreenController
             const std::vector<SensorMeasurement>& expected_path,
             const std::vector<SensorMeasurement>& measured_path) = 0;
 
+    virtual void print_task_clue_goal(const char* clue_text) = 0;
+
     /**
      * @brief Clears the screen of any displayed clues
      */

@@ -17,6 +17,7 @@
 #include <task/TaskStepEqual.hpp>
 #include <task/TaskStepEqualDuringRandom.hpp>
 #include <task/TaskStepEqualToRandom.hpp>
+#include <task/TaskStepTouchGoalFromPool.hpp>
 #include <task/TaskStepTraceShape.hpp>
 #include <task/TaskStepTraceShapeManagePool.hpp>
 #include <task/TaskStepTraceShapeFromPool.hpp>
@@ -272,15 +273,6 @@ struct TaskBoardDriver_v1 :
                             hardware_low_level_controller_.pb_hub_controller_2.write_digital_IO0(PbHubController::Channel::CHANNEL_3, state == Actuator::State::ON);
                         });
 
-        gpio_config_t io_conf = {
-            .pin_bit_mask = (1ULL << GPIO_NUM_27),  // Use GPIO 27
-            .mode = GPIO_MODE_OUTPUT,               // Set as output
-            .pull_up_en = GPIO_PULLUP_DISABLE,      // No pull-up
-            .pull_down_en = GPIO_PULLDOWN_DISABLE,  // No pull-down
-            .intr_type = GPIO_INTR_DISABLE          // No interrupt
-        };
-        gpio_config(&io_conf);  // Apply the configuration
-
         Actuator* ball_drop_solenoid = new Actuator("BALL_DROP_SOLENOID", [&](Actuator::State state)
                         {
                             gpio_set_level(GPIO_NUM_27, state == Actuator::State::ON);
@@ -313,12 +305,41 @@ struct TaskBoardDriver_v1 :
         // Create shape pool
         std::vector<TraceShapeCommon::ShapeType>* shape_pool = new std::vector<TraceShapeCommon::ShapeType> {};
 
+        // Create touch goal pool
+        std::vector<TaskStepTouchGoalFromPool::TouchGoalType>* default_touch_goals = new std::vector<TaskStepTouchGoalFromPool::TouchGoalType>
+        {
+            TaskStepTouchGoalFromPool::TouchGoalType::TapAGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::TapBGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::DoubleTapAGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::DoubleTapBGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::LongPressAGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::LongPressBackgroundGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::LongPressBGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::TapBackgroundGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::DoubleTapBackgroundGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::DragFromAtoBGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::DragFromBtoAGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::DragFromAtoBackgroundGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::DragFromBtoBackgroundGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::DragFromBackgroundtoAGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::DragFromBackgroundtoBGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::SwipeUpGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::SwipeDownGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::SwipeLeftGoal,
+            TaskStepTouchGoalFromPool::TouchGoalType::SwipeRightGoal
+        };
+
+        std::vector<TaskStepTouchGoalFromPool::TouchGoalType>* touch_goal_pool = new std::vector<TaskStepTouchGoalFromPool::TouchGoalType> {};
+
         // Create default tasks
         std::vector<const TaskStepBase*>* precondition_steps = new std::vector<const TaskStepBase*>
         {
             new TaskStepTraceShapeSetPool("SET_SHAPE_POOL", shape_pool, default_shapes),
+            new TaskStepTouchGoalSetPool("SET_TOUCH_GOAL_POOL", touch_goal_pool, default_touch_goals),
             new TaskStepActuator(*all_goal_leds, Actuator::State::OFF),
             new TaskStepActuator(*ball_drop_solenoid, Actuator::State::OFF),
+            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_1"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON_RIGHT"), SensorMeasurement(true)),
         };
 
         default_precondition_task_ = new SimultaneousConditionTask(*precondition_steps, "Precondition Task");
@@ -331,17 +352,24 @@ struct TaskBoardDriver_v1 :
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
-            new TaskStepEqualDuringRandom(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(true), 0.0, 3000L, 8000L),
+            new TaskStepTouchGoalFromPool(*get_sensor_by_name("TOUCH_SCREEN"), touch_goal_pool),
+            new TaskStepTouchGoalFromPool(*get_sensor_by_name("TOUCH_SCREEN"), touch_goal_pool),
+            new TaskStepTouchGoalFromPool(*get_sensor_by_name("TOUCH_SCREEN"), touch_goal_pool),
+            new TaskStepTouchGoalFromPool(*get_sensor_by_name("TOUCH_SCREEN"), touch_goal_pool),
+            new TaskStepTouchGoalFromPool(*get_sensor_by_name("TOUCH_SCREEN"), touch_goal_pool),
+            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_2"), SensorMeasurement(true)),
             new TaskStepActuator(*ball_drop_solenoid, Actuator::State::ON),
+            new TaskStepEqualDuringRandom(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(true), 0.0, 3000L, 8000L),
+            new TaskStepActuator(*ball_drop_solenoid, Actuator::State::OFF),
             new TaskStepActuator(*all_goal_leds, Actuator::State::ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_1"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_1_led, Actuator::State::OFF),
-            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_2"), SensorMeasurement(true)),
-            new TaskStepActuator(*goal_2_led, Actuator::State::OFF),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_3"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_3_led, Actuator::State::OFF),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_4"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_4_led, Actuator::State::OFF),
+            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_2"), SensorMeasurement(true)),
+            new TaskStepActuator(*goal_2_led, Actuator::State::OFF),
         };
 
         default_task_ = new SequentialTask(*main_steps, "Default Task");
