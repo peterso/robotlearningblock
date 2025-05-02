@@ -34,8 +34,9 @@ struct TaskBoardDriver_v1 :
      * @param hardware_low_level_controller Reference to hardware interface
      */
     TaskBoardDriver_v1(
-            HardwareLowLevelController& hardware_low_level_controller)
-        : hardware_low_level_controller_(hardware_low_level_controller)
+            m5::M5Unified& m5_unified)
+        : pb_hub_controller_(new PbHubController()),
+          hardware_low_level_controller_(*pb_hub_controller_, m5_unified)
     {
         // Fill unique id
         uint8_t mac[6];
@@ -46,6 +47,14 @@ struct TaskBoardDriver_v1 :
         char ssid_with_mac[32];
         snprintf(ssid_with_mac, sizeof(ssid_with_mac), "Robothon Task Board %01X%02X", (mac[4] & 0x0F), mac[5]);
         unique_ssid_ = ssid_with_mac;
+
+        // Wait for PbHubController to initialize
+        // This can take variable time after boot
+        while (!hardware_low_level_controller_.pb_hub_controller.check_status())
+        {
+            ESP_LOGI("app_main", "Waiting for PbHubController to start");
+            vTaskDelay(pdMS_TO_TICKS(10));
+        }
 
         // Initialize sensors
         Sensor* blue_button = new Sensor("BLUE_BUTTON", [&]()
@@ -254,7 +263,7 @@ struct TaskBoardDriver_v1 :
         update();
 
         // Create default tasks
-        std::vector<const TaskStep*>* precondition_steps = new std::vector<const TaskStep*>
+        std::vector<const TaskStepBase*>* precondition_steps = new std::vector<const TaskStepBase*>
         {
             new TaskStepEqual(*get_sensor_by_name("FADER"), SensorMeasurement(0.0f), 0.1f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(false)),
@@ -272,7 +281,7 @@ struct TaskBoardDriver_v1 :
                 new TaskStepEqualToRandom(*get_sensor_by_name("FADER"), 0.05f);
         // random_fader_step->set_clue_timeout(*get_sensor_by_name("BLUE_BUTTON"), 3000);
 
-        std::vector<const TaskStep*>* main_steps = new std::vector<const TaskStep*>
+        std::vector<const TaskStepBase*>* main_steps = new std::vector<const TaskStepBase*>
         {
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
             timed_fader_operation,
@@ -374,12 +383,19 @@ struct TaskBoardDriver_v1 :
         return unique_ssid_;
     }
 
+    /// Virtual method implementation
+    HardwareLowLevelController& get_hardware_low_level_controller() override
+    {
+        return hardware_low_level_controller_;
+    }
+
 private:
 
-    HardwareLowLevelController& hardware_low_level_controller_;    ///< Reference to hardware interface
+    PbHubController* pb_hub_controller_;    ///< Pointer to the PbHubController instance
+    HardwareLowLevelController hardware_low_level_controller_;    ///< Reference to hardware interface
     std::vector<Sensor*> sensors_;                                 ///< List of all board sensors
     std::string unique_id_ = "TaskBoard_v1";                       ///< Board identifier
-    std::string unique_ssid_ = "Robothon Task Board";                       ///< Board identifier
+    std::string unique_ssid_ = "Robothon Task Board";              ///< Board identifier
 
     Task* default_task_;                    ///< Default main task sequence
     Task* default_precondition_task_;       ///< Default precondition task sequence

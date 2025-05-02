@@ -160,7 +160,7 @@ struct PbHubController
         read_operation(channel, Operation::WRITE_IO1, reinterpret_cast<uint8_t*>(&data), sizeof(data));
     }
 
-private:
+protected:
 
     /**
      * @brief Performs I2C read operation
@@ -172,25 +172,25 @@ private:
      *
      * @return true if operation successful, false otherwise
      */
-    bool read_operation(
+    virtual bool read_operation(
             const Channel channel,
             const Operation operation,
             uint8_t* data,
             const size_t length)
     {
         bool status = true;
-        status &= M5.Ex_I2C.start(i2c_addr_, false, I2C_FREQ);
-        status &= M5.Ex_I2C.write(static_cast<uint8_t>(channel) + static_cast<uint8_t>(operation));
-        status &= M5.Ex_I2C.stop();
+        status = status && M5.Ex_I2C.start(i2c_addr_, false, I2C_FREQ);
+        status = status && M5.Ex_I2C.write(static_cast<uint8_t>(channel) + static_cast<uint8_t>(operation));
+        status = status && M5.Ex_I2C.stop();
 
-        status &= M5.Ex_I2C.start(i2c_addr_, true, I2C_FREQ);
+        status = status && M5.Ex_I2C.start(i2c_addr_, true, I2C_FREQ);
 
         for (size_t i = 0; i < length; i++)
         {
-            status &= M5.Ex_I2C.read(&data[i], 1);
+            status = status && M5.Ex_I2C.read(&data[i], 1);
         }
 
-        status &= M5.Ex_I2C.stop();
+        status = status && M5.Ex_I2C.stop();
 
         if (!status)
         {
@@ -210,17 +210,17 @@ private:
      *
      * @return true if operation successful, false otherwise
      */
-    bool write_operation(
+    virtual bool write_operation(
             const Channel channel,
             const Operation operation,
             const uint8_t* data,
             const size_t length)
     {
         bool status = true;
-        status &= M5.Ex_I2C.start(i2c_addr_, false, I2C_FREQ);
-        status &= M5.Ex_I2C.write(static_cast<uint8_t>(channel) + static_cast<uint8_t>(operation));
-        status &= M5.Ex_I2C.write(data, length);
-        status &= M5.Ex_I2C.stop();
+        status = status && M5.Ex_I2C.start(i2c_addr_, false, I2C_FREQ);
+        status = status && M5.Ex_I2C.write(static_cast<uint8_t>(channel) + static_cast<uint8_t>(operation));
+        status = status && M5.Ex_I2C.write(data, length);
+        status = status && M5.Ex_I2C.stop();
 
         if (!status)
         {
@@ -229,6 +229,8 @@ private:
 
         return status;
     }
+
+private:
 
     const uint8_t i2c_addr_ = 0;   ///< I2C address of PbHub device
 };

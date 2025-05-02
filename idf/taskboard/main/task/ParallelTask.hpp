@@ -24,11 +24,12 @@ struct ParallelTask :
      * @param task_name Name identifier for the task
      */
     ParallelTask(
-            const std::vector<const TaskStep*>& steps,
+            const std::vector<const TaskStepBase*>& steps,
             const std::string& task_name = "")
         : Task(steps, task_name, false)
     {
         steps_status_.resize(steps.size(), false);
+        steps_score_.resize(steps.size(), -1.0f);
         steps_finish_time_.resize(steps.size(), -1);
     }
 
@@ -63,6 +64,7 @@ struct ParallelTask :
             if (!steps_status_[i] && steps_[i]->success())
             {
                 steps_status_[i] = true;
+                steps_score_[i] = steps_[i]->score();
                 steps_finish_time_[i] = elapsed_time();
                 ret = true;
             }
@@ -93,6 +95,33 @@ struct ParallelTask :
     }
 
     /// Virtual method implementation
+    float step_score(
+            size_t step) const override
+    {
+        return steps_score_[step];
+    }
+
+    /// Virtual method implementation
+    float final_score() const override
+    {
+        float final_score = 0;
+        uint16_t steps_scored_count = 0;
+        for (const float step_score : steps_score_)
+        {
+            if (step_score >= 0.0)
+            {
+                final_score += step_score;
+                steps_scored_count++;
+            }
+        }
+        if (steps_scored_count > 0)
+        {
+            final_score /= steps_scored_count;
+        }
+        return final_score;
+    }
+
+    /// Virtual method implementation
     int64_t step_done_time(
             size_t step) const override
     {
@@ -104,10 +133,15 @@ struct ParallelTask :
     {
         std::fill(steps_status_.begin(), steps_status_.end(), false);
         Task::restart();
+        for (size_t i = 0; i < steps_.size(); i++)
+        {
+            steps_[i]->initialize_step();
+        }
     }
 
 protected:
 
     std::vector<bool> steps_status_;            ///< Completion status for each step
+    std::vector<float> steps_score_;        ///< Score for each step
     std::vector<int64_t> steps_finish_time_;    ///< Completion status for each step
 };

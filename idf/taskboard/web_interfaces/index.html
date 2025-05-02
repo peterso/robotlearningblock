@@ -271,6 +271,8 @@
             padding: 10px;
             background: #f8f8f8;
             border-radius: 4px;
+            flex-wrap: wrap;
+            padding-left: 2.2rem;
         }
         .step.done {
             background: #e8f5e9;
@@ -281,6 +283,7 @@
         .step-status {
             font-size: 1.2em;
             color: #666;
+            margin-left: -1.5rem;
         }
         .step.done .step-status {
             color: #4caf50;
@@ -513,9 +516,10 @@
                 <table class="tasks-table">
                     <thead>
                         <tr>
+                            <th></th>
                             <th>Task</th>
                             <th>Time</th>
-                            <th></th>
+                            <th>Score</th>
                             <th>UUID</th>
                         </tr>
                     </thead>
@@ -779,6 +783,105 @@
                 ctx.font = '12px sans-serif';
                 ctx.fillText(axis.label, x + 30, padding + itemHeight/2 + 4);
             });
+        }
+    }
+
+    class ScatterGraph {
+        constructor(container) {
+            this.container = container;
+            this.canvas = container.querySelector('canvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.dataX = new Array(30).fill(null);
+            this.dataY = new Array(30).fill(null);
+            this.dataZ = new Array(30).fill(null);
+            this.color = '#2196f3';
+
+            this.resizeCanvas();
+            window.addEventListener('resize', () => this.resizeCanvas());
+        }
+
+        resizeCanvas() {
+            const rect = this.container.getBoundingClientRect();
+            this.canvas.width = rect.width;
+            this.canvas.height = rect.height;
+            this.draw();
+        }
+
+        addValue(x, y, z) {
+            this.dataX.push(x);
+            this.dataX.shift();
+            this.dataY.push(y);
+            this.dataY.shift();
+            this.dataZ.push(z);
+            this.dataZ.shift();
+            this.draw();
+        }
+
+        draw() {
+            const ctx = this.ctx;
+            const width = this.canvas.width;
+            const height = this.canvas.height;
+            ctx.clearRect(0, 0, width, height);
+
+            this.drawGrid();
+
+            const last_index = this.dataX.length - 1;
+
+            // Draw point if we are touching
+            if (this.dataZ[last_index] === 1) {
+                const x = this.dataX[last_index] * width / 100;
+                const y = this.dataY[last_index] * height / 100;
+
+                const alpha = 1;
+                ctx.fillStyle = `rgba(33, 150, 243, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw lines between consecutive points where both Z are 1
+            for (let i = 0; i < this.dataX.length - 1; i++) {
+                if (this.dataZ[i] === 1 && this.dataZ[i + 1] === 1) {
+                    const x1 = this.dataX[i] * width / 100;
+                    const y1 = this.dataY[i] * height / 100;
+                    const x2 = this.dataX[i + 1] * width / 100;
+                    const y2 = this.dataY[i + 1] * height / 100;
+
+                    const alphaStart = i / (this.dataX.length - 1);
+                    const alphaEnd = (i + 1) / (this.dataX.length - 1);
+
+                    const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+                    gradient.addColorStop(0, `rgba(33, 150, 243, ${alphaStart})`);
+                    gradient.addColorStop(1, `rgba(33, 150, 243, ${alphaEnd})`);
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        drawGrid() {
+            const ctx = this.ctx;
+            const width = this.canvas.width;
+            const height = this.canvas.height;
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+
+            // Draw vertical line at origin (left edge)
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, height);
+            ctx.stroke();
+
+            // Draw horizontal line at origin (top edge)
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(width, 0);
+            ctx.stroke();
         }
     }
 
@@ -1156,7 +1259,11 @@
                     let graph = sensorGraphs.get(sensor.id);
                     if (!graph) {
                         if (isIMU) {
-                            graph = new IMUGraph(graphContainer);
+                            if (sensor.id.includes('TOUCH_SCREEN')) {
+                                graph = new ScatterGraph(graphContainer);
+                            } else {
+                                graph = new IMUGraph(graphContainer);
+                            }
                         }
                         else
                         {
@@ -1229,6 +1336,7 @@
                                     <span class="step-status">${step.done ? '✓' : '○'}</span>
                                     <span class="step-name">${step.sensor}</span>
                                     ${step.finish_time || step.finish_time == 0.0 ? '<span class="step-time">' + step.finish_time.toFixed(2) + ' s</span>' : ''}
+                                    ${step.score >= 0.0 && step.score < 100.0 ? '<span>·</span><span>' + step.score.toFixed(0) + '%</span>' : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -1282,7 +1390,7 @@
                     .filter(line => line.trim()) // Remove empty lines
                     .map(line => {
                         // Match values using regex to handle the JSON array correctly
-                        const regex = /([^,]+),([^,]+),([^,]+),([^,]+),(\[.*\])/;
+                        const regex = /([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),(\[.*\])/;
                         const match = line.match(regex);
 
                         if (!match) {
@@ -1290,11 +1398,12 @@
                             return null;
                         }
 
-                        const [, taskName, timestamp, isHuman, uniqueId, steps_times] = match;
+                        const [, taskName, timestamp, score, isHuman, uniqueId, steps_times] = match;
 
                         return {
                             taskName,
                             timestamp: parseInt(timestamp, 10),
+                            score: parseFloat(score),
                             isHuman: parseInt(isHuman, 10) === 1,
                             uniqueId,
                             steps_times: JSON.parse(steps_times)
@@ -1311,9 +1420,10 @@
                     row.className = 'leaderboard-row';
                     row.innerHTML = `
 
+                        <td>${entry.isHuman ? '👤' : '🤖'}</td>
                         <td>${entry.taskName}</td>
                         <td class="time-cell">${(entry.timestamp / 1000000).toFixed(3)} s</td>
-                        <td>${entry.isHuman ? '👤' : '🤖'}</td>
+                        <td>${entry.score.toFixed(1)} %</td>
                         <td class="uuid-cell">
                             ${entry.uniqueId.substring(0, 8)}...
                             <span class="uuid-tooltip">${entry.uniqueId}</span>

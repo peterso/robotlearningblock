@@ -35,9 +35,20 @@ struct TaskStepGreaterEqualThan :
     }
 
     /// Virtual method implementation
+    void initialize_step() const override
+    {
+    }
+
+    /// Virtual method implementation
     bool success() const override
     {
         return SensorMeasurement::greater_or_equal(sensor_.read(), expected_value_);
+    }
+
+    /// Virtual method implementation
+    float score() const override
+    {
+        return 100.0f;
     }
 
     /// Virtual method implementation

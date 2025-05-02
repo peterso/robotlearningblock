@@ -27,7 +27,7 @@ struct SimultaneousConditionTask :
      * @param task_name Name identifier for the task
      */
     SimultaneousConditionTask(
-            const std::vector<const TaskStep*>& steps,
+            const std::vector<const TaskStepBase*>& steps,
             const std::string& task_name = "")
         : ParallelTask(steps, task_name)
     {
@@ -50,16 +50,24 @@ struct SimultaneousConditionTask :
 
                 if (!state)
                 {
+                    steps_score_[i] = -1.0f;
                     steps_finish_time_[i] = -1;
                 }
                 else
                 {
+                    steps_score_[i] = steps_[i]->score();
                     steps_finish_time_[i] = elapsed_time();
                 }
             }
         }
 
         return ret;
+    }
+
+    /// Virtual method implementation
+    int64_t total_task_time() const override
+    {
+        return elapsed_time();
     }
 
 };

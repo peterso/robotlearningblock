@@ -119,17 +119,20 @@ private:
 };
 
 /**
- * @struct TaskStep
+ * @struct TaskStepBase
  *
- * @brief Base class representing a single condition or action within a task
+ * @brief Base class for task step handlers
  *
- * @details A TaskStep defines a goal condition that must be met by a specific sensor
- *          reading. It provides the interface for checking condition completion and
- *          accessing expected values.
+ * @details This class provides the interface for checking task step success and calculating scores.
  */
-struct TaskStep :
+struct TaskStepBase :
     public TaskStepClueHandler
 {
+    /**
+     * @brief Virtual destructor
+     */
+    virtual ~TaskStepBase() = default;
+
     /**
      * @enum Type
      *
@@ -139,10 +142,98 @@ struct TaskStep :
     {
         EQUAL,              ///< Sensor value must exactly match target
         EQUAL_TO_RANDOM,    ///< Sensor value must match a randomly generated target
+        EQUAL_DURING_RANDOM,///< Sensor value must match a target value maintained during a random time
         GREATER_OR_EQUAL,   ///< Sensor value must be greater or equal to target
-        UNKNOWN             ///< UndefOined comparison type
+        TOUCH_GOAL_FROM_POOL, ///< Sensor value must match a target value from a pool
+        TRACE_SHAPE,        ///< Sensor value must follow a specific path
+        TRACE_SHAPE_FROM_POOL, ///< Sensor value must follow a path selected at random from a pool
+        TRACE_SHAPE_MANAGE_POOL, ///< Manage a shape pool
+        WAIT_RANDOM,        ///< Wait for a random time
+        ACTUATOR,           ///< Actuator control step
+        UNKNOWN             ///< Undefined comparison type
     };
 
+    /**
+     * @brief restarts the step to the condition needed at the beginning of the task
+     */
+    virtual void restart_step() const = 0;
+
+    /**
+     * @brief runs at the beginning of the task step
+     */
+    virtual void initialize_step() const = 0;
+
+    /**
+     * @brief Gets the name of the task step
+     *
+     * @return Reference to task step name string
+     */
+    virtual const std::string& name() const = 0;
+
+    /**
+     * @brief Gets the target value for this step
+     *
+     * @return Expected sensor measurement value
+     */
+    virtual SensorMeasurement expected_value() const = 0;
+
+    /**
+     * @brief Checks if the step condition has been met
+     *
+     * @return true if condition is satisfied, false otherwise
+     */
+    virtual bool success() const = 0;
+
+    /**
+     * @brief Calculates the score for this step
+     *
+     * @details The score is a measurement of how well the task has been performed.
+     *
+     * @return Score value between 0 and 100, where 0 means no success and 100 means full success.
+     */
+    virtual float score() const = 0;
+
+    /**
+     * @brief Checks if the step is automatic or operated
+     * 
+     * @return true if the step is automatic, false if it requires operation
+     */
+    virtual bool is_time_counted() const = 0;
+
+    /**
+     * @brief Checks if the step should be shown to the user
+     * 
+     * @return true if the step should be shown, false otherwise
+     */
+    virtual bool show_to_user() const = 0;
+
+    /**
+     * @brief Gets the comparison type for this step
+     *
+     * @return Reference to the step's comparison type
+     */
+    const Type& type() const
+    {
+        return type_;
+    }
+
+protected:
+
+    Type type_ = Type::UNKNOWN;      ///< Type of comparison for success evaluation
+};
+
+/**
+ * @struct TaskStep
+ *
+ * @brief Base class representing a single condition or action within a task
+ *
+ * @details A TaskStep defines a goal condition that must be met by a specific sensor
+ *          reading. It provides the interface for checking condition completion and
+ *          accessing expected values.
+ */
+struct TaskStep :
+    public TaskStepBase
+{
     /**
      * @brief Constructs a new TaskStep object
      *
@@ -161,19 +252,29 @@ struct TaskStep :
      */
     virtual ~TaskStep() = default;
 
-    /**
-     * @brief Checks if the step condition has been met
-     *
-     * @return true if condition is satisfied, false otherwise
-     */
-    virtual bool success() const = 0;
+    /// Virtual method implementation
+    void restart_step() const override
+    {
+        sensor_.start_read();
+    }
 
-    /**
-     * @brief Gets the target value for this step
-     *
-     * @return Expected sensor measurement value
-     */
-    virtual SensorMeasurement expected_value() const = 0;
+    /// Virtual method implementation
+    const std::string& name() const override
+    {
+        return sensor_.name();
+    }
+
+    /// Virtual method implementation
+    bool is_time_counted() const override
+    {
+        return true;
+    }
+
+    /// Virtual method implementation
+    bool show_to_user() const override
+    {
+        return true;
+    }
 
     /**
      * @brief Gets the associated sensor
@@ -185,18 +286,57 @@ struct TaskStep :
         return sensor_;
     }
 
+protected:
+
+    SensorReader& sensor_;           ///< Reference to the monitored sensor
+};
+
+struct TaskStepAuto :
+    public TaskStepBase
+{
     /**
-     * @brief Gets the comparison type for this step
-     *
-     * @return Reference to the step's comparison type
+     * @brief Constructs a new TaskStepAuto object
      */
-    const Type& type() const
+    TaskStepAuto(std::string name = "")
+        : name_(name)
     {
-        return type_;
+    }
+
+    /**
+     * @brief Virtual destructor
+     */
+    virtual ~TaskStepAuto() = default;
+
+    /// Virtual method implementation
+    void restart_step() const override
+    {
+    }
+
+    /// Virtual method implementation
+    const std::string& name() const override
+    {
+        return name_;
+    }
+
+    /// Virtual method implementation
+    bool is_time_counted() const override
+    {
+        return false;
+    }
+
+    /// Virtual method implementation
+    bool show_to_user() const override
+    {
+        return false;
+    }
+
+    /// Virtual method implementation
+    SensorMeasurement expected_value() const override
+    {
+        return SensorMeasurement();
     }
 
 protected:
 
-    SensorReader& sensor_;           ///< Reference to the monitored sensor
-    Type type_ = Type::UNKNOWN;      ///< Type of comparison for success evaluation
+    std::string name_ = "TaskStepAuto"; ///< Name of the task step
 };

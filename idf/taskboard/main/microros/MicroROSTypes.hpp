@@ -52,6 +52,9 @@ struct MicroROSTypes
                 case ::TaskStep::Type::GREATER_OR_EQUAL:
                     ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_GREATER_EQUAL;
                     break;
+                case ::TaskStep::Type::TRACE_SHAPE:
+                    ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_TRACE_SHAPE;
+                    break;
                 default:
                     ret = robothon_taskboard_msgs__msg__TaskStep__TASK_STEP_TYPE_UNKNOWN;
                     break;
@@ -103,20 +106,24 @@ struct MicroROSTypes
             microros_msg_.status.size = task.total_steps();
             microros_msg_.status.capacity = task.total_steps();
 
+            microros_msg_.score.data = new float[task.total_steps()];
+            microros_msg_.score.size = task.total_steps();
+            microros_msg_.score.capacity = task.total_steps();
+
             microros_msg_.finish_times.data = new builtin_interfaces__msg__Time[task.total_steps()];
             microros_msg_.finish_times.size = task.total_steps();
             microros_msg_.finish_times.capacity = task.total_steps();
 
             for (size_t i = 0; i < task.total_steps(); i++)
             {
-                const ::TaskStep& step = task.step(i);
+                const ::TaskStepBase& step = task.step(i);
 
                 robothon_taskboard_msgs__msg__TaskStep& msg_step = microros_msg_.steps.data[i];
                 msg_step = {};
 
-                msg_step.sensor_name.data = (char*)step.sensor().name().c_str();
-                msg_step.sensor_name.size = step.sensor().name().size();
-                msg_step.sensor_name.capacity = step.sensor().name().size() + 1;
+                msg_step.sensor_name.data = (char*)step.name().c_str();
+                msg_step.sensor_name.size = step.name().size();
+                msg_step.sensor_name.capacity = step.name().size() + 1;
 
                 if (step.clue_trigger() != nullptr)
                 {
@@ -161,16 +168,20 @@ struct MicroROSTypes
                         msg_step.target.integer_value.size = 1;
                         msg_step.target.integer_value.capacity = 1;
                         break;
+                    case ::SensorMeasurement::Type::EMPTY:
+                        break;
                 }
 
                 microros_msg_.status.data[i] = task.step_done(i);
 
                 if (task.step_done(i))
                 {
+                    microros_msg_.score.data[i] = task.step_score(i);
                     microros_msg_.finish_times.data[i] = usec_to_microros(task.step_done_time(i));
                 }
                 else
                 {
+                    microros_msg_.score.data[i] = {};
                     microros_msg_.finish_times.data[i] = {};
                 }
             }
@@ -202,6 +213,10 @@ struct MicroROSTypes
             microros_msg_.status.data = nullptr;
             microros_msg_.status.size = 0;
             microros_msg_.status.capacity = 0;
+
+            microros_msg_.score.data = nullptr;
+            microros_msg_.score.size = 0;
+            microros_msg_.score.capacity = 0;
 
             microros_msg_.finish_times.data = nullptr;
             microros_msg_.finish_times.size = 0;
@@ -242,6 +257,11 @@ struct MicroROSTypes
             if (microros_msg_.status.data != nullptr)
             {
                 delete microros_msg_.status.data;
+            }
+
+            if (microros_msg_.score.data != nullptr)
+            {
+                delete microros_msg_.score.data;
             }
 
             if (microros_msg_.finish_times.data != nullptr)
@@ -570,6 +590,8 @@ struct MicroROSTypes
                         sensor_data.value.integer_value.capacity = 1;
                         sensor_data.value.integer_value.data[0] = sensor_value.get_integer();
                         break;
+                    case ::SensorMeasurement::Type::EMPTY:
+                        break;
                 }
             }
 
@@ -598,6 +620,8 @@ struct MicroROSTypes
                         break;
                     case ::SensorMeasurement::Type::INTEGER:
                         delete sensor_data.value.integer_value.data;
+                        break;
+                    case ::SensorMeasurement::Type::EMPTY:
                         break;
                 }
             }

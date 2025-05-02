@@ -99,16 +99,22 @@ struct ScreenController :
         // Draw one circle per each task step
         constexpr uint32_t CIRCLE_RADIUS = 10;
 
-        for (size_t i = 0; i < task.total_steps(); i++)
+        for (size_t i = 0, aux = 0; i < task.total_steps(); i++)
         {
+            if (!task.step(i).show_to_user())
+            {
+                continue;
+            }
+            
             if (task.step_done(i))
             {
-                display_.fillCircle(15 + ((CIRCLE_RADIUS + 3) * 2 * i), 30, CIRCLE_RADIUS, TFT_GREEN);
+                display_.fillCircle(15 + ((CIRCLE_RADIUS + 3) * 2 * aux), 30, CIRCLE_RADIUS, TFT_GREEN);
             }
             else
             {
-                display_.drawCircle(15 + ((CIRCLE_RADIUS + 3) * 2 * i), 30, CIRCLE_RADIUS, TFT_RED);
+                display_.drawCircle(15 + ((CIRCLE_RADIUS + 3) * 2 * aux), 30, CIRCLE_RADIUS, TFT_RED);
             }
+            aux++;
         }
     }
 
@@ -158,6 +164,60 @@ struct ScreenController :
         // Draw target cursor
         display_.fillRect(item_offset + (item_width * target_value) - cursor_width / 2,
                 item_height_offset, cursor_width, item_height, TFT_BLUE);
+    }
+
+    /// Virtual method implementation
+    void print_task_clue_path(
+            const std::vector<SensorMeasurement>& expected_path,
+            const std::vector<SensorMeasurement>& measured_path) override
+    {
+        const int32_t w = display_.width();
+        const int32_t h = display_.height();
+
+        display_.fillCircle(expected_path[0].get_vector3().x * w / 100.0f, expected_path[0].get_vector3().y * h / 100.0f, 6, TFT_RED);
+
+        for (size_t i = 1; i < expected_path.size(); i++)
+        {
+            display_.drawLine(expected_path[i - 1].get_vector3().x * w / 100.0f, expected_path[i - 1].get_vector3().y * h / 100.0f, expected_path[i].get_vector3().x * w / 100.0f, expected_path[i].get_vector3().y * h / 100.0f);
+        }
+
+        if (measured_path.size() > 0)
+        {
+            display_.fillCircle(measured_path[0].get_vector3().x * w / 100.0f, measured_path[0].get_vector3().y * h / 100.0f, 6, TFT_BLUE);
+
+            for (size_t i = 1; i < measured_path.size(); i++)
+            {
+                display_.drawLine(measured_path[i - 1].get_vector3().x * w / 100.0f, measured_path[i - 1].get_vector3().y * h / 100.0f, measured_path[i].get_vector3().x * w / 100.0f, measured_path[i].get_vector3().y * h / 100.0f, TFT_BLUE);
+            }
+        }
+    }
+
+    /// Virtual method implementation
+    void print_task_clue_goal(const char* clue_text) override
+    {
+        // static constexpr int32_t TEXT_TOP    = 35;
+        // static constexpr int32_t TEXT_CENTER = 160;
+        static constexpr uint8_t TEXT_FONT   = 4;
+
+        display_.setTextSize(2);
+        display_.setCursor(70, 90);
+        display_.print(clue_text);
+
+        // Draw two squares to act as buttons on the bottom of the screen
+        static constexpr int32_t BUTTON_WIDTH = 80;
+        static constexpr int32_t BUTTON_HEIGHT = 80;
+        static constexpr int32_t BUTTON_Y = 220 - BUTTON_HEIGHT;
+        static constexpr int32_t BUTTON_A_X = 40;
+        static constexpr int32_t BUTTON_B_X = 320 - BUTTON_WIDTH -40;
+
+        display_.fillRect(BUTTON_A_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT, TFT_BLUE);
+        display_.drawRect(BUTTON_A_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT, TFT_WHITE);
+        display_.fillRect(BUTTON_B_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT, TFT_BLUE);
+        display_.drawRect(BUTTON_B_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT, TFT_WHITE);
+        // display_.setTextSize(2);
+        // display_.setTextColor(TFT_WHITE, TFT_BLUE);
+        display_.drawCentreString("A", BUTTON_A_X + BUTTON_WIDTH / 2, BUTTON_Y + BUTTON_HEIGHT / 2-10);
+        display_.drawCentreString("B", BUTTON_B_X + BUTTON_WIDTH / 2, BUTTON_Y + BUTTON_HEIGHT / 2-10);
     }
 
     /// Virtual method implementation

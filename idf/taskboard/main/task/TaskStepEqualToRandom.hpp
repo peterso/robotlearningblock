@@ -36,17 +36,22 @@ struct TaskStepEqualToRandom :
     }
 
     /// Virtual method implementation
+    void initialize_step() const override
+    {
+        // Generate initial random value between 0 and 1
+        random_expected_value_ = SensorMeasurement((float) esp_random() / (float) UINT32_MAX);
+    }
+
+    /// Virtual method implementation
     bool success() const override
     {
-        const bool ret = SensorMeasurement::equal(sensor_.read(), random_expected_value_, tolerance_);
+        return SensorMeasurement::equal(sensor_.read(), random_expected_value_, tolerance_);
+    }
 
-        if (ret)
-        {
-            // Generate new random value between 0 and 1
-            random_expected_value_ = SensorMeasurement((float) esp_random() / (float) UINT32_MAX);
-        }
-
-        return ret;
+    /// Virtual method implementation
+    float score() const override
+    {
+        return 100.0f;
     }
 
 private:

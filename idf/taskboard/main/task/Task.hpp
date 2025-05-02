@@ -34,7 +34,7 @@ struct Task
      * @param first_task_init_timer If true, timer starts only after first step completion
      */
     Task(
-            const std::vector<const TaskStep*>& steps,
+            const std::vector<const TaskStepBase*>& steps,
             const std::string& task_name = "",
             bool first_task_init_timer = false)
         : steps_(steps)
@@ -62,6 +62,23 @@ struct Task
      */
     virtual bool step_done(
             size_t step) const = 0;
+
+    /**
+     * @brief Gets the score of a specific step
+     *
+     * @param step Index of the step to check
+     *
+     * @return Score of the specified step
+     */
+    virtual float step_score(
+            size_t step) const = 0;
+
+    /**
+     * @brief Gets the final score of the protocol
+     * 
+     * @return Score of the protocol
+     */
+    virtual float final_score() const = 0;
 
     /**
      * @brief Gets step done time
@@ -100,15 +117,22 @@ struct Task
         previous_done_state_ = false;
 
         // Restart all sensor reads
-        for (const TaskStep* step : steps_)
+        for (const TaskStepBase* step : steps_)
         {
-            step->sensor().start_read();
+            step->restart_step();
         }
 
         // Regenerate unique ID
         uuid_generate(unique_id_);
         unique_id_str_ = uuid_to_string(unique_id_);
     }
+
+    /**
+     * @brief Gets the total time taken for the task without taking into account automatic steps
+     *
+     * @return Total time in microseconds
+     */
+    virtual int64_t total_task_time() const = 0;
 
     /**
      * @brief Gets the elapsed time since task start
@@ -181,7 +205,7 @@ struct Task
      *
      * @return Const reference to the TaskStep object
      */
-    const TaskStep& step(
+    const TaskStepBase& step(
             size_t step) const
     {
         return *steps_[step];
@@ -225,7 +249,7 @@ protected:
         task_name_ = task_name;
     }
 
-    const std::vector<const TaskStep*>& steps_;     ///< Sequence of steps in the task
+    const std::vector<const TaskStepBase*>& steps_;     ///< Sequence of steps in the task
 
 private:
 

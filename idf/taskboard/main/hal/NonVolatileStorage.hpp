@@ -103,10 +103,11 @@ struct NonVolatileStorage
             return;
         }
 
-        // Write CSV line: timestamp, task name, is_human
-        fprintf(file, "%s,%lld,%d,%s,",
+        // Write CSV line: timestamp, protocol name, protocol time, protocol score, is_human, protocol id
+        fprintf(file, "%s,%lld,%f,%d,%s,",
                 task.name().c_str(),
-                task.elapsed_time(),
+                task.total_task_time(),
+                task.final_score(),
                 is_human ? 1 : 0,
                 task.unique_id().c_str());
 
@@ -130,8 +131,8 @@ struct NonVolatileStorage
         // Ensure data is written to file
         fflush(file);
 
-        ESP_LOGI(TAG, "Added new register: %s, %lld, %d",
-                task.name().c_str(), task.elapsed_time(), is_human ? 1 : 0);
+        ESP_LOGI(TAG, "Added new register: %s, %lld, %f, %d",
+                task.name().c_str(), task.total_task_time(), task.final_score(), is_human ? 1 : 0);
 
         fclose(file);
     }
