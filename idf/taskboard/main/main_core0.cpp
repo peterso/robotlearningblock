@@ -51,6 +51,30 @@ void websockets_task(
 extern "C" void app_main(
         void)
 {
+    // Cycle the solenoid at start up
+    esp_err_t ret_output;
+    ret_output = gpio_reset_pin(GPIO_NUM_19);
+    if (ret_output != ESP_OK) {
+        ESP_LOGE("GPIO", "Failed to reset pin 19");
+        return;
+    }
+    ret_output = gpio_set_direction(GPIO_NUM_19, GPIO_MODE_OUTPUT);
+    if (ret_output != ESP_OK) {
+        ESP_LOGE("GPIO", "Failed to set pin 19 direction");
+        return;
+    }
+    ret_output = gpio_set_level(GPIO_NUM_19, 1);
+    if (ret_output != ESP_OK) {
+        ESP_LOGE("GPIO", "Failed to set pin 19 level");
+        return;
+    }
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    ret_output = gpio_set_level(GPIO_NUM_19, 0);
+    if (ret_output != ESP_OK) {
+        ESP_LOGE("GPIO", "Failed to set pin 19 level");
+        return;
+    }
+
     // ------------------------
     // System Initialization
     // ------------------------
@@ -101,6 +125,10 @@ extern "C" void app_main(
     screen_controller.clear();
     screen_controller.print("-> TaskExecutor started");
 
+    screen_controller.turn_on_gate_LED_clue();
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    screen_controller.turn_off_gate_LED_clue();
+
     // Initialize micro-ROS for ROS communication
     MicroROSController micro_ros_controller;
 
@@ -117,6 +145,7 @@ extern "C" void app_main(
     // Get references to buttons
     const SensorReader& BUTTON_A = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_A");
     const SensorReader& BUTTON_B = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_B");
+    const SensorReader& BUTTON_C = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_C");
     const SensorReader& BUTTON_PWR = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_PWR");
     const SensorReader& RED_BUTTON = nullptr != task_board_driver.get_sensor_by_name("RED_BUTTON") ? 
         *task_board_driver.get_sensor_by_name("RED_BUTTON") :
@@ -343,6 +372,7 @@ extern "C" void app_main(
         {
             ESP_LOGI("app_main", "Button A pressed, cancelling current task");
             task_executor.cancel_task();
+            gpio_set_level(GPIO_NUM_19, 0); // force off the solenoid
 
             // Update screen with cancellation message
             screen_controller.clear();
@@ -363,6 +393,26 @@ extern "C" void app_main(
 
             // Button debounce delay
             while (BUTTON_A.read() == true)
+            {
+                vTaskDelay(pdMS_TO_TICKS(10));
+                task_board_driver.update();
+            }
+        }
+        // Handle Button C press - Toggle solenoid
+        else if (BUTTON_C.read() == true)
+        {
+            ESP_LOGI("app_main", "Button C pressed, toggle solenoid");
+            if (!gpio_get_level(GPIO_NUM_19)) 
+            {
+                gpio_set_level(GPIO_NUM_19, 1);
+                // TAKE CARE THAT THE SOLENOID IS NOT LEFT ON LONGER THAN 5 SECONDS OR IT GETS VERY HOT
+                // TODO: ADD TIMER TO TURN SOLENOID OFF AFTER TURNING IT ON.
+            } else {
+                gpio_set_level(GPIO_NUM_19, 0);
+            }
+            
+            // Button debounce delay
+            while (BUTTON_C.read() == true)
             {
                 vTaskDelay(pdMS_TO_TICKS(10));
                 task_board_driver.update();

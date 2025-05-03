@@ -275,15 +275,7 @@ struct TaskBoardDriver_v1 :
                         });
         Actuator* ball_drop_solenoid = new Actuator("BALL_DROP_SOLENOID", [&](Actuator::State state)
                         {
-                            // gpio_set_level(GPIO_NUM_27, state == Actuator::State::ON); // was here when I started
-                            // gpio_set_level(GPIO_NUM_27, 1);
-                            gpio_set_level(GPIO_NUM_27, state);
-                            
-                            // if (state == Actuator::State::ON){
-                            //     gpio_set_level(GPIO_NUM_27, 1);
-                            // } else {
-                            //     gpio_set_level(GPIO_NUM_27, 0);
-                            // }
+                            gpio_set_level(GPIO_NUM_27, state == Actuator::State::ON);
                         });
         Actuator* all_goal_leds = new Actuator("ALL_GOAL_LEDS", [&](Actuator::State state)
                         {
