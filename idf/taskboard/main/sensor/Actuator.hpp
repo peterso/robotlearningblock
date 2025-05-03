@@ -19,7 +19,8 @@ struct Actuator
     enum State
     {
         OFF = 0,
-        ON = 1
+        ON = 1,
+        LED_ON = 255 // tried 10000, 1000, 255 but LED is still dim or flickering
     };
 
     /// @brief Function type for setting actuator state

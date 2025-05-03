@@ -258,24 +258,32 @@ struct TaskBoardDriver_v1 :
         // Initialize actuators
         Actuator* goal_1_led = new Actuator("GOAL_1_LED", [&](Actuator::State state)
                         {
-                            hardware_low_level_controller_.pb_hub_controller_1.write_PWM_IO0(PbHubController::Channel::CHANNEL_4, state == Actuator::State::LED_ON);
+                            hardware_low_level_controller_.pb_hub_controller_1.write_PWM_IO1(PbHubController::Channel::CHANNEL_4, state == Actuator::State::LED_ON);
                         });
         Actuator* goal_2_led = new Actuator("GOAL_2_LED", [&](Actuator::State state)
                         {
-                            ESP_LOGI("app_main", "setting value goal_2_led"); 
-                            hardware_low_level_controller_.pb_hub_controller_1.write_PWM_IO1(PbHubController::Channel::CHANNEL_4, state == Actuator::State::LED_ON);
+                            hardware_low_level_controller_.pb_hub_controller_1.write_PWM_IO0(PbHubController::Channel::CHANNEL_5, state == Actuator::State::LED_ON);
                         });
         Actuator* goal_3_led = new Actuator("GOAL_3_LED", [&](Actuator::State state)
                         {
-                            hardware_low_level_controller_.pb_hub_controller_1.write_PWM_IO0(PbHubController::Channel::CHANNEL_5, state == Actuator::State::LED_ON);
+                            hardware_low_level_controller_.pb_hub_controller_1.write_PWM_IO0(PbHubController::Channel::CHANNEL_4, state == Actuator::State::LED_ON);
                         });
         Actuator* goal_4_led = new Actuator("GOAL_4_LED", [&](Actuator::State state)
                         {
                             hardware_low_level_controller_.pb_hub_controller_1.write_PWM_IO1(PbHubController::Channel::CHANNEL_5, state == Actuator::State::LED_ON);
                         });
+        Actuator* blue_button_led = new Actuator("BLUE_BUTTON_LED", [&](Actuator::State state)
+                        {
+                            hardware_low_level_controller_.pb_hub_controller_2.write_PWM_IO0(PbHubController::Channel::CHANNEL_0, state == Actuator::State::LED_ON);
+                        });
+        Actuator* red_button_led = new Actuator("RED_BUTTON_LED", [&](Actuator::State state)
+                        {
+                            hardware_low_level_controller_.pb_hub_controller_2.write_PWM_IO0(PbHubController::Channel::CHANNEL_1, state == Actuator::State::LED_ON);
+                        });
         Actuator* ball_drop_solenoid = new Actuator("BALL_DROP_SOLENOID", [&](Actuator::State state)
                         {
-                            gpio_set_level(GPIO_NUM_27, state == Actuator::State::ON);
+                            // gpio_set_level(GPIO_NUM_27, state == Actuator::State::ON);
+                            gpio_set_level(GPIO_NUM_27, 1);
                         });
         Actuator* all_goal_leds = new Actuator("ALL_GOAL_LEDS", [&](Actuator::State state)
                         {
@@ -290,6 +298,8 @@ struct TaskBoardDriver_v1 :
         actuators_.push_back(goal_2_led);
         actuators_.push_back(goal_3_led);
         actuators_.push_back(goal_4_led);
+        actuators_.push_back(blue_button_led);
+        actuators_.push_back(red_button_led);
         actuators_.push_back(ball_drop_solenoid);
         actuators_.push_back(all_goal_leds);
 
@@ -348,28 +358,38 @@ struct TaskBoardDriver_v1 :
 
         std::vector<const TaskStepBase*>* main_steps = new std::vector<const TaskStepBase*>
         {
-            new TaskStepActuator(*all_goal_leds, Actuator::State::LED_ON),
+            new TaskStepActuator(*blue_button_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(true)),
+            new TaskStepActuator(*blue_button_led, Actuator::State::OFF),
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(false)),
+            new TaskStepActuator(*red_button_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON_RIGHT"), SensorMeasurement(true)),
+            new TaskStepActuator(*red_button_led, Actuator::State::OFF),
             new TaskStepActuator(*all_goal_leds, Actuator::State::OFF),
+            new TaskStepActuator(*goal_4_led, Actuator::State::LED_ON),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTouchGoalFromPool(*get_sensor_by_name("TOUCH_SCREEN"), touch_goal_pool), // PS: task needs to be fixed touches aren't registered
-            new TaskStepActuator(*goal_2_led, Actuator::State::ON),
+            new TaskStepActuator(*goal_2_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_2"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_2_led, Actuator::State::OFF),
             new TaskStepActuator(*ball_drop_solenoid, Actuator::State::ON),
+            new TaskStepActuator(*blue_button_led, Actuator::State::LED_ON),
             new TaskStepEqualDuringRandom(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(true), 0.0, 3000L, 8000L),
             new TaskStepActuator(*ball_drop_solenoid, Actuator::State::OFF),
-            new TaskStepActuator(*all_goal_leds, Actuator::State::ON),
+            new TaskStepActuator(*blue_button_led, Actuator::State::OFF),
+            // do something here to assess if the ball has reached goal 1, maybe wait a fixed amount of time and return success if goal 1 is not made 
+            new TaskStepActuator(*goal_1_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_1"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_1_led, Actuator::State::OFF),
+            new TaskStepActuator(*goal_2_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_2"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_2_led, Actuator::State::OFF),
+            new TaskStepActuator(*goal_3_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_3"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_3_led, Actuator::State::OFF),
+            new TaskStepActuator(*goal_4_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_4"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_4_led, Actuator::State::OFF),
             

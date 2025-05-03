@@ -125,10 +125,6 @@ extern "C" void app_main(
     screen_controller.clear();
     screen_controller.print("-> TaskExecutor started");
 
-    screen_controller.turn_on_gate_LED_clue();
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    screen_controller.turn_off_gate_LED_clue();
-
     // Initialize micro-ROS for ROS communication
     MicroROSController micro_ros_controller;
 
@@ -372,7 +368,6 @@ extern "C" void app_main(
         {
             ESP_LOGI("app_main", "Button A pressed, cancelling current task");
             task_executor.cancel_task();
-            gpio_set_level(GPIO_NUM_19, 0); // force off the solenoid
 
             // Update screen with cancellation message
             screen_controller.clear();
@@ -402,14 +397,10 @@ extern "C" void app_main(
         else if (BUTTON_C.read() == true)
         {
             ESP_LOGI("app_main", "Button C pressed, toggle solenoid");
-            if (!gpio_get_level(GPIO_NUM_19)) 
-            {
-                gpio_set_level(GPIO_NUM_19, 1);
-                // TAKE CARE THAT THE SOLENOID IS NOT LEFT ON LONGER THAN 5 SECONDS OR IT GETS VERY HOT
-                // TODO: ADD TIMER TO TURN SOLENOID OFF AFTER TURNING IT ON.
-            } else {
-                gpio_set_level(GPIO_NUM_19, 0);
-            }
+            // briefly turn on then off the solenoid
+            gpio_set_level(GPIO_NUM_19, 1);
+            vTaskDelay(pdMS_TO_TICKS(500));
+            gpio_set_level(GPIO_NUM_19, 0);
             
             // Button debounce delay
             while (BUTTON_C.read() == true)

@@ -143,7 +143,7 @@ struct PbHubController
             const bool value)
     {
         uint8_t data = value;
-        read_operation(channel, Operation::WRITE_IO0, reinterpret_cast<uint8_t*>(&data), sizeof(data));
+        write_operation(channel, Operation::WRITE_IO0, reinterpret_cast<uint8_t*>(&data), sizeof(data));
     }
 
     /**
@@ -157,7 +157,7 @@ struct PbHubController
             const bool value)
     {
         uint8_t data = value;
-        read_operation(channel, Operation::WRITE_IO1, reinterpret_cast<uint8_t*>(&data), sizeof(data));
+        write_operation(channel, Operation::WRITE_IO1, reinterpret_cast<uint8_t*>(&data), sizeof(data));
     }
 
     /**
@@ -171,7 +171,7 @@ struct PbHubController
         const uint8_t value)
     {
         uint8_t data = value;
-        read_operation(channel, Operation::PWM_IO0, reinterpret_cast<uint8_t*>(&data), sizeof(data));
+        write_operation(channel, Operation::PWM_IO0, reinterpret_cast<uint8_t*>(&data), sizeof(data));
     }
 
     /**
@@ -185,7 +185,7 @@ struct PbHubController
             const uint8_t value)
     {
         uint8_t data = value;
-        read_operation(channel, Operation::PWM_IO1, reinterpret_cast<uint8_t*>(&data), sizeof(data));
+        write_operation(channel, Operation::PWM_IO1, reinterpret_cast<uint8_t*>(&data), sizeof(data));
     }
 
 protected:
@@ -260,5 +260,6 @@ protected:
 
 private:
 
-    const uint8_t i2c_addr_ = 0;   ///< I2C address of PbHub device
+    // const uint8_t i2c_addr_ = 0;   ///< I2C address of PbHub device
+    const uint8_t i2c_addr_ = DEFAULT_I2C_ADDR;   ///< I2C address of PbHub device
 };
