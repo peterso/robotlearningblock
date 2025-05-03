@@ -125,9 +125,9 @@ extern "C" void app_main(
     screen_controller.clear();
     screen_controller.print("-> TaskExecutor started");
 
-    screen_controller.turn_on_gate_LED_clue();
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    screen_controller.turn_off_gate_LED_clue();
+    // screen_controller.turn_on_gate_LED_clue();
+    // vTaskDelay(pdMS_TO_TICKS(1000));
+    // screen_controller.turn_off_gate_LED_clue();
 
     // Initialize micro-ROS for ROS communication
     MicroROSController micro_ros_controller;
