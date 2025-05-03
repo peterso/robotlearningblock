@@ -160,6 +160,34 @@ struct PbHubController
         read_operation(channel, Operation::WRITE_IO1, reinterpret_cast<uint8_t*>(&data), sizeof(data));
     }
 
+    /**
+     * @brief Writes PWM value to IO0 pin
+     *
+     * @param channel Channel to write to
+     * @param value range 0 - 255
+     */
+     void write_PWM_IO0(
+        const Channel channel,
+        const uint8_t value)
+    {
+        uint8_t data = value;
+        read_operation(channel, Operation::PWM_IO0, reinterpret_cast<uint8_t*>(&data), sizeof(data));
+    }
+
+    /**
+    * @brief Writes PWM value to IO1 pin
+    *
+    * @param channel Channel to write to
+    * @param value range 0 - 255
+    */
+    void write_PWM_IO1(
+            const Channel channel,
+            const uint8_t value)
+    {
+        uint8_t data = value;
+        read_operation(channel, Operation::PWM_IO1, reinterpret_cast<uint8_t*>(&data), sizeof(data));
+    }
+
 protected:
 
     /**
