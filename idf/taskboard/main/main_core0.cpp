@@ -145,7 +145,7 @@ extern "C" void app_main(
     const SensorReader& BUTTON_PWR = *task_board_driver.get_sensor_by_name("ON_BOARD_BUTTON_PWR");
     const SensorReader& RED_BUTTON = nullptr != task_board_driver.get_sensor_by_name("RED_BUTTON") ? 
         *task_board_driver.get_sensor_by_name("RED_BUTTON") :
-        *task_board_driver.get_sensor_by_name("RED_BUTTON_LEFT");
+        *task_board_driver.get_sensor_by_name("RED_BUTTON_RIGHT");
     const SensorReader& BLUE_BUTTON = nullptr != task_board_driver.get_sensor_by_name("BLUE_BUTTON") ?
         *task_board_driver.get_sensor_by_name("BLUE_BUTTON") :
         *task_board_driver.get_sensor_by_name("BLUE_BUTTON_LEFT");
