@@ -77,8 +77,9 @@ struct TaskStepTouchGoalFromPool :
         goal_ = goal_pool_->at(0);
         goal_pool_->erase(goal_pool_->begin());
 
-        step_started_ = false;
         initial_time_ = esp_timer_get_time();
+        last_touching_ = false;
+        tap_count_ = 0;
 
         measured_path_.clear();
     }
@@ -92,41 +93,59 @@ struct TaskStepTouchGoalFromPool :
             sensor_value_aux.get_vector3().y * 240.0f / 100.0f,
             sensor_value_aux.get_vector3().z};
         bool pressing_screen = (sensor_value.z != 0);
-        if (!step_started_)
+
+        if (pressing_screen)
         {
-            if (pressing_screen)
+            // Save the value
+            measured_path_.push_back(sensor_value);
+
+            // Update the timer for the first tap
+            if (tap_count_ == 0)
             {
-                step_started_ = true;
                 first_tap_start_time_ = esp_timer_get_time();
                 first_tap_duration_ = 0;
-                tap_count_ = 0;
                 ESP_LOGI(TAG, "Step started");
             }
-        }
-        else
-        {
-            if (pressing_screen)
-            {
-                measured_path_.push_back(sensor_value);
-            }
-        }
-
-        if (pressing_screen && !last_touching_)
-        {
-            tap_count_++;
-            ESP_LOGI(TAG, "Tap count: %d", tap_count_);
-            if (tap_count_ == 1)
+            else if (tap_count_ == 1)
             {
                 first_tap_duration_ = esp_timer_get_time() - first_tap_start_time_;
+            }
+
+            // Update the tap count
+            if (!last_touching_)
+            {
+                tap_count_++;
+                ESP_LOGI(TAG, "Tap count: %d", tap_count_);
             }
         }
 
         last_touching_ = pressing_screen;
 
-        // Check if the time limit has been reached+
+        // Check for success conditions
         if (esp_timer_get_time() - initial_time_ > TIMEOUT_LIMIT)
         {
+            // The time limit has been reached
             ESP_LOGI(TAG, "Time limit reached");
+            return true;
+        }
+        else if (!pressing_screen)
+        {
+            // Has the tap count been reached?
+            int tap_count_limit =  (goal_ == DoubleTapAGoal ||
+                                    goal_ == DoubleTapBGoal ||
+                                    goal_ == DoubleTapBackgroundGoal) ? 2 : 1;
+                    
+            if(tap_count_ >= tap_count_limit)
+            {
+                ESP_LOGI(TAG, "Step finished");
+                return true;
+            }
+        }
+        else if (first_tap_duration_ > 2000000)
+        {
+            // A long press has been detected
+            ESP_LOGI(TAG, "Long press detected");
+            tap_count_ = 1;
             return true;
         }
 
@@ -530,7 +549,6 @@ protected:
     }
 
     mutable TouchGoalType goal_;                                     ///< Shape type to be traced
-    mutable bool step_started_ = 0;                             ///< Flag to indicate if the step has started
     mutable std::vector<SensorMeasurement>measured_path_ = {};  ///< Path measured
     mutable int64_t initial_time_ = 0;                               ///< Time when the step started
     mutable int tap_count_ = 0;                                  ///< Number of taps detected
