@@ -46,13 +46,12 @@ void websockets_task(
         void* args);
 
 /**
- * @brief System entry point
+ * @brief GPIO configuration
  */
-extern "C" void app_main(
-        void)
+void config_gpios()
 {
-    // Cycle the solenoid at start up
     esp_err_t ret_output;
+    // Set GPIO 19 to output mode
     ret_output = gpio_reset_pin(GPIO_NUM_19);
     if (ret_output != ESP_OK) {
         ESP_LOGE("GPIO", "Failed to reset pin 19");
@@ -63,6 +62,7 @@ extern "C" void app_main(
         ESP_LOGE("GPIO", "Failed to set pin 19 direction");
         return;
     }
+    // Cycle the solenoid at start up
     ret_output = gpio_set_level(GPIO_NUM_19, 1);
     if (ret_output != ESP_OK) {
         ESP_LOGE("GPIO", "Failed to set pin 19 level");
@@ -74,6 +74,55 @@ extern "C" void app_main(
         ESP_LOGE("GPIO", "Failed to set pin 19 level");
         return;
     }
+}
+
+/**
+ * @brief Deactivate the solenoid
+ */
+void deactivate_solenoid()
+{
+    esp_err_t ret_output;
+    ret_output = gpio_set_level(GPIO_NUM_19, 0);
+    if (ret_output != ESP_OK) {
+        ESP_LOGE("GPIO", "Failed to set pin 19 level");
+        return;
+    }
+}
+
+TimerHandle_t timer_solenoid_ = xTimerCreate(   //< Timer to turn solenoid off
+    "SolenoidOff",         // Timer name
+    pdMS_TO_TICKS(5000),   // Delay in ms
+    pdFALSE,               // Disabled auto-reload
+    nullptr,
+    [](TimerHandle_t xTimer) {  // Callback
+        // Turn solenoid off
+        deactivate_solenoid();
+    }
+);
+
+/**
+ * @brief Activate the solenoid for 5 seconds
+ */
+void activate_solenoid()
+{
+    esp_err_t ret_output;
+    ret_output = gpio_set_level(GPIO_NUM_19, 1);
+    if (ret_output != ESP_OK) {
+        ESP_LOGE("GPIO", "Failed to set pin 19 level");
+        return;
+    }
+    if (timer_solenoid_ != nullptr) {
+        xTimerStart(timer_solenoid_, 0);
+    }
+}
+
+/**
+ * @brief System entry point
+ */
+extern "C" void app_main(
+        void)
+{
+    config_gpios();
 
     // ------------------------
     // System Initialization
