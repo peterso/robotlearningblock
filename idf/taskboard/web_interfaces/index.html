@@ -280,6 +280,9 @@
         .step.pending {
             background: #fff3e0;
         }
+        .step.failed {
+            background: #ffebee;
+        }
         .step-status {
             font-size: 1.2em;
             color: #666;
@@ -290,6 +293,9 @@
         }
         .step.pending .step-status {
             color: #ff9800;
+        }
+        .step.failed .step-status {
+            color: #f44336;
         }
         .step-name {
             font-weight: 500;
@@ -1332,8 +1338,8 @@
                         <div class="task-uuid"> <small> Unique ID: <b>${data.current_task.unique_id} </b> </small> </div>
                         <div class="task-steps">
                             ${data.current_task.steps.map(step => `
-                                <div class="step ${step.done ? 'done' : 'pending'}">
-                                    <span class="step-status">${step.done ? '✓' : '○'}</span>
+                                <div class="step ${step.done ? ( step.score < 50 ? 'failed' : 'done' ) : 'pending'}">
+                                    <span class="step-status">${step.done ? ( step.score < 50 ? '✗' : '✓') : '○'}</span>
                                     <span class="step-name">${step.sensor}</span>
                                     ${step.finish_time || step.finish_time == 0.0 ? '<span class="step-time">' + step.finish_time.toFixed(2) + ' s</span>' : ''}
                                     ${step.score >= 0.0 && step.score < 100.0 ? '<span>·</span><span>' + step.score.toFixed(0) + '%</span>' : ''}
