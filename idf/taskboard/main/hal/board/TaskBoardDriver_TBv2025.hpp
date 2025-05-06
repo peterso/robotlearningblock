@@ -108,7 +108,7 @@ struct TaskBoardDriver_v1 :
                             return SensorMeasurement(value);
                         });
 
-        Sensor* ball_goal_4 = new Sensor("BALL_GOAL_4", [&]()
+        Sensor* stylus_on_stand = new Sensor("STYLUS_ON_STAND", [&]()
                         {
                             bool value =
                             hardware_low_level_controller_.pb_hub_controller_1.read_digital_IO0(PbHubController::Channel::
@@ -122,24 +122,6 @@ struct TaskBoardDriver_v1 :
                             bool value =
                             hardware_low_level_controller_.pb_hub_controller_2.read_digital_IO1(PbHubController::Channel::
                                     CHANNEL_0);
-
-                            return SensorMeasurement(!value); // Button is inverted
-                        });
-
-        Sensor* red_button_left = new Sensor("RED_BUTTON_LEFT", [&]()
-                        {
-                            bool value =
-                            hardware_low_level_controller_.pb_hub_controller_2.read_digital_IO1(PbHubController::Channel::
-                                    CHANNEL_0);
-
-                            return SensorMeasurement(!value); // Button is inverted
-                        });
-
-        Sensor* blue_button_right = new Sensor("BLUE_BUTTON_RIGHT", [&]()
-                        {
-                            bool value =
-                            hardware_low_level_controller_.pb_hub_controller_2.read_digital_IO1(PbHubController::Channel::
-                                    CHANNEL_1);
 
                             return SensorMeasurement(!value); // Button is inverted
                         });
@@ -243,10 +225,8 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(ball_goal_1);
         sensors_.push_back(ball_goal_2);
         sensors_.push_back(ball_goal_3);
-        sensors_.push_back(ball_goal_4);
+        sensors_.push_back(stylus_on_stand);
         sensors_.push_back(blue_button_left);
-        sensors_.push_back(red_button_left);
-        sensors_.push_back(blue_button_right);
         sensors_.push_back(red_button_right);
         sensors_.push_back(on_board_button_a);
         sensors_.push_back(on_board_button_b);
@@ -359,7 +339,7 @@ struct TaskBoardDriver_v1 :
             new TaskStepActuator(*all_goal_leds, Actuator::State::OFF),
             new TaskStepActuator(*ball_drop_solenoid, Actuator::State::OFF),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_1"), SensorMeasurement(true)),
-            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_4"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("STYLUS_ON_STAND"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("RED_BUTTON_RIGHT"), SensorMeasurement(true)),
         };
 
@@ -372,9 +352,8 @@ struct TaskBoardDriver_v1 :
             new TaskStepActuator(*blue_button_led, Actuator::State::OFF),
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(false)),
             new TaskStepActuator(*red_button_led, Actuator::State::LED_ON),
-            new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON_RIGHT"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("RED_BUTTON_RIGHT"), SensorMeasurement(true)),
             new TaskStepActuator(*red_button_led, Actuator::State::OFF),
-            new TaskStepActuator(*all_goal_leds, Actuator::State::OFF),
             new TaskStepActuator(*goal_4_led, Actuator::State::LED_ON),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
@@ -399,7 +378,7 @@ struct TaskBoardDriver_v1 :
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_3"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_3_led, Actuator::State::OFF),
             new TaskStepActuator(*goal_4_led, Actuator::State::LED_ON),
-            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_4"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("STYLUS_ON_STAND"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_4_led, Actuator::State::OFF),
             
         };
