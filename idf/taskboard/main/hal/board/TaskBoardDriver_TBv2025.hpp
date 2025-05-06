@@ -349,20 +349,32 @@ struct TaskBoardDriver_v1 :
 
         std::vector<const TaskStepBase*>* main_steps = new std::vector<const TaskStepBase*>
         {
+            // TASK 1 Find Task Board
             new TaskStepActuator(*blue_button_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(true)),
+            // TASK 2 Speed Test
             new TaskStepActuator(*blue_button_led, Actuator::State::OFF),
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(false)),
             new TaskStepActuator(*red_button_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("RED_BUTTON_RIGHT"), SensorMeasurement(true)),
             new TaskStepActuator(*red_button_led, Actuator::State::OFF),
+            // TASK 2.5 Light Test
+            new TaskStepWaitRandom("LIGHT_TEST_RAND_WAIT", 2000L, 5000L),
+            // new TaskStepEqualDuringRandom(*get_sensor_by_name("RED_BUTTON_RIGHT"), SensorMeasurement(false), 0.0, 1000L, 4000L),
+            new TaskStepActuator(*red_button_led, Actuator::State::LED_ON),
+            new TaskStepEqual(*get_sensor_by_name("RED_BUTTON_RIGHT"), SensorMeasurement(true)),
+            new TaskStepActuator(*red_button_led, Actuator::State::OFF),
+            // TASK 3 Screen Test
             new TaskStepActuator(*goal_4_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("STYLUS_ON_STAND"), SensorMeasurement(false)),
             new TaskStepActuator(*goal_4_led, Actuator::State::OFF),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
             new TaskStepTraceShapeFromPool(*get_sensor_by_name("TOUCH_SCREEN"), shape_pool),
-            new TaskStepTouchGoalFromPool(*get_sensor_by_name("TOUCH_SCREEN"), touch_goal_pool), // PS: task needs to be fixed touches aren't registered
+            new TaskStepTouchGoalFromPool(*get_sensor_by_name("TOUCH_SCREEN"), touch_goal_pool), 
+            new TaskStepTouchGoalFromPool(*get_sensor_by_name("TOUCH_SCREEN"), touch_goal_pool), 
+            new TaskStepTouchGoalFromPool(*get_sensor_by_name("TOUCH_SCREEN"), touch_goal_pool), 
+            // Task 4 Ball Drop
             new TaskStepActuator(*goal_2_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_2"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_2_led, Actuator::State::OFF),
@@ -374,6 +386,7 @@ struct TaskBoardDriver_v1 :
             // do something here to assess if the ball has reached goal 1, maybe wait a fixed amount of time and return success if goal 1 is not made 
             new TaskStepActuator(*goal_1_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_1"), SensorMeasurement(true)),
+            // TASK 5 Marble Maze
             new TaskStepActuator(*goal_1_led, Actuator::State::OFF),
             new TaskStepActuator(*goal_2_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_2"), SensorMeasurement(true)),
@@ -381,6 +394,10 @@ struct TaskBoardDriver_v1 :
             new TaskStepActuator(*goal_3_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_3"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_3_led, Actuator::State::OFF),
+            new TaskStepActuator(*goal_1_led, Actuator::State::LED_ON),
+            new TaskStepEqual(*get_sensor_by_name("BALL_GOAL_1"), SensorMeasurement(true)),
+            new TaskStepActuator(*goal_1_led, Actuator::State::OFF),
+            // TASK 6 Return Stylus to Stand to End Test
             new TaskStepActuator(*goal_4_led, Actuator::State::LED_ON),
             new TaskStepEqual(*get_sensor_by_name("STYLUS_ON_STAND"), SensorMeasurement(true)),
             new TaskStepActuator(*goal_4_led, Actuator::State::OFF),
