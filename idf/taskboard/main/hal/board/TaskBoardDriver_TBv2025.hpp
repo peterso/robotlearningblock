@@ -287,7 +287,7 @@ struct TaskBoardDriver_v1 :
                         {
                             if (state == Actuator::State::ON)
                             {
-                            activate_solenoid();
+                                activate_solenoid();
                             }
                             else
                             {
@@ -385,7 +385,7 @@ struct TaskBoardDriver_v1 :
             new TaskStepActuator(*goal_2_led, Actuator::State::OFF),
             new TaskStepActuator(*ball_drop_solenoid, Actuator::State::ON),
             new TaskStepActuator(*blue_button_led, Actuator::State::LED_ON),
-            new TaskStepEqualDuringRandom(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(true), 0.0, 3000L, 8000L),
+            new TaskStepEqualDuringRandom(*get_sensor_by_name("BLUE_BUTTON_LEFT"), SensorMeasurement(true), 0.0, 1000L, 4000L),
             new TaskStepActuator(*ball_drop_solenoid, Actuator::State::OFF),
             new TaskStepActuator(*blue_button_led, Actuator::State::OFF),
             // do something here to assess if the ball has reached goal 1, maybe wait a fixed amount of time and return success if goal 1 is not made 
