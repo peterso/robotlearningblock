@@ -45,22 +45,6 @@ struct WebSocketTaskArgs
 void websockets_task(
         void* args);
 
-
-TimerHandle_t timer_solenoid_ = xTimerCreate(   //< Timer to turn solenoid off
-    "SolenoidOff",         // Timer name
-    pdMS_TO_TICKS(5000),   // Delay in ms
-    pdFALSE,               // Disabled auto-reload
-    nullptr,
-    [](TimerHandle_t xTimer) {  // Callback
-        // Turn solenoid off
-        esp_err_t ret_output = gpio_set_level(GPIO_NUM_19, 0);
-        if (ret_output != ESP_OK) {
-            ESP_LOGE("GPIO", "Failed to set pin 19 level");
-            return;
-        }
-    }
-);
-
 /**
  * @brief GPIO configuration
  */
@@ -91,6 +75,30 @@ void config_gpios()
         return;
     }
 }
+
+/**
+ * @brief Deactivate the solenoid
+ */
+void deactivate_solenoid()
+{
+    esp_err_t ret_output;
+    ret_output = gpio_set_level(GPIO_NUM_19, 0);
+    if (ret_output != ESP_OK) {
+        ESP_LOGE("GPIO", "Failed to set pin 19 level");
+        return;
+    }
+}
+
+TimerHandle_t timer_solenoid_ = xTimerCreate(   //< Timer to turn solenoid off
+    "SolenoidOff",         // Timer name
+    pdMS_TO_TICKS(5000),   // Delay in ms
+    pdFALSE,               // Disabled auto-reload
+    nullptr,
+    [](TimerHandle_t xTimer) {  // Callback
+        // Turn solenoid off
+        deactivate_solenoid();
+    }
+);
 
 /**
  * @brief Activate the solenoid for 5 seconds
