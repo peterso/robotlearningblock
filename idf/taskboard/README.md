@@ -96,6 +96,73 @@ To run `idf.py` from any additional terminal attached to the Docker, the followi
 source /opt/esp/idf/export.sh
 ```
 
+## Build ROS 2 messages
+
+In case that the ROS 2 messages are modified, they need to be built from a ROS 2 environment.
+
+This is only necessary when the compiler shows an error similar to this:
+
+```bash
+/robotlearningblock/idf/taskboard/main/microros/MicroROSTypes.hpp:217:27: error: 'robothon_taskboard_msgs__msg__TaskStatus' {aka 'struct robothon_taskboard_msgs__msg__TaskStatus'} has no member named 'score'
+```
+
+To build the ROS 2 messages run `colcon build` in the `extra_ros_packages` directory.
+
+```bash
+# Navigate to the messages directory
+cd extra_ros_packages
+
+# Build the messages
+colcon build
+
+# Source the ROS 2 workspace
+source install/local_setup.bash
+```
+
+If the above commands are not available in your current environment, it is possible to start a ROS 2 Jazzy Docker container to read and modify the files in the host filesystem via a shared volume.
+
+```bash
+# Go to the taskboard directory in your host filesystem
+cd robotlearningblock/idf/taskboard
+
+# Run the Jazzy Docker container with a volume pointing to the current directory
+docker run -it --rm --privileged --net=host -v $(pwd):/robotlearningblock/idf/taskboard ros:jazzy
+
+# Navigate to the messages directory
+cd /robotlearningblock/idf/taskboard/extra_ros_packages
+
+# Build the messages
+colcon build
+
+# Source the ROS 2 workspace
+source install/local_setup.bash
+```
+
+After building the messages, go back to the espressif environment, clean the project and build it again:
+
+```bash
+# Clean and build the project
+idf.py clean
+idf.py build
+```
+
+If you used the ROS 2 Jazzy Docker approach, to point to the already existing project in your host filesystem, you can also use the Docker volume option with the ESP-IDF container:
+
+```bash
+# Go to the repository root
+cd robotlearningblock
+
+# Run the ESP-IDF Docker container with a volume pointing to the current directory
+docker run -it --rm -v /dev:/dev -v $(pwd):/robotlearningblock --privileged espressif/idf:release-v5.3
+
+# Navigate to the taskboard directory inside the Docker container
+cd /robotlearningblock/idf/taskboard
+
+# Clean and build the project
+idf.py clean
+idf.py build
+```
+
 ## Data Model Overview
 
 The Robothon Task Board Firmware is built around a hierarchical data model where **Tasks** is the main component.

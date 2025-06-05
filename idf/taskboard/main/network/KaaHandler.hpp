@@ -7,6 +7,7 @@
 #include <network/JSONHandler.hpp>
 #include <hal/TaskBoardDriver.hpp>
 
+#include <esp_mac.h>
 #include <esp_log.h>
 
 /**
@@ -18,8 +19,6 @@ struct KaaHandler
 {
     const char* TAG = "KaaHandler"; ///< Logging tag
 
-    const char* KAA_URI = "http://cloud.kaaiot.com/kpc/kp1/c1v9jqmgul2l1s47m6bg-v0/dcx/task_board_dev/json";
-
     /**
      * @brief Constructs a new KaaHandler object
      *
@@ -29,6 +28,13 @@ struct KaaHandler
             const TaskBoardDriver& task_board_driver)
         : task_board_driver_(task_board_driver)
     {
+        uint8_t mac[6];
+        esp_read_mac(mac, ESP_MAC_WIFI_STA);
+
+        char KAA_URI[80];
+        
+        sprintf(KAA_URI, "http://cloud.kaaiot.com/kpc/kp1/c1v9jqmgul2l1s47m6bg-v0/dcx/task_board_%01X%02X/json", (mac[4] & 0x0F), mac[5]);
+
         // Make HTTP request to get latest release
         esp_http_client_config_t config = {};
         config.url = KAA_URI;
