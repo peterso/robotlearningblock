@@ -12,7 +12,7 @@ The concept of a crowdsourced robot solution for real-world use cases with the D
 
 ## Quick Links
 
-- IEEE-RAM Paper: [DOI: 10.1109/MRA.2023.3336473](https://doi.org/10.1109/MRA.2023.3336473)
+- IEEE-RAM Paper Digital Robot Judge: [DOI: 10.1109/MRA.2023.3336473](https://doi.org/10.1109/MRA.2023.3336473)
 - 1-min Paper [Highlight Video](https://drive.google.com/file/d/1jVCkPBq7-JO2KUGaQfxDcgK1_qGyWVMT/view) 
 - ERF 2022 Hackathon: Franka Emika Tactile Manipulation Benchmark Challenge: [Highlight Video](https://www.youtube.com/watch?app=desktop&v=eqpV09Kuc_o)
 - Robothon Grand Challenge Competition [automatica website](https://automatica-munich.com/en/munich-i/robothon/)
@@ -128,7 +128,7 @@ When working with the task board, developers may want to read the task board sta
 
 The core design features of the task board microcontroller are:
 
-[Status] Feature Description
+**[Status] Feature Description**
 
 - [x] task board monitors a digital state of all mounted manipulation elements
 - [x] user can start a trial using the device without internet connection
@@ -170,26 +170,27 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 ### Relevant Design Documents
 
 
-| Design Document       | TBv2021 | TBv2023 |
-|-----------------------|---------|---------|
-| Design BOM            | [TBv2021](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit?usp=sharing)        | [TBv2023](https://drive.google.com/file/d/1Rnd_u9MT5yowWGOLc9BP8yHH_inwEdMb/view?usp=sharing)        |
-| Assembly Drawing      | [PDF](https://drive.google.com/file/d/1hJSEHZe9U0Q7VRQKNKOsz96tIN9Y0mhF/view?usp=sharing)        | [PDF](https://drive.google.com/file/d/1tS-sQoqfd0bgX27vQssPpRKi-OBj2Tsp/view?usp=sharing)        |
-| CAD Files             | [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)        | [Onshape](https://cad.onshape.com/documents/db5a4ee49311d077447cc358/w/9c0b93db9a3945ee3cde6ada/e/5ab54cca5c27c6df318a9a63?renderMode=0&uiState=6720a79a1d02e666789b5f03)        |
-| Assembly Instructions | [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)        | [PDF](https://drive.google.com/file/d/1LZS_wPafdJOO1Q0lu-8TDO9xGrxpoSBB/view?usp=sharing)        |
-| Wiring Diagram | [PNG](/assets/images/TaskBoard-5Level-Wiring.png)        | [PDF](https://drive.google.com/file/d/1LZS_wPafdJOO1Q0lu-8TDO9xGrxpoSBB/view?usp=sharing)        |
-| 3D Print Files        | ./assets        | ./assets        |
-| CNC Files             | ./assets        | ./assets        |
+| Design Document       | TBv2021 | TBv2023 | TBv2025 |
+|-----------------------|---------|---------|--------|
+| Design BOM            | [TBv2021](https://docs.google.com/spreadsheets/d/1id1LLbRTHQwQDf9HCM8Hft5gwp9QI8y8CJt2JUEMMQk/edit?usp=sharing)        | [TBv2023](https://drive.google.com/file/d/1Rnd_u9MT5yowWGOLc9BP8yHH_inwEdMb/view?usp=sharing)        | Coming Soon |
+| Assembly Drawing      | [PDF](https://drive.google.com/file/d/1hJSEHZe9U0Q7VRQKNKOsz96tIN9Y0mhF/view?usp=sharing)        | [PDF](https://drive.google.com/file/d/1tS-sQoqfd0bgX27vQssPpRKi-OBj2Tsp/view?usp=sharing)        |  Coming Soon |
+| CAD Files             | [Onshape](https://cad.onshape.com/documents/9a15cff68aad2604a1373593/w/144a51d8ddacf96586ad0e0d/e/052e579b24ce3c66ae263023)        | [Onshape](https://cad.onshape.com/documents/db5a4ee49311d077447cc358/w/9c0b93db9a3945ee3cde6ada/e/5ab54cca5c27c6df318a9a63?renderMode=0&uiState=6720a79a1d02e666789b5f03)        |  [Onshape](https://cad.onshape.com/documents/aecd2bd76f7413bc4958e89c/w/35208a35a382e053eafac0d7/e/f99d3f5cc522bc6d6c1e4afb) |
+| Assembly Instructions | [PDF](https://drive.google.com/file/d/1Znj0Do6tISIWl07lZ31Lp-qGyfQIPycp/view?usp=sharing)        | [PDF](https://drive.google.com/file/d/1LZS_wPafdJOO1Q0lu-8TDO9xGrxpoSBB/view?usp=sharing)        |  Coming Soon |
+| Wiring Diagram | [PNG](/assets/images/TaskBoard-5Level-Wiring.png)        | [PDF](https://drive.google.com/file/d/1LZS_wPafdJOO1Q0lu-8TDO9xGrxpoSBB/view?usp=sharing)        |  Coming Soon |
+| 3D Print Files        | ./assets        | ./assets        |  Coming Soon |
+| CNC Files             | ./assets        | ./assets        |  Coming Soon |
 
 
-### Task Board Deployment
-- An initial 15 task boards were fabricated for the Robothon 2021 competition at automatica.
-- 20 task boards were built for the Robothon 2022 competition.
-- A new design was released for Robothon 2023. 20 task boards were made for the competition.
-- 15 more task boards (TBv2023) were made for the [euROBIN project](https://www.eurobin-project.eu/).
-- ***Order your own task board*** If you are interested in getting a pre-assembled task board to demonstrate your robot platform's capabilities or to follow along in the robot benchmark, please write an e-mail request with the model year [TBv2021 or TBv2023] and the number of boards to peter@modularmotions.com.
+### Task Board Deployment History
+- ***2021*** An initial 15 task boards were fabricated for the Robothon 2021 competition at automatica.
+- ***2022*** 20 task boards were built for the Robothon 2022 competition.
+- ***2023*** A new design was released for Robothon 2023. 20 task boards were made for the competition.
+- ***2024*** 15 more task boards (TBv2023) were made for the [euROBIN project](https://www.eurobin-project.eu/).
+- ***2025*** A new design was released for Robothon 2025. 10 task boards were produced and distributed. 
+- ***Order your own task board*** If you are interested in getting a pre-assembled task board to demonstrate your robot platform's capabilities or to follow along in the robot benchmark, please write an e-mail request with the model year [TBv2021/TBv2023/TBv2025] and the number of boards you wish to have along with your mailing address to peter@modularmotions.com.
 
 
-### Battery Recycling Articles for Manipulation Task Selection
+### Circular Economy Articles inspiring Manipulation Task Selection
 - WEF Report on battery recycling [Link to Article](https://www3.weforum.org/docs/WEF_A_New_Circular_Vision_for_Electronics.pdf)
 - German Battery Collection with GRS Batterien [Link to Article](https://www.en.grs-batterien.de/grs-batterien/)
 - Fun video from Curiousity Quest showing many e-waste handling processes [YouTube Video](https://www.youtube.com/watch?v=lMn-sDvgj4Q&ab_channel=curiosityquest)
@@ -200,9 +201,10 @@ Each task board is equipped with a microcontroller to remotely monitor its state
 - [M5Stack Community Forum](https://community.m5stack.com/category/17/m5-stick-stickc)
 - [KaaIoT Arduino SDK](https://github.com/kaaproject/kaa-arduino-sdk)
 - European Robotics Forum 2022 Franka Emika Tactile Manipulation Benchmark Challenge [Highlight Video](https://www.youtube.com/watch?app=desktop&v=eqpV09Kuc_o)
-- Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2022](https://drive.google.com/file/d/1OdqM9bOmNVIISuL4vuRz019WOS697p_8/view?usp=sharing)
-- Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides 2023](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link)
+- 2022 Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides](https://drive.google.com/file/d/1OdqM9bOmNVIISuL4vuRz019WOS697p_8/view?usp=sharing), Award Ceremony [YouTube](https://www.youtube.com/watch?v=im-amiwJDgc&t=1s)
+- 2023 Robothon Grand Challenge at [automatica/munich_i](https://www.robothon-grand-challenge.com), [Digital Kickoff Meeting Slides](https://drive.google.com/file/d/1x1t6U09iTEmM228orjCqwZNxu3CphAaz/view?usp=share_link), Award Ceremony [YouTube](https://www.youtube.com/watch?v=YmOT24pqiHU&t=559s)
 - euROBIN Manipulation Skill Versatility Challenge at IROS 2024 [Competition Website](http://sites.google.com/view/eurobin-msvc/home)
+- 2025 Robothon Grand Challege at [automatica/munich_i](https://automatica-munich.com/en/munich-i/robothon/)
 
 ### Citation 
 If you find this work insightful to your research or you reference data from our competitions, please cite this work as ***Digital Robot Judge (DR.J): Building a Task-Centric Performance Database of Real-World Manipulation with Electronic Task Boards***. The manuscript is accepted for publication in IEEE Robotics and Automation Magazine as an open-access publication and an early release is available on [IEEE-Xplore](https://ieeexplore.ieee.org/document/10378967).
