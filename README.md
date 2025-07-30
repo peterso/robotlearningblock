@@ -133,7 +133,7 @@ The core design features of the task board microcontroller are:
 - [x] task board monitors a digital state of all mounted manipulation elements
 - [x] user can start a trial using the device without internet connection
 - [x] task board reports the timestamps for each successful task interaction trial over USB
-- [x] report the stae of the task box over WiFi to the [Kaa internet dashboard](https://cloud.kaaiot.com/solutions/bvhkhrtbhnjc0btkj7r0/dashboards/) 
+- [x] report the state of the task box over WiFi to the [Kaa internet dashboard](https://www.linkedin.com/safety/go?url=https%3A%2F%2Fcloud.kaaiot.com%2Fwd-public%2Fc1v9jqmgul2l1s47m6bg%2Fdashboards%2F0d2f0e4c-6a80-4cf4-a48d-5b25fcb35ac0%2F19addcfa-9cf1-42b3-8bd3-32a1feb4abdb%3Fpublic_id%3D4e4990d1-dcab-4f1a-b1a6-8648e87bc5ad&trk=flagship-messaging-web&messageThreadUrn=urn%3Ali%3AmessagingThread%3A2-YWRhYjQ3ZGYtZjc2YS00ZjZmLTkyZWEtMmMxNGNlNWE0ZjVjXzAxMw%3D%3D&lipi=urn%3Ali%3Apage%3Ad_flagship3_feed%3BBN9Td%2Bo8RjSi2fSXdyBvfQ%3D%3D) 
 - [x] setup wifi greeter to allow user to supply own wifi ssid and password
 - [x] report the state of the task box over USB
 - [x] task board reports are integrated into a Microsoft Azure IoT dashboard
