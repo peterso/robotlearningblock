@@ -113,6 +113,24 @@ struct TaskBoardDriver_v1 :
                             return SensorMeasurement(value);
                         });
 
+        Sensor* probe_plugged_bool = new Sensor("PROBE_PLUGGED", [&]()
+                        {
+                            bool value =
+                            hardware_low_level_controller_.pb_hub_controller.read_digital_IO1(PbHubController::Channel::
+                                    CHANNEL_3);
+
+                            return SensorMeasurement(!value); // Signal is inverted
+                        });
+
+        Sensor* probe_goal_bool = new Sensor("PROBE_GOAL_BOOL", [&]()
+                        {
+                            bool value =
+                            hardware_low_level_controller_.pb_hub_controller.read_digital_IO0(PbHubController::Channel::
+                                    CHANNEL_3);
+
+                            return SensorMeasurement(!value); // Signal is inverted
+                        });
+
         Sensor* probe_goal_analog = new Sensor("PROBE_GOAL_ANALOG", [&]()
                         {
                             uint16_t value =
@@ -231,9 +249,20 @@ struct TaskBoardDriver_v1 :
                             return fader->read();
                         });
 
+
+        Sensor* blue_button_counter = new CounterSensor("BLUE_BUTTON_COUNTER", [=]()
+                        {
+                            return blue_button->read();
+                        });
+
         Sensor* red_button_counter = new CounterSensor("RED_BUTTON_COUNTER", [=]()
                         {
                             return red_button->read();
+                        });
+
+        Sensor* probe_goal_counter = new CounterSensor("PROBE_GOAL_COUNTER", [=]()
+                        {
+                            return probe_goal_bool->read();
                         });
 
         // Store sensors
@@ -243,6 +272,8 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(door_angle);
         sensors_.push_back(light_right);
         sensors_.push_back(light_left);
+        sensors_.push_back(probe_plugged_bool);
+        sensors_.push_back(probe_goal_bool);
         sensors_.push_back(probe_goal_analog);
         sensors_.push_back(on_board_button_a);
         sensors_.push_back(on_board_button_b);
@@ -256,8 +287,9 @@ struct TaskBoardDriver_v1 :
         sensors_.push_back(free_cable);
         sensors_.push_back(attached_cable);
         sensors_.push_back(probe_goal);
-        sensors_.push_back(fader_trigger_blue_button);
+        sensors_.push_back(blue_button_counter);
         sensors_.push_back(red_button_counter);
+        sensors_.push_back(probe_goal_counter);
 
         // Initial update
         update();
@@ -269,7 +301,8 @@ struct TaskBoardDriver_v1 :
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(false)),
             new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(false)),
             new TaskStepEqual(*get_sensor_by_name("FREE_CABLE"), SensorMeasurement(true)),
-            new TaskStepEqual(*get_sensor_by_name("ON_BOARD_BUTTON_B"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("PROBE_PLUGGED"), SensorMeasurement(false)),
+            new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
         };
 
         default_precondition_task_ = new SimultaneousConditionTask(*precondition_steps, "Precondition Task");
@@ -288,6 +321,7 @@ struct TaskBoardDriver_v1 :
             timed_fader_operation,
             random_fader_step,
             //new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
+            new TaskStepEqual(*get_sensor_by_name("PROBE_PLUGGED"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("ATTACHED_CABLE"), SensorMeasurement(true)),
