@@ -269,6 +269,7 @@ struct TaskBoardDriver_v1 :
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(false)),
             new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(false)),
             new TaskStepEqual(*get_sensor_by_name("FREE_CABLE"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("ON_BOARD_BUTTON_B"), SensorMeasurement(true)),
         };
 
         default_precondition_task_ = new SimultaneousConditionTask(*precondition_steps, "Precondition Task");
@@ -286,14 +287,15 @@ struct TaskBoardDriver_v1 :
             new TaskStepEqual(*get_sensor_by_name("BLUE_BUTTON"), SensorMeasurement(true)),
             timed_fader_operation,
             random_fader_step,
-            new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
+            //new TaskStepEqual(*get_sensor_by_name("FADER_BLUE_BUTTON"), SensorMeasurement(0.2f), 0.05f),
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("ATTACHED_CABLE"), SensorMeasurement(true)),
-            new TaskStepEqual(*get_sensor_by_name("RED_BUTTON_COUNTER"), SensorMeasurement(3ll)),
+            new TaskStepEqual(*get_sensor_by_name("RED_BUTTON"), SensorMeasurement(true)),
+            //new TaskStepEqual(*get_sensor_by_name("RED_BUTTON_COUNTER"), SensorMeasurement(3ll)),
         };
 
-        default_task_ = new SequentialTask(*main_steps, "Default Task");
+        default_task_ = new SequentialTask(*main_steps, "RGC2023 Protocol");
     }
 
     /**
