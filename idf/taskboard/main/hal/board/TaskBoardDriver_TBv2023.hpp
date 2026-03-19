@@ -325,6 +325,7 @@ struct TaskBoardDriver_v1 :
             new TaskStepEqual(*get_sensor_by_name("DOOR_OPEN"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("PROBE_GOAL"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("ATTACHED_CABLE"), SensorMeasurement(true)),
+            new TaskStepEqual(*get_sensor_by_name("PROBE_PLUGGED"), SensorMeasurement(true)),
             new TaskStepEqual(*get_sensor_by_name("RED_BUTTON"), SensorMeasurement(true)),
             //new TaskStepEqual(*get_sensor_by_name("RED_BUTTON_COUNTER"), SensorMeasurement(3ll)),
         };
