@@ -25,7 +25,7 @@ struct KaaHandler
      * @param task_board_driver Task board driver
      */
     KaaHandler(
-            const TaskBoardDriver& task_board_driver)
+            TaskBoardDriver& task_board_driver)
         : task_board_driver_(task_board_driver)
     {
         uint8_t mac[6];
@@ -64,6 +64,10 @@ struct KaaHandler
     {
         JSONHandler json_handler;
         json_handler.add_taskboard_status_kaaiot(task_board_driver_);
+        // Add current task status using the task board driver's default task
+        Task& current_task = task_board_driver_.get_default_task();
+        Task& precondition = task_board_driver_.get_default_task_precondition();
+        json_handler.add_task_status(current_task, &precondition);
 
         const char* status = json_handler.get_json_string();
 
@@ -76,5 +80,5 @@ struct KaaHandler
 private:
 
     esp_http_client_handle_t client_;           ///< HTTP client handle
-    const TaskBoardDriver& task_board_driver_;  ///< Task board driver
+    TaskBoardDriver& task_board_driver_;  ///< Task board driver
 };
