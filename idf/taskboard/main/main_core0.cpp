@@ -4,10 +4,12 @@
 
 #include <sdkconfig.h>
 
-#if CONFIG_M5STACK_CORE2
+#if CONFIG_M5STACK_CORE2_TBV2025
 #include <hal/board/TaskBoardDriver_TBv2025.hpp>
-#else
+#elif CONFIG_M5STACK_STICKC_PLUS2_TBV2023
 #include <hal/board/TaskBoardDriver_TBv2023.hpp>
+#elif CONFIG_M5STACK_STICKC_PLUS2_TBV2021
+#include <hal/board/TaskBoardDriver_TBv2021.hpp>
 #endif
 
 #include <util/Timing.hpp>
