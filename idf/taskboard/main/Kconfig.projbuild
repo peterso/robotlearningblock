@@ -13,6 +13,12 @@ choice CONTROLLER_HARDWARE
         bool "M5STACK_CORE2"
     config M5STACK_STICKC_PLUS
         bool "M5STACK_STICKC_PLUS"
+    config M5STACK_STICKC_PLUS2_TBV2021
+        bool "M5STACK_STICKC_PLUS2_TBV2021"
+    config M5STACK_STICKC_PLUS2_TBV2023
+        bool "M5STACK_STICKC_PLUS2_TBV2023"
+    config M5STACK_CORE2_TBV2025
+        bool "M5STACK_CORE2_TBV2025"
 endchoice
         
 endmenu
