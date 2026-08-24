@@ -83,6 +83,8 @@ idf.py menuconfig
 idf.py build flash monitor
 ```
 
+To exit the idf.py monitor, press the key combination "ctrl+t", then "x".
+
 To update a `M5STACK StickC Plus` (the version with 4MB of FLASH memory), it is necessary to use a different baud rate for flashing:
 
 ```bash
